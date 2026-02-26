@@ -1,12 +1,15 @@
-# Requirements Document: AIforBharat Frontend Architecture
+# Requirements Document: AIforBharat — Personal Civic Operating System
 
 ## Introduction
 
-The AIforBharat platform requires a modern, scalable frontend architecture built with React, TypeScript, and Vite. The system must support user authentication, real-time updates, efficient data fetching, responsive design, and comprehensive form management while maintaining high performance, accessibility, and developer experience standards.
+The AIforBharat platform is a **Personal Civic Operating System** for Indian citizens, built on an **Event-Driven Microservices Architecture** with 21 specialized engines. The system must support user authentication, real-time updates, deterministic eligibility evaluation, AI-powered civic intelligence, voice interaction in 22 Indian languages, and a responsive dashboard — all while maintaining high performance, accessibility, privacy compliance (DPDP Act 2023), and scalability to 10M+ users.
+
+This document covers requirements across **Frontend**, **Backend Engines**, **Data Sources**, **AI/ML Infrastructure**, and **Security & Compliance**.
 
 ## Glossary
 
-- **Frontend_System**: The client-side application built with React and TypeScript
+### Frontend
+- **Frontend_System**: The client-side application built with React 19 and TypeScript
 - **Auth_Service**: The authentication service handling user login, token management, and session validation
 - **API_Gateway**: The backend entry point for all API requests from the frontend
 - **Auth_Context**: React Context managing authentication state across the application
@@ -17,8 +20,22 @@ The AIforBharat platform requires a modern, scalable frontend architecture built
 - **Token_Interceptor**: Axios interceptor handling token refresh on 401 responses
 - **Cache_Layer**: Client-side data caching mechanism for optimizing API calls
 - **UI_Component**: Reusable React component following design system specifications
+- **BFF_Layer**: Backend-for-Frontend (FastAPI) that aggregates data for dashboard consumption
 
-## Requirements
+### Backend Engines
+- **Event_Bus**: Apache Kafka / NATS message broker for async inter-engine communication
+- **Rules_Engine**: Deterministic YAML-based eligibility evaluator (NOT LLM)
+- **Neural_Engine**: AI Core orchestrator (RAG, Simulation, Impact, Recommendation, Roadmap)
+- **Identity_Vault**: AES-256-GCM encrypted PII storage with tokenized identities
+- **Policy_Store**: Versioned repository of government scheme rules and documents
+- **Metadata_Engine**: User input normalization and derived attribute computation
+- **Analytics_WH**: ClickHouse OLAP + RAPIDS GPU analytics pipeline
+- **Speech_Engine**: NVIDIA Riva ASR/TTS for 22 Indian language voice interaction
+- **Doc_Engine**: Document understanding pipeline (PDF parsing, OCR, NER, amendment detection)
+
+---
+
+## Part A: Frontend Requirements
 
 ### Requirement 1: User Authentication
 
@@ -218,3 +235,221 @@ The AIforBharat platform requires a modern, scalable frontend architecture built
 4. WHEN a component needs global state, THE component SHALL consume state through custom hooks
 5. THE Frontend_System SHALL implement state persistence for user preferences using localStorage
 6. WHEN debugging, THE Frontend_System SHALL provide clear state inspection through React DevTools
+
+### Requirement 16: UI Component Libraries
+
+**User Story:** As a developer, I want pre-built, accessible UI components, so that I can build the dashboard quickly with consistent, production-ready elements.
+
+#### Acceptance Criteria
+
+1. THE Frontend_System SHALL use Hero UI (https://www.heroui.com/docs/components) as the primary component library for cards, modals, inputs, and navigation
+2. THE Frontend_System SHALL use ShadCN (https://ui.shadcn.com/) for accessible components including dialogs, data tables, command palettes, and calendars
+3. THE Frontend_System SHALL use UIverse (https://uiverse.io/) for community-driven animated elements including loaders, toggles, and progress indicators
+4. THE Frontend_System SHALL use CSS Buttons (https://cssbuttons.io/) for stylized CTA buttons on scheme application, simulation triggers, and action cards
+5. THE Frontend_System SHALL use MapCN (https://www.mapcn.dev/) with MapLibre GL for interactive civic heatmaps and scheme adoption map visualizations
+6. WHEN rendering map components, THE Frontend_System SHALL integrate MapCN for district-level scheme penetration, regional benefit distribution, and geographic analytics
+
+### Requirement 17: Multilingual & Voice Support
+
+**User Story:** As a citizen who speaks a regional Indian language, I want to interact with the platform in my native language via text or voice, so that I can access civic services without language barriers.
+
+#### Acceptance Criteria
+
+1. THE Frontend_System SHALL support 22 scheduled Indian languages using react-i18next
+2. THE Frontend_System SHALL detect the user's preferred language from browser settings or user profile
+3. WHEN voice input is enabled, THE Speech_Engine SHALL transcribe speech via NVIDIA Riva ASR WebSocket streaming
+4. WHEN the platform generates voice output, THE Speech_Engine SHALL synthesize speech via NVIDIA Riva TTS with SSML prosody control
+5. THE Frontend_System SHALL support code-switching (e.g., Hindi-English mix) in voice interactions
+6. WHEN rendering text, THE Frontend_System SHALL apply appropriate Unicode fonts and RTL/LTR layout for each script
+
+---
+
+## Part B: Backend Engine Requirements
+
+### Requirement 18: Event-Driven Engine Architecture
+
+**User Story:** As a platform architect, I want all 21 engines to communicate asynchronously via an event bus, so that engines are loosely coupled, independently deployable, and horizontally scalable.
+
+#### Acceptance Criteria
+
+1. THE Event_Bus SHALL use Apache Kafka or NATS for all inter-engine async communication
+2. WHEN an engine processes input, THE engine SHALL publish completion events with structured payloads
+3. WHEN an engine receives an event, THE engine SHALL be idempotent — processing the same event twice produces the same result
+4. THE API_Gateway SHALL be the single entry point for all external requests, routing to engines via internal REST/gRPC
+5. WHEN an engine fails, THE Event_Bus SHALL implement dead-letter queues for failed events
+6. THE platform SHALL support adding new engines without modifying existing engine code
+
+### Requirement 19: Eligibility Rules Engine
+
+**User Story:** As a citizen, I want my scheme eligibility to be determined by auditable, deterministic rules — NOT AI/LLM inference — so that the results are legally defensible and 100% reproducible.
+
+#### Acceptance Criteria
+
+1. THE Rules_Engine SHALL evaluate eligibility using YAML-defined boolean rules with AND/OR/NOT compositions
+2. THE Rules_Engine SHALL NOT use any LLM or probabilistic model for eligibility determination
+3. WHEN eligibility is determined, THE Neural_Engine MAY generate a natural-language explanation of the deterministic result using Llama 3.1 8B
+4. THE Rules_Engine SHALL evaluate one citizen against ALL tracked schemes in < 500ms
+5. THE Rules_Engine SHALL maintain a full version history of every rule change with effective dates and author
+6. THE Rules_Engine SHALL compute partial match scores (0-100%) for "almost eligible" cases with specific gap identification
+7. WHEN a rule evaluation occurs, THE Rules_Engine SHALL log the full audit trail: rule version, input snapshot, and result
+
+### Requirement 20: Policy Ingestion & Government Data Sync
+
+**User Story:** As a platform operator, I want the system to continuously monitor official government data sources and ingest policy changes automatically, so that citizens always see the latest, most accurate scheme information.
+
+#### Acceptance Criteria
+
+1. THE Policy_Store SHALL crawl and ingest data from these MVP sources:
+   - data.gov.in (https://data.gov.in) — CSV datasets, scheme metadata
+   - PIB (https://pib.gov.in) — Daily policy announcements
+   - India Code (https://www.indiacode.nic.in) — Acts, amendments, legal texts
+   - eGazette (https://egazette.nic.in) — Official gazette notifications
+   - MyGov (https://www.mygov.in) — Policy summaries
+2. THE Policy_Store SHALL detect changes via content hashing and compute structured diffs between policy versions
+3. THE Policy_Store SHALL maintain full version history for every tracked policy
+4. WHEN a gazette amendment is detected, THE Doc_Engine SHALL parse the PDF and extract structured changes (substitutions, additions, deletions)
+5. WHEN a policy change affects eligibility rules, THE Event_Bus SHALL trigger re-evaluation of affected citizens
+6. THE Policy_Store SHALL respect robots.txt and rate-limit crawling to 1-5 requests/second per source
+
+### Requirement 21: User Identity & Privacy
+
+**User Story:** As a citizen, I want my personal data to be encrypted, tokenized, and only shared with my consent, so that my privacy is protected under Indian data protection law.
+
+#### Acceptance Criteria
+
+1. THE Identity_Vault SHALL encrypt all PII using AES-256-GCM with per-user encryption keys
+2. THE Identity_Vault SHALL support key rotation every 90 days via HSM/KMS
+3. THE Identity_Vault SHALL issue a platform-unique identity token decoupled from PII for inter-engine communication
+4. WHEN a user requests data export, THE Identity_Vault SHALL generate a portable JSON/PDF export of all user data
+5. WHEN a user requests deletion ("right to forget"), THE Identity_Vault SHALL perform cryptographic deletion by destroying encryption keys
+6. THE platform SHALL comply with the Digital Personal Data Protection (DPDP) Act 2023
+7. THE Identity_Vault SHALL reference UIDAI (https://uidai.gov.in) for public stats only — full Aadhaar integration requires government approval
+8. THE platform SHALL integrate DigiLocker (https://developer.digilocker.gov.in) for verified document access (Phase 4+)
+
+### Requirement 22: Simulation & Financial Impact
+
+**User Story:** As a citizen, I want to simulate "what if?" life changes (income change, relocation, marriage) and see the civic, tax, and scheme eligibility impact, so that I can make informed decisions.
+
+#### Acceptance Criteria
+
+1. THE Simulation_Engine SHALL clone the user's profile into an ephemeral context — never modifying real data
+2. THE Simulation_Engine SHALL support multi-variable simulations (e.g., "move to Karnataka AND income becomes ₹15L")
+3. THE Simulation_Engine SHALL source tax slab data from Income Tax India (https://www.incometax.gov.in)
+4. THE Simulation_Engine SHALL source interest/inflation data from RBI DBIE (https://dbie.rbi.org.in)
+5. THE Simulation_Engine SHALL source budget allocation data from Union Budget Portal (https://www.indiabudget.gov.in)
+6. THE Simulation_Engine SHALL produce side-by-side comparisons: current state vs simulated state (eligibility delta, tax impact, benefit gain/loss)
+7. THE Simulation_Engine SHALL complete standard simulations in < 3 seconds (p95)
+
+### Requirement 23: Deadline Monitoring & Notifications
+
+**User Story:** As a citizen, I want to receive escalating alerts for approaching deadlines (tax filing, scheme enrollment, document renewal), so that I never miss a critical civic obligation.
+
+#### Acceptance Criteria
+
+1. THE Deadline_Engine SHALL track deadlines from: data.gov.in, Income Tax Portal (https://www.incometax.gov.in), Election Commission (https://eci.gov.in), and eGazette
+2. THE Deadline_Engine SHALL implement escalating priority levels: Info (30d) → Important (14d) → Urgent (7d) → Critical (3d) → Overdue
+3. THE Deadline_Engine SHALL deliver notifications across: in-app, push (FCM), SMS, email, and WhatsApp
+4. THE Deadline_Engine SHALL generate personalized per-citizen deadline calendars with iCal export
+5. THE Deadline_Engine SHALL compute compliance scores tracking a citizen's deadline adherence over time
+6. WHEN a deadline depends on a prior action, THE Deadline_Engine SHALL identify and alert on the prerequisite
+
+### Requirement 24: Analytics & Heatmaps
+
+**User Story:** As a platform operator and researcher, I want anonymized, aggregated analytics on scheme adoption and regional patterns, so that policy effectiveness can be measured.
+
+#### Acceptance Criteria
+
+1. THE Analytics_WH SHALL use ClickHouse for OLAP aggregates and TimescaleDB for time-series metrics
+2. THE Analytics_WH SHALL ingest geographic data from Census India (https://censusindia.gov.in) and development indicators from NDAP (https://ndap.niti.gov.in)
+3. THE Analytics_WH SHALL generate regional heatmaps at state → district → block granularity
+4. THE Analytics_WH SHALL maintain k-anonymity (k ≥ 10) for all research data exports
+5. THE Analytics_WH SHALL use RAPIDS cuDF/cuML for GPU-accelerated batch analytics
+6. THE Analytics_WH SHALL support cube queries with < 500ms p99 latency
+
+### Requirement 25: Document Understanding
+
+**User Story:** As a policy ingestion system, I want to automatically parse government PDFs, extract entities, detect amendments, and produce structured data, so that manual document processing is minimized.
+
+#### Acceptance Criteria
+
+1. THE Doc_Engine SHALL parse PDFs using PyMuPDF with specialized gazette format handling (Part I/II/III)
+2. THE Doc_Engine SHALL extract entities (scheme names, amounts, dates, departments, eligibility fields) using NVIDIA NeMo BERT fine-tuned NER
+3. THE Doc_Engine SHALL detect amendment types: substitution, addition, deletion — and produce structured change records
+4. THE Doc_Engine SHALL OCR scanned documents with > 92% accuracy using Tesseract + NVIDIA OCR
+5. THE Doc_Engine SHALL extract tables from complex PDFs (merged cells, multi-level headers) using Camelot/Tabula
+6. THE Doc_Engine SHALL process gazette notifications in < 10 seconds average
+7. THE Doc_Engine SHALL source documents from eGazette (https://egazette.nic.in), India Code (https://www.indiacode.nic.in), Union Budget (https://www.indiabudget.gov.in), and data.gov.in
+
+### Requirement 26: Speech Interface
+
+**User Story:** As a citizen with limited digital literacy, I want to interact with the platform using my voice in my native language, so that I can access civic services without typing.
+
+#### Acceptance Criteria
+
+1. THE Speech_Engine SHALL use NVIDIA Riva for ASR (speech-to-text) and TTS (text-to-speech)
+2. THE Speech_Engine SHALL support 22 scheduled Indian languages
+3. THE Speech_Engine SHALL stream audio over WebSocket for real-time transcription (< 500ms latency)
+4. THE Speech_Engine SHALL classify user intent from transcribed text using NeMo BERT
+5. THE Speech_Engine SHALL support code-switching (Hindi-English mix) without degradation
+6. THE Speech_Engine SHALL generate natural speech output with SSML prosody control
+
+---
+
+## Part C: AI/ML Infrastructure Requirements
+
+### Requirement 27: NVIDIA Stack Integration
+
+**User Story:** As a platform architect, I want all AI inference to run on the NVIDIA AI Enterprise stack, so that we achieve production-grade performance, scalability, and model management.
+
+#### Acceptance Criteria
+
+1. THE platform SHALL use NVIDIA NIM for Llama 3.1 70B (primary reasoning) and Llama 3.1 8B (fast Q&A, explanations)
+2. THE platform SHALL use NVIDIA NeMo for fine-tuned BERT models (NER, classification, intent detection)
+3. THE platform SHALL use NVIDIA NeMo Retriever for long document chunking and semantic retrieval
+4. THE platform SHALL use TensorRT-LLM for INT8/FP8 quantized inference in production
+5. THE platform SHALL use Triton Inference Server for multi-model serving
+6. THE platform SHALL use RAPIDS cuDF/cuML/XGBoost for GPU-accelerated analytics and projections
+7. THE platform SHALL use NVIDIA Riva for ASR/TTS across 22 Indian languages
+8. THE platform SHALL pull model containers from NVIDIA NGC (https://catalog.ngc.nvidia.com)
+
+### Requirement 28: AI Trust & Safety
+
+**User Story:** As a citizen, I want AI-generated responses to include trust scores and source attribution, so that I can assess the reliability of information before acting on it.
+
+#### Acceptance Criteria
+
+1. THE Trust_Engine SHALL compute trust scores across 4 dimensions: data quality, model confidence, source authority, and temporal freshness
+2. THE Anomaly_Engine SHALL implement two-layer verification: Layer 1 (AI output hallucination detection), Layer 2 (system anomaly monitoring)
+3. WHEN the Neural_Engine generates a response, THE response SHALL include source citations and a confidence score
+4. WHEN the trust score is below threshold, THE dashboard SHALL display a warning to the citizen
+5. THE Anomaly_Engine SHALL use Llama 3.1 8B for second-pass hallucination detection
+
+---
+
+## Part D: Security & Compliance Requirements
+
+### Requirement 29: Data Protection Compliance
+
+**User Story:** As a platform operator, I want the system to comply with Indian data protection laws and international security standards, so that citizen data is legally and technically protected.
+
+#### Acceptance Criteria
+
+1. THE platform SHALL comply with the Digital Personal Data Protection (DPDP) Act 2023
+2. THE platform SHALL implement append-only, immutable audit logs for all data access and modification
+3. THE platform SHALL encrypt all PII at rest (AES-256-GCM) and in transit (TLS 1.3)
+4. THE platform SHALL support data export (portability) and cryptographic deletion (right to forget)
+5. THE platform SHALL maintain separate encryption keys per user with HSM-backed key management
+6. THE platform SHALL anonymize all analytics/research data with k-anonymity (k ≥ 10)
+
+### Requirement 30: Scalability Targets
+
+**User Story:** As a platform architect, I want the system to scale from MVP (10K users) to 10M+ users without architectural changes, so that growth is handled through configuration and horizontal scaling.
+
+#### Acceptance Criteria
+
+1. THE platform SHALL support 4-tier scaling: MVP (< 10K) → Growth (10K-500K) → Scale (500K-5M) → Massive (5M+)
+2. THE platform SHALL use PostgreSQL + Citus for horizontal sharding of user data
+3. THE platform SHALL support independent scaling of each engine via container orchestration (Kubernetes)
+4. THE API_Gateway SHALL handle > 10K concurrent connections
+5. THE Eligibility Rules_Engine SHALL evaluate 1M users × 1000 rules in < 2 hours (batch mode)
+6. THE Analytics_WH SHALL support > 100K events/sec ingestion throughput

@@ -1,16 +1,162 @@
-# Design Document: AIforBharat Frontend Architecture
+# Design Document: AIforBharat — Personal Civic Operating System
 
 ## Overview
 
-The AIforBharat Frontend Architecture is a modern, scalable React application built with TypeScript, Vite, and Tailwind CSS. The system implements a component-based architecture with clear separation of concerns, efficient state management using React Context, and robust data fetching strategies with caching. The design prioritizes performance, accessibility, type safety, and developer experience.
+AIforBharat is a **Personal Civic Operating System** for Indian citizens — a sovereign, voice-first AI platform that bridges the gap between 1.4 billion citizens and 3,000+ government schemes across central and state governments. The platform uses an **Event-Driven Microservices Architecture** with 21 specialized engines, powered by the **NVIDIA AI stack**, to deliver personalized scheme discovery, eligibility determination, deadline tracking, tax simulation, and civic intelligence.
 
 ### Key Design Principles
 
-1. **Component Modularity**: Atomic design hierarchy ensuring reusable, composable components
-2. **Type Safety First**: Strict TypeScript configuration catching errors at compile time
-3. **Performance by Default**: Code splitting, lazy loading, and optimized rendering strategies
-4. **Accessibility Built-in**: WCAG 2.1 AA compliance from the ground up
-5. **Developer Experience**: Fast builds, hot module replacement, and clear code patterns
+1. **Event-Driven Microservices**: Loosely-coupled engines communicating via Kafka event bus
+2. **Hybrid LLM + Rules**: Deterministic rules for eligibility (auditable), LLM for explanations (natural language)
+3. **Privacy-First**: Tokenized identities, AES-256 encryption, DPDP Act 2023 compliance
+4. **Append-Only Data**: Immutable audit trail for every user interaction and data change
+5. **Policy Versioning**: Every government scheme tracked with full version history and change diffs
+6. **NVIDIA-Accelerated AI**: NIM, NeMo, TensorRT-LLM, Riva, Triton, RAPIDS for production inference
+7. **Component Modularity**: Atomic design hierarchy for the frontend with reusable, composable components
+8. **Type Safety First**: Strict TypeScript configuration catching errors at compile time
+9. **Accessibility Built-in**: WCAG 2.1 AA compliance, 22 Indian language support, voice navigation
+10. **Offline-Ready**: PWA with IndexedDB caching for low-connectivity regions
+
+---
+
+## Full-Stack System Architecture
+
+### 5-Layer Architecture
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│  LAYER 1: USER LAYER                                                  │
+│  Web App (React 19) │ Mobile (PWA) │ Voice (NVIDIA Riva) │ IVR       │
+└──────────────────────────┬───────────────────────────────────────────┘
+                           │ HTTPS / WSS
+┌──────────────────────────▼───────────────────────────────────────────┐
+│  LAYER 2: API GATEWAY                                                 │
+│  Rate Limiting │ JWT Validation │ Request Routing │ Circuit Breaker   │
+│  WebSocket Hub │ Load Balancing │ Request/Response Logging            │
+└──────────────────────────┬───────────────────────────────────────────┘
+                           │ Internal gRPC / REST
+┌──────────────────────────▼───────────────────────────────────────────┐
+│  LAYER 3: EVENT BUS (Apache Kafka / NATS)                             │
+│  Async inter-engine communication │ Event sourcing │ CQRS patterns    │
+└──────────────────────────┬───────────────────────────────────────────┘
+                           │
+┌──────────────────────────▼───────────────────────────────────────────┐
+│  LAYER 4: STATELESS COMPUTE ENGINES (21 Engines)                      │
+│                                                                        │
+│  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────────────┐ │
+│  │ Auth & Identity  │ │ Data Ingestion  │ │ AI & Intelligence       │ │
+│  │                  │ │                  │ │                         │ │
+│  │ • Login/Register │ │ • Policy Fetch  │ │ • Neural Network (Core) │ │
+│  │ • Identity Engine│ │ • Gov Data Sync │ │ • Anomaly Detection     │ │
+│  │                  │ │ • Doc Understand│ │ • Trust Scoring         │ │
+│  └─────────────────┘ │ • Chunks Engine │ │ • Simulation Engine     │ │
+│                       └─────────────────┘ └─────────────────────────┘ │
+│  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────────────┐ │
+│  │ Data Processing  │ │ Business Logic  │ │ User-Facing             │ │
+│  │                  │ │                  │ │                         │ │
+│  │ • Metadata Engine│ │ • Eligibility   │ │ • Dashboard Interface   │ │
+│  │ • JSON User Info │ │   Rules Engine  │ │ • Speech Interface      │ │
+│  │ • Analytics WH   │ │ • Deadline Mon. │ │                         │ │
+│  └─────────────────┘ └─────────────────┘ └─────────────────────────┘ │
+│  ┌─────────────────────────────────────────────────────────────────┐ │
+│  │ Storage Engines                                                  │ │
+│  │ • Raw Data Store │ Processed Metadata Store │ Vector Database     │ │
+│  └─────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────┘
+                           │
+┌──────────────────────────▼───────────────────────────────────────────┐
+│  LAYER 5: DISTRIBUTED STORAGE                                         │
+│                                                                        │
+│  PostgreSQL 16    │ Redis 7.x     │ S3/MinIO       │ Apache Kafka     │
+│  + Citus          │ (Session/     │ (Object Store) │ (Event Store)    │
+│  (Sharded User    │  Cache/OTP)   │                │                  │
+│  Data)            │               │                │                  │
+│                   │               │                │                  │
+│  Milvus/Qdrant   │ ClickHouse    │ TimescaleDB    │ Apache Iceberg   │
+│  (Vector DB)     │ (OLAP)        │ (Time-Series)  │ (Data Lake)      │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### 21 Engine Overview
+
+| # | Engine | Purpose | Key Technology |
+|---|---|---|---|
+| 1 | **Login/Register Engine** | User onboarding, OAuth2, JWT, phone OTP | FastAPI, bcrypt, Redis |
+| 2 | **Identity Engine** | Tokenized vault, AES-256, zero-knowledge proofs | HSM, PostgreSQL |
+| 3 | **Raw Data Store** | Append-only immutable audit logs | S3/MinIO, Parquet |
+| 4 | **Metadata Engine** | User input normalization, derived attributes | Pydantic v2, NeMo BERT |
+| 5 | **Processed User Metadata Store** | Sharded user profile storage | PostgreSQL + Citus |
+| 6 | **Vector Database** | Policy embedding, hybrid search | Milvus/Qdrant, NV-Embed-QA |
+| 7 | **Neural Network Engine** | AI Core: RAG, Simulation, Impact, Recommendations | Llama 3.1 70B/8B via NIM |
+| 8 | **Anomaly Detection Engine** | AI output verification, system anomalies | Llama 3.1 8B, Morpheus |
+| 9 | **API Gateway** | Single entry point, rate limiting, circuit breaking | FastAPI/Kong |
+| 10 | **Chunks Engine** | Semantic chunking, metadata tagging | NeMo BERT, MinHash |
+| 11 | **Policy Fetching Engine** | Crawl 100+ govt portals, change detection | aiohttp, BeautifulSoup |
+| 12 | **JSON User Info Generator** | Unified profile assembly, JSON Patch deltas | RFC 6902, Redis cache |
+| 13 | **Analytics Warehouse** | OLAP analytics, heatmaps, impact modeling | ClickHouse, RAPIDS |
+| 14 | **Dashboard Interface** | Personalized civic command center | React 19, Hero UI, ShadCN |
+| 15 | **Eligibility Rules Engine** | Deterministic YAML rules (NOT LLM) | Python, YAML, Redis |
+| 16 | **Deadline Monitoring Engine** | Temporal intelligence, escalating alerts | Celery Beat, FCM |
+| 17 | **Simulation Engine** | "What if?" tax/scheme impact projections | RAPIDS XGBoost |
+| 18 | **Government Data Sync Engine** | Amendment tracking, gazette parsing | NeMo BERT classifier |
+| 19 | **Trust Scoring Engine** | 4-dimension trust model with provenance | NeMo classification |
+| 20 | **Speech Interface Engine** | Voice in 22 Indian languages | NVIDIA Riva ASR/TTS |
+| 21 | **Document Understanding Engine** | PDF/gazette parsing, OCR, entity extraction | NeMo Retriever, PyMuPDF |
+
+### NVIDIA Stack Alignment
+
+| NVIDIA Tool | Engines Using It | Purpose |
+|---|---|---|
+| **NVIDIA NIM** | Neural Network, Anomaly Detection, Simulation, Gov Data Sync | Llama 3.1 70B/8B containerized inference |
+| **NeMo Framework** | Metadata, Chunks, Gov Data Sync, Trust Scoring, Doc Understanding | BERT fine-tuning (NER, classification) |
+| **NeMo Retriever** | Document Understanding, Chunks | Long document chunking + retrieval |
+| **TensorRT-LLM** | Neural Network, Doc Understanding | INT8/FP8 quantized inference |
+| **NVIDIA Riva** | Speech Interface, Dashboard | ASR/TTS for 22 Indian languages |
+| **Triton Inference Server** | Neural Network, Doc Understanding | Multi-model serving |
+| **RAPIDS** | Analytics Warehouse, Simulation | cuDF/cuML/XGBoost GPU analytics |
+| **NVIDIA Morpheus** | Anomaly Detection | Real-time security/anomaly monitoring |
+
+### NVIDIA Build Resources
+
+| Purpose | Resource | URL |
+|---|---|---|
+| Model Containers | NVIDIA NGC | https://catalog.ngc.nvidia.com |
+| RAG Toolkit | NeMo Retriever | https://developer.nvidia.com/nemo |
+| Speech AI | Riva | https://developer.nvidia.com/riva |
+| GPU Analytics | RAPIDS | https://rapids.ai |
+| Inference Serving | Triton | https://developer.nvidia.com/triton-inference-server |
+
+### Official Data Sources (MVP)
+
+| Category | Source | URL | Used By |
+|---|---|---|---|
+| Scheme datasets | data.gov.in | https://data.gov.in | Policy Fetching, Eligibility, Deadline, Analytics |
+| Policy announcements | PIB | https://pib.gov.in | Policy Fetching, Gov Data Sync |
+| Legal texts | India Code | https://www.indiacode.nic.in | Policy Fetching, Doc Understanding, Eligibility |
+| Gazette amendments | eGazette | https://egazette.nic.in | Gov Data Sync, Doc Understanding, Policy Fetching |
+| Tax slabs | Income Tax Portal | https://www.incometax.gov.in | Simulation, Deadline Monitoring |
+| RBI financial data | RBI DBIE | https://dbie.rbi.org.in | Simulation |
+| Census demographics | Census India | https://censusindia.gov.in | Metadata, Analytics |
+| Development indices | NITI Aayog / NDAP | https://ndap.niti.gov.in | Metadata, Analytics |
+| Budget allocations | Union Budget | https://www.indiabudget.gov.in | Simulation, Gov Data Sync |
+| Election data | ECI | https://eci.gov.in | Deadline Monitoring |
+| Identity references | UIDAI | https://uidai.gov.in | Identity Engine (stats only) |
+| Document verification | DigiLocker | https://developer.digilocker.gov.in | Login/Register, Identity Engine |
+| Public services | UMANG | https://www.umang.gov.in | Dashboard (reference architecture) |
+
+### UI Component Libraries
+
+| Library | URL | Usage in Dashboard |
+|---|---|---|
+| **Hero UI** | https://www.heroui.com/docs/components | Primary components — cards, modals, inputs, nav |
+| **ShadCN** | https://ui.shadcn.com/ | Accessible components — dialogs, data tables, command palette |
+| **UIverse** | https://uiverse.io/ | Community elements — loaders, toggles, animated UI |
+| **CSS Buttons** | https://cssbuttons.io/ | Stylized CTA buttons — apply, simulate actions |
+| **MapCN** | https://www.mapcn.dev/ | Map components — civic heatmaps, scheme adoption maps |
+
+---
+
+## Frontend Architecture
 
 ### Technology Stack
 
@@ -19,15 +165,19 @@ The AIforBharat Frontend Architecture is a modern, scalable React application bu
 - **Framework**: React 19.2.0
 - **Build Tool**: Vite 7.2.4
 - **Language**: TypeScript 5.x (Strict Mode)
-- **Styling**: Tailwind CSS 3.4.17
+- **Styling**: Tailwind CSS 3.4.17 + Hero UI + ShadCN
+- **Maps**: MapCN + MapLibre GL
 - **Routing**: React Router DOM 7.13.0
+- **State Management**: Zustand (client) + React Query (server)
 - **Form Management**: react-hook-form + zod
 - **Testing**: Vitest + React Testing Library + Playwright
 - **Linting**: ESLint 9.x + Prettier
+- **i18n**: react-i18next (22 Indian languages)
+- **PWA**: Workbox (service worker) + IndexedDB
 
-## Architecture
+## Frontend Component Architecture
 
-### High-Level Architecture
+### Frontend High-Level Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -1569,3 +1719,35 @@ export default defineConfig({
 - First Contentful Paint (FCP): < 1.5s
 - Lighthouse Performance Score: > 90
 - Lighthouse Accessibility Score: > 95
+
+---
+
+## Engine Design Documents
+
+Each engine has a dedicated design & plan document in its own folder:
+
+| Engine | Document |
+|---|---|
+| Login/Register Engine | `login-register-engine/design-and-plan.md` |
+| Identity Engine | `identity-engine/design-and-plan.md` |
+| Raw Data Store | `raw-data-store/design-and-plan.md` |
+| Metadata Engine | `metadata-engine/design-and-plan.md` |
+| Processed User Metadata Store | `processed-user-metadata-store/design-and-plan.md` |
+| Vector Database | `vector-database/design-and-plan.md` |
+| Neural Network Engine | `neural-network-engine/design-and-plan.md` |
+| Anomaly Detection Engine | `anomaly-detection-engine/design-and-plan.md` |
+| API Gateway | `api-gateway/design-and-plan.md` |
+| Chunks Engine | `chunks-engine/design-and-plan.md` |
+| Policy Fetching Engine | `policy-fetching-engine/design-and-plan.md` |
+| JSON User Info Generator | `json-user-info-generator/design-and-plan.md` |
+| Analytics Warehouse | `analytics-warehouse/design-and-plan.md` |
+| Dashboard Interface | `dashboard-interface/design-and-plan.md` |
+| Eligibility Rules Engine | `eligibility-rules-engine/design-and-plan.md` |
+| Deadline Monitoring Engine | `deadline-monitoring-engine/design-and-plan.md` |
+| Simulation Engine | `simulation-engine/design-and-plan.md` |
+| Government Data Sync Engine | `government-data-sync-engine/design-and-plan.md` |
+| Trust Scoring Engine | `trust-scoring-engine/design-and-plan.md` |
+| Speech Interface Engine | `speech-interface-engine/design-and-plan.md` |
+| Document Understanding Engine | `document-understanding-engine/design-and-plan.md` |
+
+Each document covers: Purpose, Capabilities, Architecture, Data Models, Context Flow, Event Bus Integration, NVIDIA Stack Alignment, Scaling Strategy, API Endpoints, Dependencies, Technology Stack, Implementation Phases, Success Metrics, and Official Data Sources.

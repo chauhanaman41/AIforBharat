@@ -1,0 +1,289 @@
+# 🟦 Login / Register Engine — Design & Plan
+
+## 1. Purpose
+
+The Login/Register Engine is the **user onboarding gateway** for the AIforBharat platform. It handles new user registration, credential-based authentication, session generation, and future integration with India's digital identity infrastructure (Aadhaar, PAN, DigiLocker).
+
+This engine is the first touchpoint for every user and must be **fast, secure, and frictionless** — especially for rural and semi-urban users who may have limited digital literacy.
+
+---
+
+## 2. Capabilities
+
+| Capability | Description |
+|---|---|
+| **User Registration** | Collect minimal identity info (phone/email, name, state, preferred language) |
+| **Credential Authentication** | Phone OTP, email/password, or social login |
+| **Session Generation** | Issue JWT access + refresh tokens upon successful auth |
+| **OAuth2 Support** | Standards-based auth flow for third-party integrations |
+| **Aadhaar/PAN Linking** | Future: eKYC via Aadhaar, PAN verification for financial features |
+| **DigiLocker Integration** | Future: Pull verified documents for eligibility checks |
+| **Multi-Language Onboarding** | Registration flow available in 12+ Indian languages |
+| **Rate Limiting** | Brute-force protection on login/OTP endpoints |
+| **Audit Logging** | Every auth event logged immutably to Raw Data Store |
+
+---
+
+## 3. Architecture
+
+### 3.1 Component Diagram
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                     User (Web / Mobile / Voice)              │
+└──────────────────────┬───────────────────────────────────────┘
+                       │ HTTPS
+                       ▼
+┌──────────────────────────────────────────────────────────────┐
+│                      API Gateway Layer                       │
+│  ┌─────────────┐  ┌──────────────┐  ┌────────────────────┐  │
+│  │ Rate Limiter│  │ TLS Termination│ │ Request Validator │  │
+│  └─────────────┘  └──────────────┘  └────────────────────┘  │
+└──────────────────────┬───────────────────────────────────────┘
+                       │
+                       ▼
+┌──────────────────────────────────────────────────────────────┐
+│                  Login/Register Engine                        │
+│                                                              │
+│  ┌────────────────┐  ┌──────────────────┐                    │
+│  │ Registration   │  │ Authentication   │                    │
+│  │ Service        │  │ Service          │                    │
+│  │                │  │                  │                    │
+│  │ • Validate     │  │ • Verify creds   │                    │
+│  │ • Deduplicate  │  │ • Generate JWT   │                    │
+│  │ • Create user  │  │ • Refresh tokens │                    │
+│  └───────┬────────┘  └───────┬──────────┘                    │
+│          │                   │                               │
+│  ┌───────▼───────────────────▼──────────┐                    │
+│  │         OTP / SMS Gateway            │                    │
+│  │    (Twilio / MSG91 / Custom)         │                    │
+│  └──────────────────────────────────────┘                    │
+│                                                              │
+│  ┌──────────────────────────────────────┐                    │
+│  │     Identity Engine Delegate         │                    │
+│  │  (Forward identity ops after auth)   │                    │
+│  └──────────────────────────────────────┘                    │
+└──────────────────────┬───────────────────────────────────────┘
+                       │
+          ┌────────────┼────────────┐
+          ▼            ▼            ▼
+┌──────────────┐ ┌──────────┐ ┌──────────────┐
+│ User DB      │ │ Redis    │ │ Raw Data     │
+│ (PostgreSQL) │ │ (Session │ │ Store        │
+│              │ │  Cache)  │ │ (Audit Log)  │
+└──────────────┘ └──────────┘ └──────────────┘
+```
+
+### 3.2 Stateless Design
+
+- **No server-side sessions** — all session state is encoded in JWT tokens
+- Authentication service is **horizontally scalable** behind a load balancer
+- OTP state stored in **Redis with TTL** (5-minute expiry)
+- User creation is an **idempotent operation** keyed on phone number
+
+---
+
+## 4. Data Models
+
+### 4.1 User Registration Payload
+
+```json
+{
+  "phone": "+91XXXXXXXXXX",
+  "name": "Ravi Kumar",
+  "state": "UP",
+  "district": "Lucknow",
+  "preferred_language": "hi",
+  "registration_source": "web",
+  "consent_given": true,
+  "consent_timestamp": "2026-02-26T10:00:00Z"
+}
+```
+
+### 4.2 JWT Token Structure
+
+```json
+{
+  "sub": "user_uuid_v4",
+  "iat": 1740000000,
+  "exp": 1740003600,
+  "role": "citizen",
+  "region": "UP",
+  "scopes": ["read:schemes", "write:profile"],
+  "token_type": "access"
+}
+```
+
+### 4.3 Auth Event Log (to Raw Data Store)
+
+```json
+{
+  "event_id": "evt_uuid",
+  "user_id": "user_uuid",
+  "event_type": "LOGIN_SUCCESS",
+  "timestamp": "2026-02-26T10:05:00Z",
+  "ip_address": "hashed",
+  "device_fingerprint": "hashed",
+  "region": "UP"
+}
+```
+
+---
+
+## 5. Context Flow
+
+```
+User opens app
+    │
+    ├─► [New User] → Registration Form
+    │       │
+    │       ├─► Validate phone → Send OTP (via SMS Gateway)
+    │       ├─► User enters OTP → Verify against Redis
+    │       ├─► Create user record in PostgreSQL
+    │       ├─► Publish USER_REGISTERED event to Event Bus
+    │       ├─► Forward identity setup to Identity Engine
+    │       └─► Issue JWT tokens → Return to client
+    │
+    └─► [Existing User] → Login Form
+            │
+            ├─► Phone + OTP flow  OR  Email + Password flow
+            ├─► Verify credentials
+            ├─► Publish LOGIN_SUCCESS event to Event Bus
+            ├─► Issue JWT tokens → Return to client
+            └─► Failed? → Log LOGIN_FAILED event, increment rate counter
+```
+
+---
+
+## 6. Event Bus Integration
+
+| Event | Payload | Consumers |
+|---|---|---|
+| `USER_REGISTERED` | `{user_id, phone, state, timestamp}` | Identity Engine, Metadata Engine, Analytics |
+| `LOGIN_SUCCESS` | `{user_id, timestamp, device}` | Raw Data Store, Analytics |
+| `LOGIN_FAILED` | `{phone, reason, timestamp}` | Anomaly Detection, Raw Data Store |
+| `TOKEN_REFRESHED` | `{user_id, timestamp}` | Raw Data Store |
+| `ACCOUNT_LOCKED` | `{user_id, reason, timestamp}` | Identity Engine, Anomaly Detection |
+
+---
+
+## 7. NVIDIA Stack Alignment
+
+| Component | NVIDIA Tool | Usage |
+|---|---|---|
+| OTP Verification | — | Standard crypto, no GPU needed |
+| Captcha / Bot Detection | NVIDIA Morpheus | Anomaly detection on auth patterns |
+| Future: Voice Auth | NVIDIA Riva | Speaker verification for voice login |
+| Future: Face Auth | NVIDIA DeepStream | Liveness detection for eKYC |
+
+---
+
+## 8. Scaling Strategy
+
+| Scale Tier | Users | Strategy |
+|---|---|---|
+| **Tier 1** (MVP) | < 10K | Single instance, SQLite → PostgreSQL |
+| **Tier 2** | 10K – 1M | Horizontal pods, Redis cluster, read replicas |
+| **Tier 3** | 1M – 10M | Multi-region, geo-DNS routing, regional DB shards |
+| **Tier 4** | 10M+ | Edge auth nodes, precomputed OTP pools, CDN-based static auth pages |
+
+### Key Scaling Decisions
+
+- **Redis Cluster** for distributed session/OTP cache
+- **PostgreSQL with Citus** for horizontal user table sharding (shard key: `region`)
+- **Connection pooling** via PgBouncer
+- **Auth service replicas**: min 3, auto-scale on CPU/request latency
+
+---
+
+## 9. Security Considerations
+
+| Concern | Mitigation |
+|---|---|
+| Brute-force attacks | Rate limiting (5 attempts / 15 min), exponential backoff |
+| Token theft | Short-lived access tokens (1hr), HTTPOnly refresh cookies |
+| OTP interception | OTP hash stored in Redis, not in DB; 5-min expiry |
+| Data breach | Passwords bcrypt-hashed (cost=12); PII encrypted at rest |
+| Session hijacking | Device fingerprint binding in JWT |
+| CSRF | SameSite cookies + CSRF token for state-changing requests |
+
+---
+
+## 10. API Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/api/v1/auth/register` | Register new user |
+| `POST` | `/api/v1/auth/login` | Login with credentials |
+| `POST` | `/api/v1/auth/otp/send` | Send OTP to phone |
+| `POST` | `/api/v1/auth/otp/verify` | Verify OTP code |
+| `POST` | `/api/v1/auth/token/refresh` | Refresh access token |
+| `POST` | `/api/v1/auth/logout` | Invalidate session |
+| `GET`  | `/api/v1/auth/me` | Get current user profile |
+| `PUT`  | `/api/v1/auth/profile` | Update user profile |
+
+---
+
+## 11. Dependencies
+
+| Dependency | Direction | Purpose |
+|---|---|---|
+| **Identity Engine** | Downstream | Delegates identity vault creation after registration |
+| **Metadata Engine** | Downstream | Triggers user profile enrichment |
+| **Raw Data Store** | Downstream | Logs all auth events immutably |
+| **Event Bus** | Downstream | Publishes auth lifecycle events |
+| **API Gateway** | Upstream | Receives all auth requests through gateway |
+| **Anomaly Detection** | Downstream | Monitors for suspicious auth patterns |
+
+---
+
+## 12. Technology Stack
+
+| Layer | Technology |
+|---|---|
+| Runtime | Node.js 20 LTS / Python 3.11 (FastAPI) |
+| Auth Protocol | OAuth2 + JWT (RS256) |
+| Password Hashing | bcrypt (cost factor 12) |
+| OTP Cache | Redis 7.x (TTL-based) |
+| User Storage | PostgreSQL 16 |
+| SMS Gateway | MSG91 / Twilio / AWS SNS |
+| Event Bus | Apache Kafka / NATS |
+| Containerization | Docker + Kubernetes |
+| Monitoring | Prometheus + Grafana |
+
+---
+
+## 13. Implementation Phases
+
+| Phase | Milestone | Timeline |
+|---|---|---|
+| **Phase 1** | Phone + OTP registration/login, JWT auth | Week 1-2 |
+| **Phase 2** | Email/password auth, profile management | Week 3 |
+| **Phase 3** | Rate limiting, audit logging, anomaly hooks | Week 4 |
+| **Phase 4** | DigiLocker / Aadhaar integration (sandbox) | Week 6-8 |
+| **Phase 5** | Voice-based auth via Riva | Week 10-12 |
+
+---
+
+## 14. Success Metrics
+
+| Metric | Target |
+|---|---|
+| Registration completion rate | > 85% |
+| Login latency (P95) | < 200ms |
+| OTP delivery success rate | > 98% |
+| Failed login detection accuracy | > 95% |
+| Token refresh success rate | > 99.5% |
+
+---
+
+## 15. Identity & Authentication References (MVP)
+
+| Service | URL | Purpose |
+|---|---|---|
+| **Aadhaar (UIDAI)** | https://uidai.gov.in | Public stats — eKYC requires government approval |
+| **DigiLocker** | https://www.digilocker.gov.in | Pull verified documents post-registration |
+| **DigiLocker Developer API** | https://developer.digilocker.gov.in | OAuth2-based document access API |
+| **UMANG** | https://web.umang.gov.in | Reference for unified service authentication |
+
+> ⚠️ **Important:** Full Aadhaar-based authentication (eKYC) requires UIDAI licensing. MVP phase uses Phone OTP + Email/Password. DigiLocker integration is planned for Phase 4.
