@@ -513,3 +513,34 @@ secrets_management:
 | **API8: Misconfig** | ✅ | Security headers, TLS 1.3, no debug mode in production |
 | **API9: Improper Inventory** | ✅ | Versioned endpoints, deprecated routes return 410 |
 | **API10: Unsafe Consumption** | ✅ | SMS gateway responses validated; timeouts enforced |
+
+---
+
+## ⚙️ Build Phase Instructions (Current Phase Override)
+
+> **These instructions override any conflicting guidance above for the current local build phase.**
+
+### 1. Local-First Architecture
+- Build and run this engine **entirely locally**. Do NOT integrate any AWS cloud services (AWS SNS, AWS Secrets Manager, etc.).
+- Store all secrets in a local `.env` file. Do NOT use AWS Secrets Manager.
+- OTP delivery: Use **console/log-based OTP** (print OTP to stdout/log) instead of SMS gateways (Twilio, MSG91, AWS SNS). Real SMS integration will be added later.
+- All references to cloud infrastructure (VPN, CloudFront, etc.) are deferred to the cloud migration phase.
+
+### 2. Data Storage & Caching (Zero-Redundancy)
+- Before downloading or fetching any external data/files, **always check if the target data already exists locally**.
+- If present locally → skip the download and load directly from the local path.
+- Only download/fetch data if it is **completely missing locally**.
+- Use local filesystem and SQLite/PostgreSQL (local) for all storage needs.
+
+### 3. Deferred Features (Do NOT Implement Yet)
+- **DigiLocker Verification**: Skip entirely. Do not implement `DIGILOCKER_CLIENT_ID`, `DIGILOCKER_CLIENT_SECRET`, or any DigiLocker OAuth2 flows. Phase 4 DigiLocker integration is deferred.
+- **Aadhaar eKYC**: Skip entirely. No UIDAI integration in this phase.
+- **Notifications & Messaging**: Do not build or integrate any SMS, email, push, or WhatsApp notification systems. OTP should be logged to console only.
+- **CAPTCHA**: Use a simple local mock or skip; do not integrate external CAPTCHA services.
+
+### 4. Primary Focus
+Build a robust, locally-functioning authentication engine with:
+- Phone/email + password registration (OTP logged to console)
+- JWT session management (local RSA keys)
+- Rate limiting (in-memory or Redis local)
+- All functionality testable without any external service dependencies

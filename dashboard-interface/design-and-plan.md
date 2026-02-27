@@ -674,3 +674,33 @@ secrets_management:
 | **API8: Misconfig** | CSP headers; HSTS preload; no debug mode in production |
 | **API9: Improper Inventory** | API versioning via BFF; deprecated endpoints return 410 Gone |
 | **API10: Unsafe Consumption** | All downstream responses validated in BFF; timeouts on all service calls |
+
+---
+
+## ⚙️ Build Phase Instructions (Current Phase Override)
+
+> **These instructions override any conflicting guidance above for the current local build phase.**
+
+### 1. Local-First Architecture
+- Build and run this engine **entirely locally**. Do NOT integrate any AWS cloud services.
+- BFF (Backend-for-Frontend) should connect to locally running engine instances.
+- All references to cloud infrastructure are deferred to the cloud migration phase.
+
+### 2. Data Storage & Caching (Zero-Redundancy)
+- Before downloading or fetching any external data/files, **always check if the target data already exists locally**.
+- If present locally → skip the download and load directly from the local path.
+- Only download/fetch data if it is **completely missing locally**.
+- Use local storage (IndexedDB, localStorage) for PWA caching.
+
+### 3. Deferred Features (Do NOT Implement Yet)
+- **DigiLocker Integration**: Skip entirely. Do not build DigiLocker UI links, document viewers, or API integrations to `developer.digilocker.gov.in` or UMANG Portal.
+- **Notifications & Messaging**: Do not build push notification UI, WebSocket real-time alert panels, or notification preference screens. These will be added later.
+- **External Portal Links**: Do not integrate UMANG Portal links or DigiLocker document access.
+
+### 4. Primary Focus
+Build a robust, locally-functioning dashboard interface with:
+- Personalized scheme discovery and eligibility display
+- Deadline calendar views
+- Simulation result displays
+- Profile management UI
+- All functionality testable without any external service or cloud dependencies

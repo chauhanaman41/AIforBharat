@@ -492,3 +492,34 @@ secrets_management:
 | **API8: Misconfig** | TDE enabled; field-level encryption; connection pooler enforces SSL |
 | **API9: Improper Inventory** | Schema migrations versioned; deprecated columns retained for migration period |
 | **API10: Unsafe Consumption** | Input validated before write; RLS prevents cross-user reads |
+
+---
+
+## ⚙️ Build Phase Instructions (Current Phase Override)
+
+> **These instructions override any conflicting guidance above for the current local build phase.**
+
+### 1. Local-First Architecture
+- Build and run this engine **entirely locally**. Do NOT integrate any AWS cloud services (AWS KMS, HashiCorp Vault, etc.).
+- Use local PostgreSQL for sharded user profile storage.
+- Use local encryption (Python `cryptography` library with AES-256-GCM) instead of cloud KMS/HSM for field-level encryption.
+- Store all secrets in a local `.env` file.
+
+### 2. Data Storage & Caching (Zero-Redundancy)
+- Before writing any user metadata, **always check if the record already exists locally**.
+- If present locally → update only changed fields (delta writes).
+- Avoid full-record rewrites when only specific fields have changed.
+
+### 3. Deferred Features (Do NOT Implement Yet)
+- **Notifications & Messaging**: Do not build or integrate any notification systems.
+- **Cloud KMS/HSM**: Use local encryption libraries instead.
+- **Citus sharding**: Use standard PostgreSQL locally; sharding will be configured during cloud migration.
+
+### 4. Primary Focus
+Build a robust, locally-functioning processed user metadata store with:
+- PostgreSQL-based user profile storage (local)
+- Field-level encryption for PII
+- Row-Level Security (RLS)
+- Audit trail for all writes
+- Schema versioning and migrations
+- All functionality testable without any cloud dependencies

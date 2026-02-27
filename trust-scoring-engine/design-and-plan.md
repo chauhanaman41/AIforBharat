@@ -706,3 +706,29 @@ secrets_management:
 | **API8: Misconfig** | Scoring weights in versioned config — not API-modifiable |
 | **API9: Improper Inventory** | Scoring model versions tracked; A/B scoring for model transitions |
 | **API10: Unsafe Consumption** | NIM/Milvus responses validated; fallback scoring on timeout |
+
+---
+
+## ⚙️ Build Phase Instructions (Current Phase Override)
+
+> **These instructions override any conflicting guidance above for the current local build phase.**
+
+### 1. Local-First Architecture
+- Build and run this engine **entirely locally**. Do NOT integrate any AWS cloud services.
+- Store all secrets in a local `.env` file.
+
+### 2. Data Storage & Caching (Zero-Redundancy)
+- Before downloading or fetching any external data, **always check if the target data already exists locally**.
+- If present locally → skip the download and load directly from the local path.
+- Only download/fetch data if it is **completely missing locally**.
+
+### 3. Deferred Features (Do NOT Implement Yet)
+- **Notifications & Messaging**: Do not build trust alert notification delivery. Log `trust.alert.raised` events locally for future notification system consumption.
+
+### 4. Primary Focus
+Build a robust, locally-functioning trust scoring engine with:
+- Multi-signal trust scoring for AI outputs
+- Source provenance verification
+- Confidence scoring and authority weighting
+- Append-only score history
+- All functionality testable without any external service or cloud dependencies

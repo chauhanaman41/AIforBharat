@@ -673,3 +673,40 @@ secrets_management:
 | **API8: Misconfig** | ClickHouse read-only user for analytics; no DDL via API |
 | **API9: Improper Inventory** | Query templates versioned; deprecated metrics flagged |
 | **API10: Unsafe Consumption** | Kafka event payloads validated against schema before insertion |
+
+---
+
+## ⚙️ Build Phase Instructions (Current Phase Override)
+
+> **These instructions override any conflicting guidance above for the current local build phase.**
+
+### 1. Local-First Architecture
+- Build and run this engine **entirely locally**. Do NOT integrate any AWS cloud services.
+- **Replace S3/Glacier with local filesystem** or MinIO (local Docker) for any object storage needs.
+- Use ClickHouse running locally (Docker) for OLAP analytics.
+- Store all secrets in a local `.env` file. Do NOT use AWS Secrets Manager.
+- Apache Iceberg → Use local filesystem-backed Iceberg tables if needed, or defer Iceberg entirely.
+
+### 2. Data Storage & Caching (Zero-Redundancy)
+- Before downloading or fetching any external data/files, **always check if the target data already exists locally**.
+- If present locally → skip the download and load directly from the local path.
+- Only download/fetch data if it is **completely missing locally**.
+- **Local datasets available** (use these instead of API calls):
+  - Finance/economic data: `C:\Users\Amandeep\Downloads\financefiles\` (18 Excel files covering GDP, CPI, WPI, wages, reserves, market indices, etc.)
+  - Census 2011 data: `C:\Users\Amandeep\Downloads\DDW_PCA0000_2011_Indiastatedist.xlsx`
+  - SDG India Index: `C:\Users\Amandeep\Downloads\amandeepsinghchauhan5_17722109276149728.csv`
+  - NFHS-5 district data: `C:\Users\Amandeep\Downloads\NFHS 5 district wise data\NFHS 5 district wise data\ssrn datasheet.xls`
+  - Poverty data: `C:\Users\Amandeep\Downloads\amandeepsinghchauhan5_17722114987588584.csv`
+  - Aspirational Districts: `C:\Users\Amandeep\Downloads\List-of-112-Aspirational-Districts (1).pdf`
+
+### 3. Deferred Features (Do NOT Implement Yet)
+- **Notifications & Messaging**: Do not build or integrate any notification systems.
+- **Cloud storage tiering**: Use local filesystem only.
+
+### 4. Primary Focus
+Build a robust, locally-functioning analytics warehouse with:
+- ClickHouse (local) for OLAP queries
+- Kafka event ingestion for analytics data
+- Pre-built analytics dashboards using local data
+- Heatmap and impact modeling using locally available datasets
+- All functionality testable without any external service or cloud dependencies

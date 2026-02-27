@@ -536,3 +536,37 @@ secrets_management:
 | **API8: Misconfig** | User-Agent identifies bot; robots.txt compliance |
 | **API9: Improper Inventory** | Source configs versioned; deprecated sources cleaned up |
 | **API10: Unsafe Consumption** | All crawled content sanitized with bleach; schema validated |
+
+---
+
+## ⚙️ Build Phase Instructions (Current Phase Override)
+
+> **These instructions override any conflicting guidance above for the current local build phase.**
+
+### 1. Local-First Architecture
+- Build and run this engine **entirely locally**. Do NOT integrate any AWS cloud services.
+- **Replace S3/MinIO cloud** with local filesystem for document archives (e.g., `./data/policy-archive/`).
+- Store all secrets (including `DATA_GOV_API_KEY`) in a local `.env` file. Do NOT use AWS Secrets Manager or HashiCorp Vault.
+- Use the provided **data.gov.in API key**: `579b464db66ec23bdd0000016f17f36372cf48e47f7e5b4ecdb7bb27`
+
+### 2. Data Storage & Caching (Zero-Redundancy)
+- Before crawling or fetching any policy document, **always check if the target data already exists locally**.
+- If present locally → skip the download and load directly from the local path.
+- Only crawl/fetch data if it is **completely missing locally**.
+- Maintain a local manifest/index of all crawled documents with hashes to detect duplicates.
+- **Local datasets available** (check these before crawling):
+  - Finance/economic data: `C:\Users\Amandeep\Downloads\financefiles\` (18 Excel files)
+  - Census 2011 data: `C:\Users\Amandeep\Downloads\DDW_PCA0000_2011_Indiastatedist.xlsx`
+  - Aspirational Districts: `C:\Users\Amandeep\Downloads\List-of-112-Aspirational-Districts (1).pdf`
+
+### 3. Deferred Features (Do NOT Implement Yet)
+- **Notifications & Messaging**: Do not build or integrate any notification systems.
+- **Cloud storage**: Use local filesystem only.
+
+### 4. Primary Focus
+Build a robust, locally-functioning policy fetching engine with:
+- Crawling from government portals (data.gov.in, pib.gov.in, egazette.nic.in, etc.)
+- Change detection (diff-based) for policy updates
+- Local document archival with versioning
+- Rate limiting and robots.txt compliance
+- All functionality testable without any cloud dependencies

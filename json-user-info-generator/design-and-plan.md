@@ -709,3 +709,32 @@ secrets_management:
 | **API8: Misconfig** | Service tokens have minimal scope; admin access logged |
 | **API9: Improper Inventory** | Profile schema versioned; deprecated sections flagged |
 | **API10: Unsafe Consumption** | Upstream engine responses validated against expected schema |
+
+---
+
+## ⚙️ Build Phase Instructions (Current Phase Override)
+
+> **These instructions override any conflicting guidance above for the current local build phase.**
+
+### 1. Local-First Architecture
+- Build and run this engine **entirely locally**. Do NOT integrate any AWS cloud services (KMS, etc.).
+- Use local encryption (Python `cryptography` library) instead of cloud KMS.
+- Store all secrets in a local `.env` file.
+
+### 2. Data Storage & Caching (Zero-Redundancy)
+- Before assembling or fetching any user profile data, **always check if the target data already exists locally**.
+- If present locally → skip re-assembly and load directly from the local cache.
+- Only re-assemble if profile data has **changed** (use JSON Patch delta detection).
+- Cache assembled profiles locally in Redis (local) with appropriate TTL.
+
+### 3. Deferred Features (Do NOT Implement Yet)
+- **Notifications & Messaging**: Do not build or integrate any notification systems.
+- **Cloud KMS**: Use local encryption libraries instead.
+
+### 4. Primary Focus
+Build a robust, locally-functioning JSON user info generator with:
+- Unified profile assembly from internal engine outputs
+- JSON Patch delta computation (RFC 6902)
+- Profile snapshot management
+- Field-level access control
+- All functionality testable without any cloud dependencies

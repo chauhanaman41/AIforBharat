@@ -542,3 +542,40 @@ secrets_management:
 | **API8: Misconfig** | Normalization rules in versioned config — not API-editable |
 | **API9: Improper Inventory** | Schema versions tracked; deprecated fields sunset with migration |
 | **API10: Unsafe Consumption** | External data (Census/NDAP) validated against expected schema |
+
+---
+
+## ⚙️ Build Phase Instructions (Current Phase Override)
+
+> **These instructions override any conflicting guidance above for the current local build phase.**
+
+### 1. Local-First Architecture
+- Build and run this engine **entirely locally**. Do NOT integrate any AWS cloud services (AWS KMS, etc.).
+- Use local encryption libraries instead of cloud KMS for PII field encryption.
+- All references to cloud infrastructure are deferred to the cloud migration phase.
+
+### 2. Data Storage & Caching (Zero-Redundancy)
+- Before downloading or fetching any external data/files, **always check if the target data already exists locally**.
+- If present locally → skip the download and load directly from the local path.
+- Only download/fetch data if it is **completely missing locally**.
+- **Local datasets available** (use these instead of API calls where applicable):
+  - NFHS-5 district-wise data: `C:\Users\Amandeep\Downloads\NFHS 5 district wise data\NFHS 5 district wise data\ssrn datasheet.xls`
+  - Census 2011 PCA data: `C:\Users\Amandeep\Downloads\DDW_PCA0000_2011_Indiastatedist.xlsx`
+  - Census Town-Village Directory: `C:\Users\Amandeep\Downloads\PC11_TV_DIR.xlsx`
+  - SDG India Index: `C:\Users\Amandeep\Downloads\amandeepsinghchauhan5_17722109276149728.csv`
+  - Poverty data: `C:\Users\Amandeep\Downloads\amandeepsinghchauhan5_17722114987588584.csv`
+  - Slum Population data: `C:\Users\Amandeep\Downloads\amandeepsinghchauhan5_17722114968323698.csv`
+  - Aspirational Districts list: `C:\Users\Amandeep\Downloads\List-of-112-Aspirational-Districts (1).pdf`
+- For Census/NDAP API enrichment: use local datasets first; only call APIs if specific data is missing from local files.
+
+### 3. Deferred Features (Do NOT Implement Yet)
+- **DigiLocker Integration**: Skip entirely. Do not use DigiLocker as an input data source. Remove DigiLocker from the source priority chain; use: Form > Voice > API.
+- **Notifications & Messaging**: Do not build or integrate any notification systems.
+- **Cloud KMS**: Use local encryption libraries instead.
+
+### 4. Primary Focus
+Build a robust, locally-functioning metadata engine with:
+- User input normalization and derived attribute computation
+- Multi-source data fusion (registration, voice, forms — excluding DigiLocker)
+- Local dataset loading for Census, NDAP, NFHS-5 indicators
+- All functionality testable without any external service or cloud dependencies

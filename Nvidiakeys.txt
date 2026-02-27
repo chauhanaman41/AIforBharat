@@ -1,0 +1,119 @@
+1.Llama 3.1 70B Instruct:-
+
+from openai import OpenAI
+
+client = OpenAI(
+  base_url = "https://integrate.api.nvidia.com/v1",
+  api_key = "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"
+)
+
+completion = client.chat.completions.create(
+  model="meta/llama-3.1-8b-instruct",
+  messages=[{"role":"user","content":""}],
+  temperature=0.2,
+  top_p=0.7,
+  max_tokens=1024,
+  stream=True
+)
+
+for chunk in completion:
+  if chunk.choices and chunk.choices[0].delta.content is not None:
+    print(chunk.choices[0].delta.content, end="")
+
+2.NVIDIABuild-Autogen-21:-
+
+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
+
+3.NVIDIABuild-Autogen-97:-
+
+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
+
+4.RIVA_API_KEY & NEMO_API_KEY:-
+
+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
+
+5.TRITON_AUTH_TOKEN:-
+
+During project build, automatically generate a secure TRITON_AUTH_TOKEN.
+
+Requirements:
+
+  1. Generate a cryptographically secure random token
+   - Use Python secrets.token_hex(32)
+   - Minimum 64-character hex string
+   - Must be unpredictable
+
+  2. Store the token securely:
+   - If local development → save in .env file
+   - If Docker → inject as environment variable
+   - If production (AWS) → store in AWS Secrets Manager
+
+  3. Do NOT hardcode token in source files.
+  4. Add .env to .gitignore automatically.
+  5. Load token using os.getenv("TRITON_AUTH_TOKEN").
+  6. Implement FastAPI middleware to validate:
+   - Check header: Authorization: Bearer <token>
+   - Reject if invalid (403)
+
+  7. If token does not exist, auto-generate it at startup.
+
+Generate:
+- token generation script
+- .env creation logic
+- FastAPI auth middleware
+- Dockerfile environment handling
+- Logging for failed auth attempts
+
+6. data.gov.in API Key:-
+
+579b464db66ec23bdd0000016f17f36372cf48e47f7e5b4ecdb7bb27
+
+7.deepseek-v3.1 key:-
+
+
+from openai import OpenAI
+
+client = OpenAI(
+  base_url = "https://integrate.api.nvidia.com/v1",
+  api_key = "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"
+)
+
+completion = client.chat.completions.create(
+  model="deepseek-ai/deepseek-v3.1",
+  messages=[{"role":"user","content":""}],
+  temperature=0.2,
+  top_p=0.7,
+  max_tokens=8192,
+  extra_body={"chat_template_kwargs": {"thinking":True}},
+  stream=True
+)
+
+for chunk in completion:
+  if not getattr(chunk, "choices", None):
+    continue
+  reasoning = getattr(chunk.choices[0].delta, "reasoning_content", None)
+  if reasoning:
+    print(reasoning, end="")
+  if chunk.choices and chunk.choices[0].delta.content is not None:
+    print(chunk.choices[0].delta.content, end="")
+  
+
+8.SENTRY_DSN:-
+
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="https://6fd4ca588e57fb4091ecf6cd23f48238@o4510959197290496.ingest.de.sentry.io/4510959207383120",
+    # Add data like request headers and IP for users,
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+)
+
+9.DATADOG_API_KEY:-
+
+Name
+metadata-engine-monitoring
+Key ID
+d05d5e9f-bf18-48b6-8ae4-c6ecde3dd1ff
+
+4c8cf9321fac83d4bdcfc7eaaf8da02a268be6d4

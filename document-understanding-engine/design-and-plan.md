@@ -826,3 +826,36 @@ secrets_management:
 | **API8: Misconfig** | HTML sanitized with bleach; PDF JS disabled; no eval() in parsers |
 | **API9: Improper Inventory** | Parser version tracked per document; old parser versions deprecated |
 | **API10: Unsafe Consumption** | All external document content treated as untrusted; sandboxed parsing |
+
+---
+
+## ⚙️ Build Phase Instructions (Current Phase Override)
+
+> **These instructions override any conflicting guidance above for the current local build phase.**
+
+### 1. Local-First Architecture
+- Build and run this engine **entirely locally**. Do NOT integrate any AWS cloud services.
+- **Replace S3/MinIO cloud** with local filesystem for document storage (e.g., `./data/documents/`).
+- Store all secrets in a local `.env` file.
+- Use NVIDIA NIM locally (via NVIDIA API endpoints with provided keys) for document understanding models.
+
+### 2. Data Storage & Caching (Zero-Redundancy)
+- Before downloading or fetching any documents, **always check if the target document already exists locally**.
+- If present locally → skip the download and load directly from the local path.
+- Only download/fetch documents if they are **completely missing locally**.
+- **Local datasets available** (use these for initial document parsing):
+  - Aspirational Districts PDF: `C:\Users\Amandeep\Downloads\List-of-112-Aspirational-Districts (1).pdf`
+  - Finance Excel files: `C:\Users\Amandeep\Downloads\financefiles\`
+  - NFHS-5 data: `C:\Users\Amandeep\Downloads\NFHS 5 district wise data\`
+
+### 3. Deferred Features (Do NOT Implement Yet)
+- **Notifications & Messaging**: Do not build or integrate any notification systems.
+- **Cloud storage**: Use local filesystem only.
+
+### 4. Primary Focus
+Build a robust, locally-functioning document understanding engine with:
+- PDF, Excel, CSV, HTML document parsing
+- Table extraction and structure recognition
+- Government document layout analysis
+- Text extraction pipelines
+- All functionality testable without any cloud dependencies

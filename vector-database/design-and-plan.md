@@ -508,3 +508,32 @@ secrets_management:
 | **API8: Misconfig** | Milvus behind VPC; no public access; TLS required |
 | **API9: Improper Inventory** | Collection and index versions tracked; migration handled via CI/CD |
 | **API10: Unsafe Consumption** | Embedding outputs validated for NaN/Inf; dimension checks enforced |
+
+---
+
+## ⚙️ Build Phase Instructions (Current Phase Override)
+
+> **These instructions override any conflicting guidance above for the current local build phase.**
+
+### 1. Local-First Architecture
+- Build and run this engine **entirely locally**. Do NOT integrate any AWS cloud services.
+- **Replace S3 backup storage** with local filesystem directory for vector backups (e.g., `./data/vector-backups/`).
+- Run Milvus/Qdrant locally (Docker) for vector storage.
+- Use NVIDIA NV-Embed-QA via NVIDIA API endpoints with provided keys for embedding generation.
+
+### 2. Data Storage & Caching (Zero-Redundancy)
+- Before generating or storing any embeddings, **always check if the target vectors already exist locally**.
+- If present locally → skip re-embedding and load directly from the local Milvus/Qdrant instance.
+- Only generate new embeddings if the source data is **completely missing from the vector store**.
+
+### 3. Deferred Features (Do NOT Implement Yet)
+- **Notifications & Messaging**: Do not build or integrate any notification systems.
+- **Cloud S3 backups**: Use local filesystem backups only.
+
+### 4. Primary Focus
+Build a robust, locally-functioning vector database engine with:
+- Milvus/Qdrant running locally
+- Policy embedding storage and hybrid search
+- Collection management and indexing
+- Local backup and restore
+- All functionality testable without any cloud dependencies

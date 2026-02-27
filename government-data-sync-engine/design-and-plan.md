@@ -676,3 +676,42 @@ secrets_management:
 | **API8: Misconfig** | robots.txt respected; User-Agent identifies the platform |
 | **API9: Improper Inventory** | Source configs versioned; deprecated sources decommissioned with alerts |
 | **API10: Unsafe Consumption** | ALL external content sanitized with bleach; structure validated |
+
+---
+
+## ⚙️ Build Phase Instructions (Current Phase Override)
+
+> **These instructions override any conflicting guidance above for the current local build phase.**
+
+### 1. Local-First Architecture
+- Build and run this engine **entirely locally**. Do NOT integrate any AWS cloud services.
+- **Replace S3/MinIO cloud** with local filesystem for sync data storage (e.g., `./data/gov-sync/`).
+- Store all secrets in a local `.env` file.
+- Use the provided **data.gov.in API key**: `579b464db66ec23bdd0000016f17f36372cf48e47f7e5b4ecdb7bb27`
+
+### 2. Data Storage & Caching (Zero-Redundancy)
+- Before syncing or fetching any government data, **always check if the target data already exists locally**.
+- If present locally → skip the download and load directly from the local path.
+- Only sync/fetch data if it is **completely missing locally**.
+- Maintain a local sync manifest with timestamps and hashes to avoid redundant downloads.
+- **Local datasets available** (load these directly instead of re-fetching):
+  - Finance/economic data: `C:\Users\Amandeep\Downloads\financefiles\` (GDP, CPI, WPI, wages, reserves, MSP, etc.)
+  - Census 2011 PCA: `C:\Users\Amandeep\Downloads\DDW_PCA0000_2011_Indiastatedist.xlsx`
+  - Census Town-Village Directory: `C:\Users\Amandeep\Downloads\PC11_TV_DIR.xlsx`
+  - SDG India Index: `C:\Users\Amandeep\Downloads\amandeepsinghchauhan5_17722109276149728.csv`
+  - Poverty data: `C:\Users\Amandeep\Downloads\amandeepsinghchauhan5_17722114987588584.csv`
+  - Slum Population data: `C:\Users\Amandeep\Downloads\amandeepsinghchauhan5_17722114968323698.csv`
+  - NFHS-5 district data: `C:\Users\Amandeep\Downloads\NFHS 5 district wise data\NFHS 5 district wise data\ssrn datasheet.xls`
+  - Aspirational Districts: `C:\Users\Amandeep\Downloads\List-of-112-Aspirational-Districts (1).pdf`
+
+### 3. Deferred Features (Do NOT Implement Yet)
+- **Notifications & Messaging**: Do not build policy change notification delivery. Log notification events to a local table for future consumption.
+- **Cloud storage**: Use local filesystem only.
+
+### 4. Primary Focus
+Build a robust, locally-functioning government data sync engine with:
+- Incremental sync from government portals (with rate limiting)
+- Local-first data loading from pre-downloaded datasets
+- Change detection and versioning for policy updates
+- Data validation and sanitization
+- All functionality testable without any cloud dependencies

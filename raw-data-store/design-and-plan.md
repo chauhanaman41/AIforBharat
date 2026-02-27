@@ -472,3 +472,39 @@ secrets_management:
 | **API8: Misconfig** | S3 Object Lock enabled; no public bucket access; TLS required |
 | **API9: Improper Inventory** | Event schema versioned; old events queryable but new schema enforced |
 | **API10: Unsafe Consumption** | All ingested events validated against schema; malformed events rejected |
+
+---
+
+## ⚙️ Build Phase Instructions (Current Phase Override)
+
+> **These instructions override any conflicting guidance above for the current local build phase.**
+
+### 1. Local-First Architecture
+- Build and run this engine **entirely locally**. Do NOT integrate any AWS cloud services.
+- **Replace S3 with local filesystem or MinIO (local Docker)**:
+  - S3 Standard → Local filesystem directory (e.g., `./data/raw-store/hot/`)
+  - S3 Infrequent Access → Local filesystem directory (e.g., `./data/raw-store/warm/`)
+  - S3 Glacier → Local filesystem directory (e.g., `./data/raw-store/cold/`)
+  - OR use MinIO running locally in Docker as an S3-compatible local object store.
+- S3 Object Lock (WORM) → Use append-only file permissions or MinIO object locking locally.
+- S3 SSE-KMS → Use local AES-256 encryption via Python `cryptography` library.
+- Store all secrets in a local `.env` file. Do NOT use AWS KMS.
+
+### 2. Data Storage & Caching (Zero-Redundancy)
+- Before writing any data, **always check if the target data/event already exists locally**.
+- If present locally → skip duplicate writes.
+- Only write data if it is **completely missing locally**.
+- Maintain append-only semantics locally using file-append mode.
+
+### 3. Deferred Features (Do NOT Implement Yet)
+- **Notifications & Messaging**: Do not build or integrate any notification systems.
+- **Cloud S3 Tiering**: Use flat local directories instead of S3 lifecycle policies.
+
+### 4. Primary Focus
+Build a robust, locally-functioning raw data store with:
+- Append-only immutable event storage (local filesystem or MinIO)
+- Hash chain verification for tamper detection
+- Event schema validation
+- Parquet file writing for efficient storage
+- Tiered local directories for hot/warm/cold data
+- All functionality testable without any external service or cloud dependencies

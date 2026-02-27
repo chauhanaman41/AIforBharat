@@ -499,3 +499,34 @@ security_headers:
   Cache-Control: "no-store"  # For authenticated responses
   X-Request-Id: "<generated_uuid>"  # Tracing correlation
 ```
+
+---
+
+## ⚙️ Build Phase Instructions (Current Phase Override)
+
+> **These instructions override any conflicting guidance above for the current local build phase.**
+
+### 1. Local-First Architecture
+- Build and run this engine **entirely locally**. Do NOT integrate any AWS cloud services.
+- **Skip**: CloudFront, AWS Shield, AWS WAF, AWS API Gateway, AWS Secrets Manager.
+- Use local FastAPI-based gateway with in-memory or Redis (local) rate limiting.
+- Store all secrets in a local `.env` file.
+- TLS termination: use self-signed certificates for local dev or skip TLS (HTTP-only for localhost).
+
+### 2. Data Storage & Caching (Zero-Redundancy)
+- Before downloading or fetching any external data/files, **always check if the target data already exists locally**.
+- If present locally → skip the download and load directly from the local path.
+- Only download/fetch data if it is **completely missing locally**.
+
+### 3. Deferred Features (Do NOT Implement Yet)
+- **Notifications & Messaging**: Do not build or integrate any notification systems.
+- **Cloud WAF/Shield/CDN**: Use local rate limiting only.
+
+### 4. Primary Focus
+Build a robust, locally-functioning API gateway with:
+- Request routing to local engine instances
+- JWT validation
+- Rate limiting (in-memory/Redis)
+- Circuit breaker patterns
+- WebSocket support for real-time features
+- All functionality testable without any external service or cloud dependencies

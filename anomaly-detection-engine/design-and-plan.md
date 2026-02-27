@@ -475,3 +475,30 @@ secrets_management:
 | **API8: Misconfig** | Detection thresholds in config — not modifiable via API |
 | **API9: Improper Inventory** | Detection model versions tracked; deprecated models archived |
 | **API10: Unsafe Consumption** | NIM/Milvus responses validated; timeout + fallback on failures |
+
+---
+
+## ⚙️ Build Phase Instructions (Current Phase Override)
+
+> **These instructions override any conflicting guidance above for the current local build phase.**
+
+### 1. Local-First Architecture
+- Build and run this engine **entirely locally**. Do NOT integrate any AWS cloud services.
+- Use NVIDIA NIM API endpoints with provided keys for LLM-based anomaly detection.
+- Store all secrets in a local `.env` file.
+
+### 2. Data Storage & Caching (Zero-Redundancy)
+- Before downloading or fetching any external data/models, **always check if they already exist locally**.
+- If present locally → skip the download and load directly from the local path.
+- Only download if **completely missing locally**.
+
+### 3. Deferred Features (Do NOT Implement Yet)
+- **Notifications & Messaging**: Do not build or integrate any notification systems.
+- **NVIDIA Morpheus local deployment**: Use API-based detection for now; local Morpheus pipeline is deferred.
+
+### 4. Primary Focus
+Build a robust, locally-functioning anomaly detection engine with:
+- AI output verification and hallucination detection
+- System anomaly detection (unusual patterns)
+- Threshold-based alerting (logged, not notified)
+- All functionality testable without any cloud dependencies

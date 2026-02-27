@@ -457,3 +457,31 @@ secrets_management:
 | **API8: Misconfig** | Chunking parameters (size, overlap) in config — not API-modifiable |
 | **API9: Improper Inventory** | Chunk versions tracked; superseded chunks marked with lineage |
 | **API10: Unsafe Consumption** | Embedding model outputs validated for dimensionality and NaN checks |
+
+---
+
+## ⚙️ Build Phase Instructions (Current Phase Override)
+
+> **These instructions override any conflicting guidance above for the current local build phase.**
+
+### 1. Local-First Architecture
+- Build and run this engine **entirely locally**. Do NOT integrate any AWS cloud services.
+- Use NVIDIA NIM API endpoints with provided keys for NeMo BERT embedding.
+- Store all secrets in a local `.env` file.
+
+### 2. Data Storage & Caching (Zero-Redundancy)
+- Before chunking or embedding any document, **always check if chunks already exist locally** for that document version.
+- If present locally → skip re-chunking and load directly from the local store.
+- Only chunk/embed data if it is **completely missing locally**.
+- Use document content hashes (MinHash) to detect duplicates before processing.
+
+### 3. Deferred Features (Do NOT Implement Yet)
+- **Notifications & Messaging**: Do not build or integrate any notification systems.
+
+### 4. Primary Focus
+Build a robust, locally-functioning chunks engine with:
+- Semantic chunking of policy documents
+- Metadata tagging per chunk
+- Embedding generation via NVIDIA NIM API
+- Deduplication via MinHash
+- All functionality testable without any cloud dependencies

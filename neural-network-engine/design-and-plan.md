@@ -611,3 +611,38 @@ secrets_management:
 | **LLM08: Excessive Agency** | LLM cannot execute actions; only generates text responses |
 | **LLM09: Overreliance** | Trust scores + anomaly detection on every response; disclaimer on simulations |
 | **LLM10: Model Theft** | Models served via Triton behind VPC; no model download endpoints |
+
+---
+
+## ⚙️ Build Phase Instructions (Current Phase Override)
+
+> **These instructions override any conflicting guidance above for the current local build phase.**
+
+### 1. Local-First Architecture
+- Build and run this engine **entirely locally**. Do NOT integrate any AWS cloud services.
+- Use **NVIDIA NIM API endpoints** (cloud-hosted inference) with the provided API keys:
+  - Llama 3.1 70B/8B Instruct: `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`
+  - NVIDIABuild-Autogen-21: `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`
+  - NVIDIABuild-Autogen-97: `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`
+  - DeepSeek V3.1: `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`
+- Store all API keys in a local `.env` file.
+- TRITON_AUTH_TOKEN: Auto-generate via `secrets.token_hex(32)` at startup; store in `.env`.
+- Base URL for all NVIDIA NIM calls: `https://integrate.api.nvidia.com/v1`
+
+### 2. Data Storage & Caching (Zero-Redundancy)
+- Before downloading any model artifacts or data, **always check if they already exist locally**.
+- If present locally → skip the download and load directly from the local path.
+- Only download if **completely missing locally**.
+- Cache LLM responses locally (Redis or SQLite) with prompt-hash keys to avoid redundant API calls.
+
+### 3. Deferred Features (Do NOT Implement Yet)
+- **Notifications & Messaging**: Do not build or integrate any notification delivery from this engine.
+- **Local GPU inference**: For now, use NVIDIA cloud API endpoints. Local Triton/TensorRT-LLM deployment is deferred.
+
+### 4. Primary Focus
+Build a robust, locally-functioning neural network engine with:
+- RAG pipeline (retrieve from local vector DB + generate via NVIDIA NIM API)
+- Multi-model routing (Llama 3.1 70B for complex, 8B for simple queries)
+- Prompt engineering and safety guardrails
+- Response caching to minimize API calls
+- All functionality testable with NVIDIA NIM API keys provided

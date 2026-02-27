@@ -545,3 +545,36 @@ secrets_management:
 | **API8: Misconfig** | AES-256-GCM encryption, TLS 1.3, no debug endpoints in production |
 | **API9: Improper Inventory** | Versioned identity schemas with migration support |
 | **API10: Unsafe Consumption** | KMS/HSM responses validated; timeout on all external calls |
+
+---
+
+## ⚙️ Build Phase Instructions (Current Phase Override)
+
+> **These instructions override any conflicting guidance above for the current local build phase.**
+
+### 1. Local-First Architecture
+- Build and run this engine **entirely locally**. Do NOT integrate any AWS cloud services (AWS CloudHSM, Azure Dedicated HSM, AWS KMS, etc.).
+- Use **local encryption** (Python `cryptography` library with AES-256-GCM) instead of cloud HSM/KMS.
+- Store encryption keys in a local `.env` file or local key file (not cloud vaults).
+- All references to cloud infrastructure are deferred to the cloud migration phase.
+
+### 2. Data Storage & Caching (Zero-Redundancy)
+- Before downloading or fetching any external data/files, **always check if the target data already exists locally**.
+- If present locally → skip the download and load directly from the local path.
+- Only download/fetch data if it is **completely missing locally**.
+- Use local PostgreSQL for the identity vault.
+
+### 3. Deferred Features (Do NOT Implement Yet)
+- **DigiLocker Verification**: Skip entirely. Do not implement DigiLocker identity linking, OAuth2 flows, or document pulls from `developer.digilocker.gov.in`.
+- **Aadhaar/UIDAI Integration**: Skip entirely. No eKYC or UIDAI API calls.
+- **UMANG Integration**: Skip entirely.
+- **Notifications & Messaging**: Do not build or integrate any notification systems (SMS, email, push, etc.).
+- **Cloud HSM/KMS**: Use local encryption libraries instead.
+
+### 4. Primary Focus
+Build a robust, locally-functioning identity vault with:
+- Tokenized identity storage (local AES-256-GCM encryption)
+- Zero-knowledge proof infrastructure (local computation)
+- Identity CRUD operations
+- Audit trail logging (local)
+- All functionality testable without any external service or cloud dependencies

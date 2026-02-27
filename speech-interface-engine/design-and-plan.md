@@ -704,3 +704,34 @@ secrets_management:
 | **API8: Misconfig** | TLS on WebSocket (WSS only); no plaintext audio transport |
 | **API9: Improper Inventory** | ASR/TTS model versions tracked; deprecated models decommissioned |
 | **API10: Unsafe Consumption** | Riva responses validated; audio output size-limited; transcript sanitized |
+
+---
+
+## ⚙️ Build Phase Instructions (Current Phase Override)
+
+> **These instructions override any conflicting guidance above for the current local build phase.**
+
+### 1. Local-First Architecture
+- Build and run this engine **entirely locally**. Do NOT integrate any AWS cloud services.
+- Use **NVIDIA Riva API** via cloud endpoints with the provided key:
+  - RIVA_API_KEY / NEMO_API_KEY: `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`
+- Store API keys in a local `.env` file.
+
+### 2. Data Storage & Caching (Zero-Redundancy)
+- Before downloading any model files or audio assets, **always check if they already exist locally**.
+- If present locally → skip the download and load directly from the local path.
+- Only download if **completely missing locally**.
+- Cache ASR/TTS results locally to avoid redundant API calls.
+
+### 3. Deferred Features (Do NOT Implement Yet)
+- **Notifications & Messaging**: Do not build notification voice-reading features. The `notification.created` event consumer for reading notifications aloud is deferred.
+- **Voice Biometrics**: Skip voice-based authentication features.
+- **Local GPU Riva deployment**: For now, use Riva cloud API. Local Riva server deployment is deferred.
+
+### 4. Primary Focus
+Build a robust, locally-functioning speech interface engine with:
+- ASR (Automatic Speech Recognition) via Riva API
+- TTS (Text-to-Speech) via Riva API
+- Multi-language support (22 Indian languages)
+- WebSocket-based real-time voice interaction
+- All functionality testable with NVIDIA Riva API key provided

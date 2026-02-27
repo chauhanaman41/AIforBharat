@@ -750,3 +750,37 @@ secrets_management:
 | **API8: Misconfig** | No eval() on simulation parameters; all mutations via switch-case logic |
 | **API9: Improper Inventory** | Scenario templates versioned; deprecated templates flagged |
 | **API10: Unsafe Consumption** | Eligibility/Tax engine responses validated; timeouts enforced |
+
+---
+
+## ⚙️ Build Phase Instructions (Current Phase Override)
+
+> **These instructions override any conflicting guidance above for the current local build phase.**
+
+### 1. Local-First Architecture
+- Build and run this engine **entirely locally**. Do NOT integrate any AWS cloud services.
+- Store all secrets in a local `.env` file.
+- Run RAPIDS/XGBoost locally for simulation computations.
+
+### 2. Data Storage & Caching (Zero-Redundancy)
+- Before downloading or fetching any external data, **always check if the target data already exists locally**.
+- If present locally → skip the download and load directly from the local path.
+- Only download/fetch data if it is **completely missing locally**.
+- **Local datasets available** (use these for tax/scheme simulation models):
+  - Finance/economic data: `C:\Users\Amandeep\Downloads\financefiles\` (GDP, CPI, WPI, monetary policy rates, MSP, etc.)
+  - Census 2011 PCA: `C:\Users\Amandeep\Downloads\DDW_PCA0000_2011_Indiastatedist.xlsx`
+  - SDG India Index: `C:\Users\Amandeep\Downloads\amandeepsinghchauhan5_17722109276149728.csv`
+  - Poverty data: `C:\Users\Amandeep\Downloads\amandeepsinghchauhan5_17722114987588584.csv`
+- For tax data (incometax.gov.in, RBI): check local finance files first; only call APIs if specific data is missing.
+
+### 3. Deferred Features (Do NOT Implement Yet)
+- **Notifications & Messaging**: Do not build or integrate any notification systems.
+- **External market data APIs** (NSE, Alpha Vantage, Yahoo Finance): Skip for now; use local finance data.
+
+### 4. Primary Focus
+Build a robust, locally-functioning simulation engine with:
+- "What if?" tax and scheme impact projections
+- Income change, family status change simulations
+- Multi-year projection models
+- Ephemeral in-memory simulation (no PII persistence)
+- All functionality testable without any external service or cloud dependencies

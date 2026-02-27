@@ -628,3 +628,39 @@ secrets_management:
 | **API8: Misconfig** | Notification keys isolated from API layer; never in responses |
 | **API9: Improper Inventory** | Deadline sources tracked with provenance; synced deadlines versioned |
 | **API10: Unsafe Consumption** | Government deadline data validated against schema before storage |
+
+---
+
+## ⚙️ Build Phase Instructions (Current Phase Override)
+
+> **These instructions override any conflicting guidance above for the current local build phase.**
+
+### 1. Local-First Architecture
+- Build and run this engine **entirely locally**. Do NOT integrate any AWS cloud services (Amazon SES, Firebase Cloud Messaging, etc.).
+- All references to cloud infrastructure are deferred to the cloud migration phase.
+- Use local Celery Beat with Redis (local) for scheduling.
+
+### 2. Data Storage & Caching (Zero-Redundancy)
+- Before downloading or fetching any external data/files, **always check if the target data already exists locally**.
+- If present locally → skip the download and load directly from the local path.
+- Only download/fetch data if it is **completely missing locally**.
+- Cache deadline data locally in PostgreSQL/Redis.
+
+### 3. Deferred Features (Do NOT Implement Yet)
+- **Notifications & Messaging**: Do NOT implement any notification delivery systems. This includes:
+  - SMS notifications (Twilio, MSG91, `SMS_GATEWAY_KEY`)
+  - Email notifications (Amazon SES, SMTP, `EMAIL_SMTP_PASSWORD`)
+  - Push notifications (FCM, `PUSH_NOTIFICATION_KEY`)
+  - WhatsApp notifications (`WHATSAPP_API_KEY`)
+  - In-app toast/bell notifications
+- Instead, **log all notification events to a local notifications table** (store: user_id, message, channel, timestamp, deadline_id). This table will be consumed by notification services when they are built later.
+- Skip `SMS_GATEWAY_KEY`, `PUSH_NOTIFICATION_KEY`, `EMAIL_SMTP_PASSWORD`, `WHATSAPP_API_KEY` — do not configure or use these.
+
+### 4. Primary Focus
+Build a robust, locally-functioning deadline monitoring engine with:
+- Deadline extraction and tracking from policy data
+- Temporal intelligence (recurring vs one-time deadlines)
+- Custom user deadline management
+- Escalating reminder schedule computation (stored, not delivered)
+- Deadline sync from government sources (data.gov.in, etc.)
+- All functionality testable without any external notification or cloud dependencies
