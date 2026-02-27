@@ -482,3 +482,149 @@ async def extract_deadlines_from_text(policy_text: str) -> list[dict]:
 | **Documents** | Aadhaar update, PAN-Aadhaar linking, Passport renewal | uidai.gov.in, incometax.gov.in |
 | **Elections** | Voter registration, polling dates | eci.gov.in |
 | **Financial** | EPF withdrawal, PPF maturity, LIC premium | respective portals |
+
+---
+
+## 14. Security Hardening
+
+### 14.1 Rate Limiting
+
+<!-- SECURITY: Deadline monitoring has notification-triggering endpoints.
+     Rate limits prevent notification spam and calendar abuse.
+     OWASP Reference: API4:2023 Unrestricted Resource Consumption -->
+
+```yaml
+rate_limits:
+  # SECURITY: Get user deadlines — standard read
+  "/api/v1/deadlines":
+    per_user:
+      requests_per_minute: 30
+      burst: 10
+
+  # SECURITY: Snooze/dismiss deadline — state mutation
+  "/api/v1/deadlines/{deadline_id}/snooze":
+    per_user:
+      requests_per_minute: 10
+      burst: 3
+
+  # SECURITY: Custom deadline creation
+  "/api/v1/deadlines/custom":
+    per_user:
+      requests_per_minute: 5
+      burst: 2
+    max_custom_deadlines_per_user: 50  # Prevent storage abuse
+
+  # SECURITY: Notification preferences update
+  "/api/v1/deadlines/preferences":
+    per_user:
+      requests_per_minute: 5
+
+  # SECURITY: Internal deadline sync (from Government Data Sync Engine)
+  internal_endpoints:
+    "/internal/deadlines/sync":
+      per_service:
+        requests_per_minute: 60
+      allowed_callers: ["government-data-sync-engine", "policy-fetching-engine"]
+
+  rate_limit_response:
+    status: 429
+    body:
+      error: "rate_limit_exceeded"
+      message: "Deadline service rate limit reached."
+```
+
+### 14.2 Input Validation & Sanitization
+
+<!-- SECURITY: Custom deadlines accept user-provided dates and descriptions.
+     Validation prevents injection and invalid date exploits.
+     OWASP Reference: API3:2023, API8:2023 -->
+
+```python
+# SECURITY: Custom deadline creation schema
+CUSTOM_DEADLINE_SCHEMA = {
+    "type": "object",
+    "required": ["title", "deadline_date", "category"],
+    "additionalProperties": False,
+    "properties": {
+        "title": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 200,
+            "pattern": "^[\\w\\s\\-.,()]+$"  # Alphanumeric + basic punctuation
+        },
+        "description": {
+            "type": "string",
+            "maxLength": 1000
+        },
+        "deadline_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Must be a future date"
+        },
+        "category": {
+            "type": "string",
+            "enum": ["tax", "scheme", "document", "financial", "election", "custom"]
+        },
+        "reminder_schedule": {
+            "type": "array",
+            "maxItems": 5,
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "days_before": {"type": "integer", "minimum": 0, "maximum": 365},
+                    "channel": {"type": "string", "enum": ["push", "sms", "email", "whatsapp"]}
+                }
+            }
+        }
+    }
+}
+
+# SECURITY: Date validation — prevent past-date and far-future abuse
+def validate_deadline_date(date_str: str) -> bool:
+    from datetime import date, timedelta
+    deadline = date.fromisoformat(date_str)
+    today = date.today()
+    max_future = today + timedelta(days=365 * 5)  # Max 5 years ahead
+    return today < deadline <= max_future
+```
+
+### 14.3 Secure API Key & Secret Management
+
+```yaml
+secrets_management:
+  environment_variables:
+    - DB_PASSWORD               # PostgreSQL (deadline records)
+    - REDIS_PASSWORD            # Reminder scheduling cache
+    - KAFKA_SASL_PASSWORD       # Event bus auth
+    - SMS_GATEWAY_KEY           # Notification SMS (MSG91/Twilio)
+    - PUSH_NOTIFICATION_KEY     # Firebase Cloud Messaging key
+    - EMAIL_SMTP_PASSWORD       # Email notification service
+    - WHATSAPP_API_KEY          # WhatsApp Business API
+
+  rotation_policy:
+    db_credentials: 90_days
+    notification_keys: 180_days
+    service_tokens: 90_days
+
+  # SECURITY: Notification keys are extremely sensitive — can send to any user
+  notification_key_protection:
+    restricted_to_notification_service: true
+    never_exposed_via_api: true
+    usage_logging: true  # Log every notification sent
+```
+
+### 14.4 OWASP Compliance
+
+| OWASP Risk | Mitigation |
+|---|---|
+| **API1: BOLA** | Users can only view/modify their own deadlines; admin for cross-user |
+| **API2: Broken Auth** | JWT validation; notification preferences require re-auth |
+| **API3: Broken Property Auth** | Custom deadline schema with category enum; no arbitrary fields |
+| **API4: Resource Consumption** | Max 50 custom deadlines per user; reminder schedule capped at 5 |
+| **API5: Broken Function Auth** | Internal sync endpoints restricted to service tokens |
+| **API6: Sensitive Flows** | Notification preference changes require re-authentication |
+| **API7: SSRF** | No URL inputs; deadlines sourced from internal sync only |
+| **API8: Misconfig** | Notification keys isolated from API layer; never in responses |
+| **API9: Improper Inventory** | Deadline sources tracked with provenance; synced deadlines versioned |
+| **API10: Unsafe Consumption** | Government deadline data validated against schema before storage |

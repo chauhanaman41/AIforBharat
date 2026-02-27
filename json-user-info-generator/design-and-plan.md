@@ -553,3 +553,159 @@ When multiple sources provide overlapping data:
 - Fields are **excluded by default** and included only if user consent covers the viewer's access level
 - Profile hash enables **tamper detection** without exposing content
 - Snapshots support **right-to-erasure** (DPDP Act compliance) via partition-level deletion
+
+---
+
+## 16. Security Hardening
+
+### 16.1 Rate Limiting
+
+<!-- SECURITY: JSON User Info Generator assembles unified profiles from multiple engines.
+     Rate limits prevent profile enumeration and excessive cross-service calls.
+     OWASP Reference: API4:2023 Unrestricted Resource Consumption -->
+
+```yaml
+rate_limits:
+  # SECURITY: Full profile assembly — triggers calls to 5+ upstream engines
+  "/api/v1/profile/assemble":
+    per_user:
+      requests_per_minute: 10
+      burst: 3
+    per_ip:
+      requests_per_minute: 5
+
+  # SECURITY: Partial profile (specific sections)
+  "/api/v1/profile/section/{section}":
+    per_user:
+      requests_per_minute: 20
+      burst: 5
+
+  # SECURITY: Profile snapshot creation
+  "/api/v1/profile/snapshot":
+    per_user:
+      requests_per_hour: 10
+      burst: 2
+
+  # SECURITY: Profile diff (compare snapshots)
+  "/api/v1/profile/diff":
+    per_user:
+      requests_per_minute: 10
+
+  # SECURITY: Internal profile assembly (called by other engines)
+  internal_endpoints:
+    "/internal/profile/assemble":
+      per_service:
+        requests_per_minute: 200
+      allowed_callers: ["eligibility-rules-engine", "simulation-engine", "neural-network-engine"]
+
+  rate_limit_response:
+    status: 429
+    body:
+      error: "rate_limit_exceeded"
+      message: "Profile assembly rate limit reached."
+```
+
+### 16.2 Input Validation & Sanitization
+
+<!-- SECURITY: Profile assembly involves merging data from multiple engines.
+     Validation ensures no injection via upstream data and access control on sections.
+     OWASP Reference: API1:2023, API3:2023, API8:2023 -->
+
+```python
+# SECURITY: Profile assembly request schema
+PROFILE_ASSEMBLY_SCHEMA = {
+    "type": "object",
+    "required": ["user_id"],
+    "additionalProperties": False,
+    "properties": {
+        "user_id": {
+            "type": "string",
+            "pattern": "^usr_[a-zA-Z0-9]{12,32}$"
+        },
+        "sections": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": ["demographics", "economic", "family", "identity",
+                         "eligibility", "documents", "applications", "trust_scores"]
+            },
+            "maxItems": 8
+        },
+        "access_level": {
+            "type": "string",
+            "enum": ["self", "service", "admin"],
+            "description": "Determines field-level visibility"
+        },
+        "include_snapshot": {"type": "boolean", "default": False}
+    }
+}
+
+# SECURITY: Field-level access control — consent-based visibility
+FIELD_ACCESS_MATRIX = {
+    "self": ["*"],  # User sees all their own data
+    "service": ["demographics.state", "demographics.district", "economic.income_bracket",
+                "family.members_count", "identity.age_bracket", "identity.gender",
+                "identity.category", "eligibility.*"],  # Services see only necessary fields
+    "admin": ["*"],  # Admin with audit trail
+}
+
+# SECURITY: Assembled profile sanitization — strip PII for non-self viewers
+def sanitize_profile_output(profile: dict, access_level: str) -> dict:
+    """Apply field-level access control before returning assembled profile."""
+    if access_level == "self":
+        return profile  # User sees everything
+    allowed = FIELD_ACCESS_MATRIX.get(access_level, [])
+    # Filter profile to only allowed fields
+    return {k: v for k, v in profile.items() if any(
+        k.startswith(a.replace('.*', '')) for a in allowed
+    )}
+
+# SECURITY: Profile hash for tamper detection
+import hashlib
+def compute_profile_hash(profile: dict) -> str:
+    """SHA-256 hash of profile for integrity verification."""
+    import json
+    canonical = json.dumps(profile, sort_keys=True, default=str)
+    return hashlib.sha256(canonical.encode()).hexdigest()
+```
+
+### 16.3 Secure API Key & Secret Management
+
+```yaml
+secrets_management:
+  environment_variables:
+    - DB_PASSWORD               # PostgreSQL (profile snapshots)
+    - REDIS_PASSWORD            # Assembly cache
+    - KAFKA_SASL_PASSWORD       # Event bus auth
+    - IDENTITY_SERVICE_TOKEN    # Identity Engine access
+    - METADATA_SERVICE_TOKEN    # Metadata Engine access
+    - ELIGIBILITY_SERVICE_TOKEN # Eligibility Rules Engine access
+    - ENCRYPTION_KEY            # Profile-level encryption key
+
+  rotation_policy:
+    db_credentials: 90_days
+    service_tokens: 90_days
+    encryption_key: 365_days  # Longer rotation with key versioning
+
+  # SECURITY: Profile data is PII-heavy — encryption mandatory
+  encryption:
+    profiles_encrypted_at_rest: true
+    snapshots_encrypted: true
+    algorithm: AES-256-GCM
+    key_source: KMS
+```
+
+### 16.4 OWASP Compliance
+
+| OWASP Risk | Mitigation |
+|---|---|
+| **API1: BOLA** | Users can only assemble their own profile; service tokens scoped per engine |
+| **API2: Broken Auth** | JWT validation; service-to-service tokens for internal endpoints |
+| **API3: Broken Property Auth** | Field-level access matrix; consent-based visibility |
+| **API4: Resource Consumption** | Assembly rate limited; snapshot creation capped per hour |
+| **API5: Broken Function Auth** | Snapshot deletion requires admin; profile assembly scoped by JWT |
+| **API6: Sensitive Flows** | Profile hash for tamper detection; snapshots support right-to-erasure |
+| **API7: SSRF** | No URL inputs; all data from internal service calls only |
+| **API8: Misconfig** | Service tokens have minimal scope; admin access logged |
+| **API9: Improper Inventory** | Profile schema versioned; deprecated sections flagged |
+| **API10: Unsafe Consumption** | Upstream engine responses validated against expected schema |

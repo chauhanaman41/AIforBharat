@@ -327,3 +327,184 @@ Within each partition, filter by:
 | Embedding throughput | > 500 docs/sec |
 | Index freshness (new policy → searchable) | < 5 minutes |
 | Hybrid search improvement over vector-only | > 10% on precision |
+
+---
+
+## 14. Security Hardening
+
+### 14.1 Rate Limiting
+
+<!-- SECURITY: Vector search powers the RAG pipeline — rate limits prevent
+     embedding generation abuse and search DoS.
+     OWASP Reference: API4:2023 Unrestricted Resource Consumption -->
+
+```yaml
+rate_limits:
+  # SECURITY: Vector search — primary RAG query path
+  "/api/v1/vectors/search":
+    per_user:
+      requests_per_minute: 30
+      burst: 10
+    per_ip:
+      requests_per_minute: 20
+
+  # SECURITY: Hybrid search (vector + keyword)
+  "/api/v1/vectors/hybrid-search":
+    per_user:
+      requests_per_minute: 20
+      burst: 5
+
+  # SECURITY: Vector upsert — internal only (from Chunks Engine)
+  "/api/v1/vectors/upsert":
+    per_service:
+      requests_per_minute: 500
+    allowed_callers: ["chunks-engine", "document-understanding-engine"]
+
+  # SECURITY: Collection management — admin only
+  "/api/v1/vectors/collections":
+    per_user:
+      requests_per_minute: 5
+    require_role: admin
+
+  # SECURITY: Index rebuild — heavy operation
+  "/api/v1/vectors/reindex":
+    per_user:
+      requests_per_hour: 2
+    require_role: admin
+
+  rate_limit_response:
+    status: 429
+    body:
+      error: "rate_limit_exceeded"
+      message: "Vector search rate limit reached."
+```
+
+### 14.2 Input Validation & Sanitization
+
+<!-- SECURITY: Vector search queries accept text that gets embedded.
+     Validation prevents embedding injection and resource abuse.
+     OWASP Reference: API3:2023, API8:2023 -->
+
+```python
+# SECURITY: Vector search schema
+VECTOR_SEARCH_SCHEMA = {
+    "type": "object",
+    "required": ["query"],
+    "additionalProperties": False,
+    "properties": {
+        "query": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 1000,
+            "description": "Natural language search query"
+        },
+        "top_k": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "default": 10
+        },
+        "filters": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "scheme_id": {"type": "string", "pattern": "^sch_[a-zA-Z0-9]+$"},
+                "source_type": {"type": "string", "enum": ["gazette","notification","circular","guideline","faq","amendment"]},
+                "language": {"type": "string", "enum": ["en","hi","bn","te","mr","ta","gu","kn"]},
+                "min_date": {"type": "string", "format": "date"},
+                "max_date": {"type": "string", "format": "date"}
+            }
+        },
+        "similarity_threshold": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0,
+            "default": 0.7
+        }
+    }
+}
+
+# SECURITY: Vector upsert validation — internal only
+VECTOR_UPSERT_SCHEMA = {
+    "type": "object",
+    "required": ["vectors"],
+    "additionalProperties": False,
+    "properties": {
+        "vectors": {
+            "type": "array",
+            "maxItems": 100,  # Batch limit
+            "items": {
+                "type": "object",
+                "required": ["id", "embedding", "metadata"],
+                "additionalProperties": False,
+                "properties": {
+                    "id": {"type": "string", "pattern": "^vec_[a-zA-Z0-9]+$"},
+                    "embedding": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                        "minItems": 768,  # Expected embedding dimension
+                        "maxItems": 1024
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "maxProperties": 20
+                    }
+                }
+            }
+        }
+    }
+}
+
+# SECURITY: Embedding dimension validation
+def validate_embedding(embedding: list, expected_dim: int = 768) -> bool:
+    """Ensure embedding has correct dimensionality and valid values."""
+    if len(embedding) != expected_dim:
+        return False
+    if any(not isinstance(v, (int, float)) for v in embedding):
+        return False
+    # Check for NaN or Inf values
+    import math
+    if any(math.isnan(v) or math.isinf(v) for v in embedding):
+        return False
+    return True
+```
+
+### 14.3 Secure API Key & Secret Management
+
+```yaml
+secrets_management:
+  environment_variables:
+    - MILVUS_ROOT_PASSWORD      # Milvus admin password
+    - MILVUS_API_KEY            # Milvus API authentication
+    - NIM_API_KEY               # NVIDIA NIM for embedding generation
+    - KAFKA_SASL_PASSWORD       # Event bus auth
+    - REDIS_PASSWORD            # Query result cache
+    - S3_ACCESS_KEY_ID          # Vector backup storage
+    - S3_SECRET_ACCESS_KEY      # Vector backup storage
+
+  rotation_policy:
+    milvus_credentials: 90_days
+    nim_api_key: 180_days
+    s3_credentials: 90_days
+
+  # SECURITY: Vector DB contains policy embeddings only — no PII
+  data_policy:
+    no_pii_in_embeddings: true
+    embedding_source_text_not_stored: true  # Only vectors, not original text
+    backup_encryption: AES-256
+```
+
+### 14.4 OWASP Compliance
+
+| OWASP Risk | Mitigation |
+|---|---|
+| **API1: BOLA** | Vector data is public policy — no user ownership; admin-only for mutations |
+| **API2: Broken Auth** | Search requires valid JWT; upsert requires service token; admin for collections |
+| **API3: Broken Property Auth** | `additionalProperties: false`; top_k and filter enums validated |
+| **API4: Resource Consumption** | top_k capped at 50; batch upsert capped at 100; reindex rate-limited |
+| **API5: Broken Function Auth** | Collection management and reindex admin-only |
+| **API6: Sensitive Flows** | No PII in vectors; embeddings are irreversible |
+| **API7: SSRF** | No URL inputs; queries are text strings only |
+| **API8: Misconfig** | Milvus behind VPC; no public access; TLS required |
+| **API9: Improper Inventory** | Collection and index versions tracked; migration handled via CI/CD |
+| **API10: Unsafe Consumption** | Embedding outputs validated for NaN/Inf; dimension checks enforced |

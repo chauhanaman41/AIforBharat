@@ -558,3 +558,151 @@ class TrustClassifier:
 | Provenance chain completeness | 100% of outputs traced |
 | Trust score cache hit ratio | > 70% |
 | Platform average trust score | > 0.7 (high confidence) |
+
+---
+
+## 14. Security Hardening
+
+### 14.1 Rate Limiting
+
+<!-- SECURITY: Trust scoring is called inline on every AI response.
+     External query endpoints need rate limits; internal endpoints need throughput caps.
+     OWASP Reference: API4:2023 Unrestricted Resource Consumption -->
+
+```yaml
+rate_limits:
+  # SECURITY: Trust score query — user-facing
+  "/api/v1/trust/score/{response_id}":
+    per_user:
+      requests_per_minute: 30
+      burst: 10
+    per_ip:
+      requests_per_minute: 20
+
+  # SECURITY: Source authority lookup
+  "/api/v1/trust/sources":
+    per_user:
+      requests_per_minute: 20
+      burst: 5
+
+  # SECURITY: Trust score override — admin only, high sensitivity
+  "/api/v1/trust/override":
+    per_user:
+      requests_per_minute: 5
+      burst: 1
+    require_role: admin
+    require_mfa: true
+
+  # SECURITY: Provenance chain retrieval
+  "/api/v1/trust/provenance/{response_id}":
+    per_user:
+      requests_per_minute: 15
+
+  # SECURITY: Internal inline scoring (called by Neural Network Engine)
+  internal_endpoints:
+    "/internal/trust/compute":
+      per_service:
+        requests_per_second: 200
+      allowed_callers: ["neural-network-engine", "anomaly-detection-engine"]
+
+  rate_limit_response:
+    status: 429
+    body:
+      error: "rate_limit_exceeded"
+      message: "Trust scoring rate limit reached."
+```
+
+### 14.2 Input Validation & Sanitization
+
+<!-- SECURITY: Trust scoring inputs include AI-generated text and source references.
+     Validation prevents score manipulation and provenance poisoning.
+     OWASP Reference: API3:2023, API8:2023 -->
+
+```python
+# SECURITY: Trust score computation request schema
+TRUST_SCORE_REQUEST_SCHEMA = {
+    "type": "object",
+    "required": ["response_id", "response_text", "sources"],
+    "additionalProperties": False,
+    "properties": {
+        "response_id": {
+            "type": "string",
+            "pattern": "^resp_[a-zA-Z0-9]{12,32}$"
+        },
+        "response_text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+        },
+        "sources": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+                "type": "object",
+                "required": ["source_id", "authority_level"],
+                "additionalProperties": False,
+                "properties": {
+                    "source_id": {"type": "string", "pattern": "^src_[a-zA-Z0-9]+$"},
+                    "authority_level": {"type": "string", "enum": ["gazette", "act", "notification", "guideline", "faq", "news", "community"]},
+                    "publication_date": {"type": "string", "format": "date"},
+                    "url": {"type": "string", "format": "uri", "maxLength": 500}
+                }
+            }
+        },
+        "query_context": {
+            "type": "string",
+            "maxLength": 2000
+        }
+    }
+}
+
+# SECURITY: Trust score override schema — admin only
+TRUST_OVERRIDE_SCHEMA = {
+    "type": "object",
+    "required": ["response_id", "override_score", "reason"],
+    "additionalProperties": False,
+    "properties": {
+        "response_id": {"type": "string", "pattern": "^resp_[a-zA-Z0-9]{12,32}$"},
+        "override_score": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "reason": {"type": "string", "minLength": 10, "maxLength": 500}
+    }
+}
+```
+
+### 14.3 Secure API Key & Secret Management
+
+```yaml
+secrets_management:
+  environment_variables:
+    - DB_PASSWORD               # PostgreSQL (trust scores, provenance)
+    - REDIS_PASSWORD            # Trust score cache
+    - KAFKA_SASL_PASSWORD       # Event bus auth
+    - NIM_API_KEY               # NLI model for claim verification
+    - MILVUS_API_KEY            # Vector DB for source matching
+
+  rotation_policy:
+    db_credentials: 90_days
+    nim_api_key: 180_days
+    service_tokens: 90_days
+
+  # SECURITY: Trust score manipulation is a critical threat
+  integrity_controls:
+    scores_are_append_only: true    # Cannot delete/update historical scores
+    override_requires_audit_trail: true
+    provenance_chains_immutable: true
+```
+
+### 14.4 OWASP Compliance
+
+| OWASP Risk | Mitigation |
+|---|---|
+| **API1: BOLA** | Trust scores scoped to user's own responses; admin for cross-user access |
+| **API2: Broken Auth** | JWT validation; override endpoint requires admin + MFA |
+| **API3: Broken Property Auth** | Strict schemas; authority_level enum prevents score inflation |
+| **API4: Resource Consumption** | Inline scoring capped per service; user queries rate-limited |
+| **API5: Broken Function Auth** | Override restricted to admin; auditor role is read-only |
+| **API6: Sensitive Flows** | Score overrides logged immutably; require reason field |
+| **API7: SSRF** | Source URLs validated against government domain allowlist |
+| **API8: Misconfig** | Scoring weights in versioned config — not API-modifiable |
+| **API9: Improper Inventory** | Scoring model versions tracked; A/B scoring for model transitions |
+| **API10: Unsafe Consumption** | NIM/Milvus responses validated; fallback scoring on timeout |

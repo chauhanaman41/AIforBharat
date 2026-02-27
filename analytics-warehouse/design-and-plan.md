@@ -519,3 +519,157 @@ GET /api/v1/analytics/schemes/pm_kisan/adoption?level=district&state=karnataka
 - **Census India** → Geographic base layer for heatmaps
 - **NITI Aayog** → Benchmark indices for impact correlation
 - **World Bank/IMF** → Cross-country comparison for policy effectiveness research
+
+---
+
+## 14. Security Hardening
+
+### 14.1 Rate Limiting
+
+<!-- SECURITY: Analytics queries can be very expensive (ClickHouse full scans).
+     Rate limits prevent query abuse and cost explosion.
+     OWASP Reference: API4:2023 Unrestricted Resource Consumption -->
+
+```yaml
+rate_limits:
+  # SECURITY: Ad-hoc analytics query — potentially expensive
+  "/api/v1/analytics/query":
+    per_user:
+      requests_per_minute: 10
+      burst: 3
+    per_ip:
+      requests_per_minute: 5
+
+  # SECURITY: Pre-built dashboard metrics — cached, cheaper
+  "/api/v1/analytics/dashboards/{dashboard_id}":
+    per_user:
+      requests_per_minute: 30
+      burst: 10
+
+  # SECURITY: Data export — admin only, large payloads
+  "/api/v1/analytics/export":
+    per_user:
+      requests_per_hour: 5
+    require_role: admin
+    max_export_rows: 100000
+
+  # SECURITY: Funnel/cohort analysis — heavy aggregation
+  "/api/v1/analytics/funnel":
+    per_user:
+      requests_per_minute: 5
+      burst: 2
+
+  # SECURITY: Query execution limits
+  query_guards:
+    max_query_duration_seconds: 30   # Kill queries over 30s
+    max_memory_per_query_mb: 512     # Memory cap per query
+    max_rows_scanned: 10000000       # 10M row scan limit
+    max_result_rows: 10000           # Paginate beyond this
+
+  rate_limit_response:
+    status: 429
+    body:
+      error: "rate_limit_exceeded"
+      message: "Analytics query rate limit reached. Please wait before running another query."
+```
+
+### 14.2 Input Validation & Sanitization
+
+<!-- SECURITY: Analytics accepts structured queries — prevent SQL injection,
+     data exfiltration, and resource exhaustion.
+     OWASP Reference: API3:2023, API8:2023 -->
+
+```python
+# SECURITY: Analytics query schema — parameterized queries only
+ANALYTICS_QUERY_SCHEMA = {
+    "type": "object",
+    "required": ["query_type"],
+    "additionalProperties": False,
+    "properties": {
+        "query_type": {
+            "type": "string",
+            "enum": ["funnel", "cohort", "time_series", "distribution", "top_n", "comparison"]
+        },
+        "metrics": {
+            "type": "array",
+            "maxItems": 10,
+            "items": {
+                "type": "string",
+                "enum": ["page_views", "scheme_checks", "eligibility_runs",
+                         "simulations", "voice_sessions", "registrations",
+                         "active_users", "trust_scores", "response_latency"]
+            }
+        },
+        "dimensions": {
+            "type": "array",
+            "maxItems": 5,
+            "items": {
+                "type": "string",
+                "enum": ["state", "district", "category", "scheme_type",
+                         "language", "device_type", "time_bucket"]
+            }
+        },
+        "filters": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "date_from": {"type": "string", "format": "date"},
+                "date_to": {"type": "string", "format": "date"},
+                "state": {"type": "string", "maxLength": 50},
+                "scheme_id": {"type": "string", "pattern": "^sch_[a-zA-Z0-9]+$"}
+            }
+        },
+        "limit": {"type": "integer", "minimum": 1, "maximum": 10000}
+    }
+}
+
+# SECURITY: No raw SQL accepted from users — all queries built server-side
+# from validated parameters using parameterized ClickHouse queries.
+# Raw SQL is ONLY accepted from admin users via internal pgAdmin-equivalent tool.
+RAW_SQL_POLICY = {
+    "user_facing_endpoints": "NEVER accept raw SQL",
+    "admin_tool": "Parameterized queries only; executed as read-only ClickHouse user",
+    "row_level_security": "Analytics data is pre-aggregated; no PII in warehouse"
+}
+```
+
+### 14.3 Secure API Key & Secret Management
+
+```yaml
+secrets_management:
+  environment_variables:
+    - CLICKHOUSE_PASSWORD       # ClickHouse analytics DB
+    - TIMESCALE_PASSWORD        # TimescaleDB time-series
+    - S3_ACCESS_KEY_ID          # Iceberg table storage
+    - S3_SECRET_ACCESS_KEY      # Iceberg table storage
+    - KAFKA_SASL_PASSWORD       # Event bus auth
+    - REDIS_PASSWORD            # Query result cache
+    - GRAFANA_ADMIN_PASSWORD    # Monitoring dashboard
+
+  rotation_policy:
+    db_credentials: 90_days
+    s3_credentials: 90_days
+    grafana_password: 90_days
+
+  # SECURITY: Analytics data is anonymized — no PII
+  data_policy:
+    no_pii_in_warehouse: true
+    user_ids_hashed: true         # SHA-256 hashed user IDs only
+    ip_addresses_anonymized: true # Last octet zeroed
+    retention_days: 365
+```
+
+### 14.4 OWASP Compliance
+
+| OWASP Risk | Mitigation |
+|---|---|
+| **API1: BOLA** | Analytics data is aggregated — no user-level data exposed; admin scoping for exports |
+| **API2: Broken Auth** | JWT validation; export endpoints require admin role |
+| **API3: Broken Property Auth** | Query schema with metric/dimension enums; no arbitrary columns |
+| **API4: Resource Consumption** | Query duration limits, memory caps, row scan limits, result pagination |
+| **API5: Broken Function Auth** | Export/admin queries restricted to admin role |
+| **API6: Sensitive Flows** | No PII in warehouse; user IDs hashed |
+| **API7: SSRF** | No external URL inputs; all data ingested via Kafka |
+| **API8: Misconfig** | ClickHouse read-only user for analytics; no DDL via API |
+| **API9: Improper Inventory** | Query templates versioned; deprecated metrics flagged |
+| **API10: Unsafe Consumption** | Kafka event payloads validated against schema before insertion |

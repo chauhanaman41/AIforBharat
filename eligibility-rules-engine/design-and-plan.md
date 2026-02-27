@@ -770,3 +770,163 @@ data.gov.in (structured) ──┐
 Ministry PDFs (manual)  ────┤──▶ Rule Authoring (YAML) ──▶ Rule Engine
 Gazette amendments       ───┘
 ```
+
+---
+
+## 16. Security Hardening
+
+### 16.1 Rate Limiting
+
+<!-- SECURITY: Eligibility endpoints are computationally expensive (batch evaluation against 1000+ rules).
+     Rate limits prevent DoS via repeated batch evaluations.
+     OWASP Reference: API4:2023 Unrestricted Resource Consumption -->
+
+```yaml
+rate_limits:
+  # SECURITY: Single-scheme eligibility check
+  "/api/v1/eligibility/check":
+    per_user:
+      requests_per_minute: 30
+      burst: 10
+    per_ip:
+      requests_per_minute: 20
+
+  # SECURITY: Batch evaluation (all 1000+ schemes) — expensive operation
+  "/api/v1/eligibility/batch":
+    per_user:
+      requests_per_minute: 5
+      burst: 2
+    per_ip:
+      requests_per_minute: 3
+
+  # SECURITY: Rule admin endpoints — admin-only
+  "/api/v1/rules/admin/*":
+    per_user:
+      requests_per_minute: 10
+    require_role: admin
+    ip_whitelist: ["10.0.0.0/8"]  # Internal network only
+
+  # SECURITY: Explanation generation — LLM-powered, GPU-intensive
+  "/api/v1/eligibility/explain":
+    per_user:
+      requests_per_minute: 15
+      burst: 5
+
+  rate_limit_response:
+    status: 429
+    headers:
+      Retry-After: "<seconds>"
+    body:
+      error: "rate_limit_exceeded"
+      message: "Eligibility evaluation rate limit reached. Please retry shortly."
+```
+
+### 16.2 Input Validation & Sanitization
+
+<!-- SECURITY: User metadata inputs to rule evaluation must be strictly typed.
+     Prevents rule injection, type confusion, and logic bypass.
+     OWASP Reference: API3:2023, API8:2023 -->
+
+```python
+# SECURITY: Eligibility check request — strict schema, no extra fields
+ELIGIBILITY_CHECK_SCHEMA = {
+    "type": "object",
+    "required": ["user_id", "scheme_id"],
+    "additionalProperties": False,
+    "properties": {
+        "user_id": {
+            "type": "string",
+            "format": "uuid"  # Must be valid UUID
+        },
+        "scheme_id": {
+            "type": "string",
+            "pattern": "^sch_[a-zA-Z0-9_]{3,64}$"  # Strict scheme ID format
+        },
+        "language": {
+            "type": "string",
+            "enum": ["en", "hi", "bn", "te", "mr", "ta", "gu", "kn", "ml", "pa", "or", "ur"]
+        },
+        "include_explanation": {
+            "type": "boolean"
+        }
+    }
+}
+
+# SECURITY: Rule definition validation — prevent code injection in YAML rules
+RULE_DEFINITION_VALIDATORS = {
+    "operators": ["eq", "neq", "gt", "gte", "lt", "lte", "in", "not_in",
+                  "contains", "not_contains", "between", "AND", "OR", "NOT"],
+    "field_whitelist": [
+        "demographics.state", "demographics.district", "demographics.urban_rural",
+        "identity.age", "identity.gender", "identity.marital_status",
+        "identity.verified_documents", "identity.social_category",
+        "economic.annual_income", "economic.bpl_status", "economic.land_holding",
+        "economic.employer_type", "economic.ration_card_type",
+        "family.dependents_count", "family.children_count", "family.family_size",
+        "eligibility.active_schemes"
+    ],
+    "max_conditions_per_rule": 50,  # Prevent overly complex rules
+    "max_nesting_depth": 5,          # Prevent deeply nested logic bombs
+    "value_constraints": {
+        "string_max_length": 256,
+        "number_min": -1000000000,
+        "number_max": 1000000000,
+        "array_max_items": 100
+    }
+}
+
+# SECURITY: Sanitize LLM explanation prompts — prevent prompt injection
+def sanitize_explanation_context(user_data: dict, rule_result: dict) -> dict:
+    """Strip any user-controlled content that could be prompt injection."""
+    sanitized = {}
+    for key, value in user_data.items():
+        if isinstance(value, str):
+            # Remove potential prompt injection patterns
+            value = re.sub(r'(ignore|forget|disregard)\s+(previous|above|all)', '', value, flags=re.I)
+            value = value[:256]  # Truncate long strings
+        sanitized[key] = value
+    return sanitized
+```
+
+### 16.3 Secure API Key & Secret Management
+
+<!-- SECURITY: Rule engine accesses user metadata and LLM services — all credentials
+     are environment-sourced.
+     OWASP Reference: API1:2023 -->
+
+```yaml
+secrets_management:
+  environment_variables:
+    - DB_PASSWORD               # PostgreSQL (rule store + evaluation audit)
+    - REDIS_PASSWORD            # Evaluation result cache
+    - KAFKA_SASL_PASSWORD       # Event bus auth
+    - NIM_API_KEY               # NVIDIA NIM for Llama 3.1 explanation generation
+    - TRITON_AUTH_TOKEN         # Triton inference server auth
+    - METADATA_STORE_API_KEY    # Internal service-to-service auth
+
+  rotation_policy:
+    db_credentials: 90_days
+    nim_api_key: 180_days
+    service_tokens: 90_days
+
+  # SECURITY: Never expose rule definitions or user data in error responses
+  error_response_policy:
+    include_rule_details: false  # Don't leak rule logic in errors
+    include_user_data: false     # Don't echo user metadata in errors
+    include_stack_trace: false   # Never in production
+```
+
+### 16.4 OWASP Compliance
+
+| OWASP Risk | Mitigation |
+|---|---|
+| **API1: BOLA** | Users can only query their own eligibility; admin role required for cross-user queries |
+| **API2: Broken Auth** | JWT validation on all endpoints; evaluation audit linked to authenticated user |
+| **API3: Broken Property Auth** | Strict schema with `additionalProperties: false`; field whitelist for rule evaluation |
+| **API4: Resource Consumption** | Batch evaluation capped at 5 req/min; max 50 conditions per rule |
+| **API5: Broken Function Auth** | Rule admin (CRUD) restricted to admin role + internal network |
+| **API6: Sensitive Flows** | Rule changes require version tracking, author attribution, and human review flag |
+| **API7: SSRF** | No user-controlled URLs; LLM prompts sanitized against prompt injection |
+| **API8: Misconfig** | Rule definitions validated against operator/field whitelists; no eval() or exec() |
+| **API9: Improper Inventory** | Rule versioning with effective dates; deprecated rules archived |
+| **API10: Unsafe Consumption** | NIM/Triton responses validated; timeouts enforced on LLM calls |

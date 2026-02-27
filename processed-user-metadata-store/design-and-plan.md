@@ -355,3 +355,140 @@ Metadata Engine publishes METADATA_UPDATED event
 | Replication lag | < 100ms |
 | Eligibility cache hit rate | > 85% |
 | Encryption/decryption overhead | < 5ms per field |
+
+---
+
+## 15. Security Hardening
+
+### 15.1 Rate Limiting
+
+<!-- SECURITY: Processed metadata store holds decrypted PII — access
+     must be rate-limited to prevent data exfiltration.
+     OWASP Reference: API4:2023 Unrestricted Resource Consumption -->
+
+```yaml
+rate_limits:
+  # SECURITY: User metadata read — frequent but controlled
+  "/api/v1/metadata/{user_id}":
+    per_user:
+      requests_per_minute: 30
+      burst: 10
+    per_ip:
+      requests_per_minute: 15
+
+  # SECURITY: Metadata write/update — PII mutation
+  "/api/v1/metadata/{user_id}/update":
+    per_user:
+      requests_per_minute: 10
+      burst: 3
+    require_auth: true
+
+  # SECURITY: Bulk metadata export — admin only
+  "/api/v1/metadata/export":
+    per_user:
+      requests_per_hour: 3
+    require_role: admin
+    require_mfa: true
+
+  # SECURITY: Data deletion (DPDP Act compliance)
+  "/api/v1/metadata/{user_id}/delete":
+    per_user:
+      requests_per_day: 1
+    require_mfa: true
+
+  # SECURITY: Internal endpoints (called by Metadata Engine, JSON User Info Generator)
+  internal_endpoints:
+    "/internal/metadata/read":
+      per_service:
+        requests_per_minute: 500
+      allowed_callers: ["metadata-engine", "json-user-info-generator", "eligibility-rules-engine"]
+
+  rate_limit_response:
+    status: 429
+    body:
+      error: "rate_limit_exceeded"
+      message: "Metadata access rate limit reached."
+```
+
+### 15.2 Input Validation & Sanitization
+
+<!-- SECURITY: All writes to the processed metadata store must be
+     validated against strict schemas. This is the canonical PII store.
+     OWASP Reference: API3:2023, API8:2023 -->
+
+```python
+# SECURITY: Metadata update schema — strict field-level control
+METADATA_UPDATE_SCHEMA = {
+    "type": "object",
+    "required": ["fields"],
+    "additionalProperties": False,
+    "properties": {
+        "fields": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "state": {"type": "string", "maxLength": 50},
+                "district": {"type": "string", "maxLength": 100},
+                "pincode": {"type": "string", "pattern": "^[1-9][0-9]{5}$"},
+                "annual_income": {"type": "number", "minimum": 0, "maximum": 100000000},
+                "income_source": {"type": "string", "enum": ["salary","business","agriculture","pension","other"]},
+                "bpl_status": {"type": "boolean"},
+                "dependents_count": {"type": "integer", "minimum": 0, "maximum": 50},
+                "marital_status": {"type": "string", "enum": ["single","married","widowed","divorced"]},
+                "disability_status": {"type": "boolean"}
+            }
+        },
+        "reason": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Audit trail reason for update"
+        }
+    }
+}
+
+# SECURITY: Row-Level Security (RLS) enforcement
+# Users can ONLY read/write their own metadata row.
+# RLS policy: WHERE user_id = current_setting('app.current_user_id')
+# Admin bypass requires separate DB role with audit logging.
+```
+
+### 15.3 Secure API Key & Secret Management
+
+```yaml
+secrets_management:
+  environment_variables:
+    - DB_PASSWORD               # PostgreSQL master password
+    - DB_ENCRYPTION_KEY         # AES-256-GCM for field-level encryption
+    - TDE_MASTER_KEY            # Transparent Data Encryption key
+    - REDIS_PASSWORD            # Eligibility cache
+    - KAFKA_SASL_PASSWORD       # Event bus auth
+    - KMS_ENDPOINT              # AWS KMS / HashiCorp Vault
+    - KMS_ACCESS_KEY            # KMS authentication
+
+  rotation_policy:
+    db_credentials: 90_days
+    encryption_keys: 365_days  # With key versioning for re-encryption
+    kms_access_key: 90_days
+
+  # SECURITY: Encryption key management
+  key_management:
+    algorithm: AES-256-GCM
+    key_wrapping: KMS
+    key_versions_retained: 3     # Support decryption of older data during rotation
+    audit_every_decryption: true # Log every field decryption event
+```
+
+### 15.4 OWASP Compliance
+
+| OWASP Risk | Mitigation |
+|---|---|
+| **API1: BOLA** | Row-Level Security (RLS) in PostgreSQL; user_id check in every query |
+| **API2: Broken Auth** | JWT validation; MFA for export/delete; separate admin DB role |
+| **API3: Broken Property Auth** | Field-level schema; `additionalProperties: false`; no arbitrary columns |
+| **API4: Resource Consumption** | Read/write rate limits; export capped at 3/hour |
+| **API5: Broken Function Auth** | Export/delete require admin + MFA; internal endpoints service-token scoped |
+| **API6: Sensitive Flows** | Every write creates audit record; deletion is soft-delete with 30-day retention |
+| **API7: SSRF** | No URL inputs; data layer only |
+| **API8: Misconfig** | TDE enabled; field-level encryption; connection pooler enforces SSL |
+| **API9: Improper Inventory** | Schema migrations versioned; deprecated columns retained for migration period |
+| **API10: Unsafe Consumption** | Input validated before write; RLS prevents cross-user reads |

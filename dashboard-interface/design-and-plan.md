@@ -517,3 +517,160 @@ class VoiceDashboardController {
 | **UMANG Portal** | https://www.umang.gov.in | Reference structure for public service tracking |
 | **DigiLocker** | https://www.digilocker.gov.in | Document verification APIs (requires registration) |
 | **DigiLocker Developer API** | https://developer.digilocker.gov.in | API documentation for integration |
+
+---
+
+## 16. Security Hardening
+
+### 16.1 Rate Limiting
+
+<!-- SECURITY: Dashboard is the primary user-facing surface.
+     Rate limits protect the BFF (Backend-for-Frontend) and prevent scraping.
+     OWASP Reference: API4:2023 Unrestricted Resource Consumption -->
+
+```yaml
+rate_limits:
+  # SECURITY: Dashboard BFF — aggregates multiple service calls
+  "/api/bff/dashboard":
+    per_user:
+      requests_per_minute: 30
+      burst: 10
+    per_ip:
+      requests_per_minute: 20
+
+  # SECURITY: Scheme search — can trigger vector search + AI query
+  "/api/bff/search":
+    per_user:
+      requests_per_minute: 15
+      burst: 5
+    per_ip:
+      requests_per_minute: 10
+
+  # SECURITY: Application tracking — frequent polling
+  "/api/bff/applications":
+    per_user:
+      requests_per_minute: 20
+      burst: 8
+
+  # SECURITY: Simulation from dashboard — redirects to simulation engine
+  "/api/bff/simulate":
+    per_user:
+      requests_per_minute: 10
+      burst: 3
+
+  # SECURITY: Profile update — sensitive PII mutation
+  "/api/bff/profile":
+    per_user:
+      requests_per_minute: 5
+      burst: 2
+
+  rate_limit_response:
+    status: 429
+    body:
+      error: "rate_limit_exceeded"
+      message: "Too many requests. Please wait a moment before trying again."
+    headers:
+      Retry-After: "<seconds>"
+```
+
+### 16.2 Input Validation & Sanitization
+
+<!-- SECURITY: Frontend inputs are the primary attack surface.
+     All inputs validated on both client and BFF server.
+     OWASP Reference: API3:2023, API8:2023 -->
+
+```python
+# SECURITY: Search query validation
+SEARCH_QUERY_SCHEMA = {
+    "type": "object",
+    "required": ["query"],
+    "additionalProperties": False,
+    "properties": {
+        "query": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 500
+        },
+        "filters": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "category": {"type": "string", "enum": ["all","education","health","agriculture","housing","employment","social_welfare","financial"]},
+                "state": {"type": "string", "maxLength": 50},
+                "eligibility_status": {"type": "string", "enum": ["all","eligible","maybe_eligible","not_eligible"]}
+            }
+        },
+        "page": {"type": "integer", "minimum": 1, "maximum": 100},
+        "limit": {"type": "integer", "minimum": 1, "maximum": 50}
+    }
+}
+
+# SECURITY: Client-side security headers (Next.js middleware)
+SECURITY_HEADERS = {
+    "Content-Security-Policy": (
+        "default-src 'self'; "
+        "script-src 'self' 'nonce-{NONCE}'; "  # CSP nonce for inline scripts
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data: https:; "
+        "connect-src 'self' wss://*.aiforBharat.in; "  # WebSocket for voice
+        "frame-ancestors 'none'; "  # Prevent clickjacking
+        "form-action 'self'; "
+    ),
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "X-XSS-Protection": "0",  # Disabled — CSP is the modern replacement
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "camera=(), microphone=(self), geolocation=()",
+    "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
+}
+
+# SECURITY: React/Next.js XSS prevention
+FRONTEND_RULES = [
+    "Never use dangerouslySetInnerHTML",
+    "All user content rendered via React text nodes (auto-escaped)",
+    "URL parameters validated before use in API calls",
+    "No eval(), Function(), or innerHTML in client code",
+    "Third-party scripts loaded only via CSP-approved sources",
+    "CSRF token sent as X-CSRF-Token header on all state-changing requests",
+]
+```
+
+### 16.3 Secure API Key & Secret Management
+
+```yaml
+secrets_management:
+  server_side_only:  # BFF environment variables — NEVER exposed to browser
+    - BFF_API_SECRET             # BFF ↔ microservice auth
+    - SESSION_SECRET             # Express/Next.js session signing
+    - CSRF_SECRET                # CSRF token generation
+    - REDIS_PASSWORD             # Session store
+
+  # SECURITY: Client-side key exposure prevention
+  client_side_rules:
+    - "No API keys in NEXT_PUBLIC_* environment variables"
+    - "No secrets in JavaScript bundles — verify with 'grep -r API_KEY .next/'"
+    - "No secrets in HTML source or meta tags"
+    - "All API calls routed through BFF — never direct from browser to microservices"
+    - "JWT stored in httpOnly cookie (NOT localStorage or sessionStorage)"
+    - "Refresh tokens in httpOnly + Secure + SameSite=Strict cookie"
+
+  rotation_policy:
+    session_secret: 90_days
+    csrf_secret: 90_days
+    bff_api_secret: 90_days
+```
+
+### 16.4 OWASP Compliance
+
+| OWASP Risk | Mitigation |
+|---|---|
+| **API1: BOLA** | BFF enforces ownership checks; users can only view their own data |
+| **API2: Broken Auth** | JWT in httpOnly cookie; CSRF tokens on mutations; session timeout |
+| **API3: Broken Property Auth** | All schemas use `additionalProperties: false`; reject unexpected fields |
+| **API4: Resource Consumption** | BFF rate limiting; pagination enforced; max query length |
+| **API5: Broken Function Auth** | Admin dashboard behind role check + VPN; feature flags per role |
+| **API6: Sensitive Flows** | Profile updates require re-authentication; OTP for PII changes |
+| **API7: SSRF** | BFF only calls whitelisted internal services; no user-supplied URLs |
+| **API8: Misconfig** | CSP headers; HSTS preload; no debug mode in production |
+| **API9: Improper Inventory** | API versioning via BFF; deprecated endpoints return 410 Gone |
+| **API10: Unsafe Consumption** | All downstream responses validated in BFF; timeouts on all service calls |

@@ -525,3 +525,154 @@ async def classify_amendment(
 | **P1 — High** | data.gov.in | Every 6 hours |
 | **P2 — Medium** | Union Budget Portal | Daily (budget season: hourly) |
 | **P3 — Low** | MyGov | Daily |
+
+---
+
+## 14. Security Hardening
+
+### 14.1 Rate Limiting
+
+<!-- SECURITY: Government data sync is primarily a backend engine —
+     rate limits protect external government APIs from over-polling
+     and prevent admin endpoints from abuse.
+     OWASP Reference: API4:2023 Unrestricted Resource Consumption -->
+
+```yaml
+rate_limits:
+  # SECURITY: Manual sync trigger — admin only
+  "/api/v1/sync/trigger":
+    per_user:
+      requests_per_hour: 10
+      burst: 2
+    require_role: admin
+
+  # SECURITY: Sync status check
+  "/api/v1/sync/status":
+    per_user:
+      requests_per_minute: 20
+    require_role: [admin, auditor]
+
+  # SECURITY: Change log retrieval
+  "/api/v1/sync/changelog":
+    per_user:
+      requests_per_minute: 15
+    require_role: [admin, auditor]
+
+  # SECURITY: External API rate limiting — respect government API quotas
+  external_api_limits:
+    "egazette.gov.in":
+      requests_per_minute: 10
+      respect_429: true
+      backoff_strategy: exponential
+    "data.gov.in":
+      requests_per_minute: 30   # data.gov.in has higher quota
+      daily_limit: 10000
+    "indiacode.nic.in":
+      requests_per_minute: 5
+      backoff_strategy: exponential
+    default:
+      requests_per_minute: 5
+      respect_robots_txt: true
+
+  rate_limit_response:
+    status: 429
+    body:
+      error: "rate_limit_exceeded"
+      message: "Sync service rate limit reached."
+```
+
+### 14.2 Input Validation & Sanitization
+
+<!-- SECURITY: Government data sync ingests external content — critical to
+     validate and sanitize before storing or forwarding downstream.
+     OWASP Reference: API3:2023, API8:2023, API10:2023 -->
+
+```python
+# SECURITY: Sync trigger request schema
+SYNC_TRIGGER_SCHEMA = {
+    "type": "object",
+    "required": ["source"],
+    "additionalProperties": False,
+    "properties": {
+        "source": {
+            "type": "string",
+            "enum": ["egazette", "india_code", "pib", "data_gov", "budget_portal", "mygov"]
+        },
+        "force_full_sync": {"type": "boolean", "default": False},
+        "date_range": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "from": {"type": "string", "format": "date"},
+                "to": {"type": "string", "format": "date"}
+            }
+        }
+    }
+}
+
+# SECURITY: External content sanitization — treat all government data as untrusted
+def sanitize_external_content(content: str, source: str) -> str:
+    """Sanitize content fetched from government portals before storage."""
+    import bleach
+    # Strip all HTML tags except safe structural elements
+    clean = bleach.clean(content, tags=['p','br','table','tr','td','th','ul','ol','li','h1','h2','h3','h4','strong','em'], strip=True)
+    # Remove any embedded scripts or event handlers that survived
+    clean = re.sub(r'on\w+\s*=', '', clean, flags=re.I)
+    # Remove potential SQL injection patterns
+    clean = re.sub(r"(--|;|union\s+select|drop\s+table)", "", clean, flags=re.I)
+    # Limit content size
+    clean = clean[:1000000]  # 1MB max per document
+    return clean
+
+# SECURITY: Validate government API response structure
+def validate_api_response(response_data: dict, source: str) -> bool:
+    """Validate that government API responses match expected schema."""
+    expected_fields = {
+        "egazette": ["title", "date", "content", "gazette_type"],
+        "data_gov": ["records", "total", "fields"],
+        "pib": ["title", "body", "ministry", "date"],
+    }
+    if source in expected_fields:
+        return all(field in response_data for field in expected_fields[source])
+    return True  # Unknown sources pass through but are flagged
+```
+
+### 14.3 Secure API Key & Secret Management
+
+```yaml
+secrets_management:
+  environment_variables:
+    - DB_PASSWORD               # PostgreSQL (sync state, changelog)
+    - KAFKA_SASL_PASSWORD       # Event bus auth
+    - DATA_GOV_API_KEY          # data.gov.in API key
+    - REDIS_PASSWORD            # Deduplication & rate limit state
+    - S3_ACCESS_KEY_ID          # Raw document archive
+    - S3_SECRET_ACCESS_KEY      # Raw document archive
+
+  rotation_policy:
+    db_credentials: 90_days
+    data_gov_api_key: 180_days
+    s3_credentials: 90_days
+
+  # SECURITY: Government API keys — critical integration credentials
+  government_api_key_rules:
+    - "Never log API keys in sync output"
+    - "API keys injected via environment variable only"
+    - "Rate limits enforced locally before hitting government APIs"
+    - "Failed auth logged and alerted immediately"
+```
+
+### 14.4 OWASP Compliance
+
+| OWASP Risk | Mitigation |
+|---|---|
+| **API1: BOLA** | Sync data is system-level — no user ownership; admin-only access |
+| **API2: Broken Auth** | Admin endpoints require JWT + admin role |
+| **API3: Broken Property Auth** | Source enum whitelist; no arbitrary URL inputs |
+| **API4: Resource Consumption** | External API rate limits respected; local throttling enforced |
+| **API5: Broken Function Auth** | All sync endpoints admin-only; auditor role is read-only |
+| **API6: Sensitive Flows** | Full sync requires explicit admin trigger; no auto-full-sync |
+| **API7: SSRF** | Only fetches from hardcoded government domain allowlist |
+| **API8: Misconfig** | robots.txt respected; User-Agent identifies the platform |
+| **API9: Improper Inventory** | Source configs versioned; deprecated sources decommissioned with alerts |
+| **API10: Unsafe Consumption** | ALL external content sanitized with bleach; structure validated |

@@ -334,3 +334,144 @@ Separately (batch / streaming):
 | Citation validity accuracy | > 98% |
 | Policy freshness check accuracy | 100% |
 | Batch audit coverage | 100% of responses audited within 24h |
+
+---
+
+## 14. Security Hardening
+
+### 14.1 Rate Limiting
+
+<!-- SECURITY: Anomaly detection runs on every AI response (inline + batch).
+     Rate limits prevent abuse of manual verification endpoints.
+     OWASP Reference: API4:2023 Unrestricted Resource Consumption -->
+
+```yaml
+rate_limits:
+  # SECURITY: Manual verification trigger — admin only
+  "/api/v1/anomaly/verify":
+    per_user:
+      requests_per_minute: 20
+      burst: 5
+    require_role: admin
+
+  # SECURITY: Anomaly report retrieval
+  "/api/v1/anomaly/reports":
+    per_user:
+      requests_per_minute: 30
+    require_role: [admin, auditor]
+
+  # SECURITY: Trust score override — extremely sensitive
+  "/api/v1/anomaly/override":
+    per_user:
+      requests_per_minute: 5
+      burst: 1
+    require_role: admin
+    require_mfa: true
+
+  # SECURITY: Inline verification (internal, called by Neural Network Engine)
+  internal_endpoints:
+    "/internal/verify-response":
+      per_service:
+        requests_per_second: 100  # High throughput for inline processing
+      allowed_callers: ["neural-network-engine", "trust-scoring-engine"]
+
+  rate_limit_response:
+    status: 429
+    body:
+      error: "rate_limit_exceeded"
+      message: "Anomaly detection rate limit reached."
+```
+
+### 14.2 Input Validation & Sanitization
+
+<!-- SECURITY: Anomaly detection processes AI-generated text — must validate
+     to prevent poisoned input that could bypass detection.
+     OWASP Reference: API3:2023, API8:2023 -->
+
+```python
+# SECURITY: Verification request schema
+VERIFICATION_REQUEST_SCHEMA = {
+    "type": "object",
+    "required": ["response_id", "response_text"],
+    "additionalProperties": False,
+    "properties": {
+        "response_id": {
+            "type": "string",
+            "pattern": "^resp_[a-zA-Z0-9]{12,32}$"
+        },
+        "response_text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+        },
+        "cited_sources": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+                "type": "object",
+                "required": ["source_id", "url"],
+                "additionalProperties": False,
+                "properties": {
+                    "source_id": {"type": "string", "maxLength": 64},
+                    "url": {"type": "string", "format": "uri", "maxLength": 500},
+                    "excerpt": {"type": "string", "maxLength": 2000}
+                }
+            }
+        },
+        "query_context": {
+            "type": "string",
+            "maxLength": 2000
+        }
+    }
+}
+
+# SECURITY: Trust score override schema — extremely restricted
+OVERRIDE_SCHEMA = {
+    "type": "object",
+    "required": ["response_id", "action", "reason"],
+    "additionalProperties": False,
+    "properties": {
+        "response_id": {"type": "string", "pattern": "^resp_[a-zA-Z0-9]{12,32}$"},
+        "action": {"type": "string", "enum": ["approve", "reject", "flag_for_review"]},
+        "reason": {"type": "string", "minLength": 10, "maxLength": 500}
+    }
+}
+```
+
+### 14.3 Secure API Key & Secret Management
+
+```yaml
+secrets_management:
+  environment_variables:
+    - DB_PASSWORD               # PostgreSQL (anomaly logs, audit trail)
+    - REDIS_PASSWORD            # Detection result cache
+    - KAFKA_SASL_PASSWORD       # Event bus auth
+    - NIM_API_KEY               # NVIDIA NIM for NLI-based verification
+    - MILVUS_API_KEY            # Vector DB for source cross-reference
+
+  rotation_policy:
+    db_credentials: 90_days
+    nim_api_key: 180_days
+    service_tokens: 90_days
+
+  # SECURITY: Audit trail is immutable — append-only
+  audit_requirements:
+    all_overrides_logged: true
+    override_logs_immutable: true
+    admin_actions_dual_logged: true  # Logged in anomaly DB + analytics warehouse
+```
+
+### 14.4 OWASP Compliance
+
+| OWASP Risk | Mitigation |
+|---|---|
+| **API1: BOLA** | Anomaly reports scoped by role; users cannot access other users' anomaly flags |
+| **API2: Broken Auth** | Admin/auditor endpoints require role + MFA for overrides |
+| **API3: Broken Property Auth** | Strict schemas with `additionalProperties: false` on all inputs |
+| **API4: Resource Consumption** | Internal endpoints rate-limited per service; batch processing capped |
+| **API5: Broken Function Auth** | Override requires admin role + MFA; auditor role is read-only |
+| **API6: Sensitive Flows** | Trust score overrides logged immutably; dual-approval planned |
+| **API7: SSRF** | Source URL validation against allowlisted government domains |
+| **API8: Misconfig** | Detection thresholds in config — not modifiable via API |
+| **API9: Improper Inventory** | Detection model versions tracked; deprecated models archived |
+| **API10: Unsafe Consumption** | NIM/Milvus responses validated; timeout + fallback on failures |

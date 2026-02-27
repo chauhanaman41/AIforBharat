@@ -684,3 +684,145 @@ class GazetteParser:
 | **Model Containers** | NVIDIA NGC | https://catalog.ngc.nvidia.com | Pre-built NeMo, Triton containers |
 | **Inference Serving** | Triton Inference Server | https://developer.nvidia.com/triton-inference-server | Serve NER, classifier, layout models |
 | **LLM Interpretation** | NVIDIA NIM | https://build.nvidia.com | Llama 3.1 8B for amendment interpretation |
+
+---
+
+## 16. Security Hardening
+
+### 16.1 Rate Limiting
+
+<!-- SECURITY: Document processing endpoints accept file uploads — rate limits
+     prevent storage abuse and CPU/GPU exhaustion from parsing.
+     OWASP Reference: API4:2023 Unrestricted Resource Consumption -->
+
+```yaml
+rate_limits:
+  # SECURITY: Document submission — resource-intensive parsing
+  "/api/v1/documents/process":
+    per_user:
+      requests_per_minute: 5
+      requests_per_hour: 50
+      burst: 2
+    per_ip:
+      requests_per_minute: 3
+    max_concurrent_per_user: 2  # At most 2 documents processing simultaneously
+
+  # SECURITY: Document retrieval — lighter but still needs limits
+  "/api/v1/documents/{doc_id}":
+    per_user:
+      requests_per_minute: 30
+      burst: 10
+
+  # SECURITY: Amendment detection — compute-heavy diff operations
+  "/api/v1/documents/amendments":
+    per_user:
+      requests_per_minute: 10
+      burst: 3
+
+  # SECURITY: Batch processing — admin only
+  "/api/v1/documents/batch":
+    per_user:
+      requests_per_hour: 5
+    require_role: admin
+
+  rate_limit_response:
+    status: 429
+    headers:
+      Retry-After: "<seconds>"
+    body:
+      error: "rate_limit_exceeded"
+      message: "Document processing rate limit reached. Please retry later."
+```
+
+### 16.2 Input Validation & Sanitization
+
+<!-- SECURITY: Uploaded documents are a primary attack vector (malicious PDFs, XXE, zip bombs).
+     All files are validated before processing.
+     OWASP Reference: API3:2023, API8:2023 -->
+
+```python
+# SECURITY: File upload validation — defense-in-depth
+DOCUMENT_UPLOAD_VALIDATION = {
+    "allowed_mime_types": [
+        "application/pdf",
+        "text/html",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "text/plain",
+        "application/json"
+    ],
+    "max_file_size_mb": 50,
+    "max_pages": 500,
+    "max_filename_length": 255,
+    "filename_pattern": r"^[a-zA-Z0-9_\-\. ]+\.(pdf|html|docx|txt|json)$",
+
+    # SECURITY: Magic byte validation — don't trust file extensions alone
+    "verify_magic_bytes": True,
+
+    # SECURITY: Antivirus scan on upload (ClamAV integration)
+    "antivirus_scan": True,
+
+    # SECURITY: PDF-specific protections
+    "pdf_protections": {
+        "disable_javascript": True,       # Strip JS from PDFs
+        "disable_external_links": True,   # Prevent SSRF via PDF links
+        "max_embedded_files": 0,          # No nested file extraction
+        "reject_encrypted_pdfs": True     # Cannot parse encrypted files
+    },
+
+    # SECURITY: HTML-specific protections
+    "html_protections": {
+        "strip_scripts": True,            # Remove <script> tags
+        "strip_iframes": True,            # Remove <iframe> tags
+        "strip_event_handlers": True,     # Remove onclick, onerror, etc.
+        "sanitize_with": "bleach"         # HTML sanitization library
+    }
+}
+
+# SECURITY: Source URL validation — prevent SSRF when fetching remote documents
+SOURCE_URL_SCHEMA = {
+    "type": "string",
+    "format": "uri",
+    "pattern": "^https://(egazette\\.gov\\.in|www\\.india\\.gov\\.in|data\\.gov\\.in|pmkisan\\.gov\\.in|www\\.indiabudget\\.gov\\.in)/.*$",
+    "description": "Only whitelisted government URLs are accepted for remote document fetching"
+}
+```
+
+### 16.3 Secure API Key & Secret Management
+
+```yaml
+secrets_management:
+  environment_variables:
+    - DB_PASSWORD               # PostgreSQL for processed documents
+    - KAFKA_SASL_PASSWORD       # Event bus auth
+    - NIM_API_KEY               # NVIDIA NIM for LLM interpretation
+    - TRITON_AUTH_TOKEN         # Triton Inference Server auth
+    - S3_ACCESS_KEY_ID          # Document storage access
+    - S3_SECRET_ACCESS_KEY      # Document storage secret
+    - CLAMAV_ENDPOINT           # Antivirus service endpoint
+
+  rotation_policy:
+    db_credentials: 90_days
+    nim_api_key: 180_days
+    s3_credentials: 90_days
+    service_tokens: 90_days
+
+  # SECURITY: Parse results never include raw file paths or internal URLs
+  output_sanitization:
+    strip_internal_paths: true
+    strip_server_info: true
+```
+
+### 16.4 OWASP Compliance
+
+| OWASP Risk | Mitigation |
+|---|---|
+| **API1: BOLA** | Document access gated by ownership check; admin role for cross-user document access |
+| **API2: Broken Auth** | JWT validation on all endpoints; internal-only batch processing endpoints |
+| **API3: Broken Property Auth** | Upload schema validates MIME type, size, and filename; rejects unexpected fields |
+| **API4: Resource Consumption** | File size limits, page count limits, concurrent processing caps |
+| **API5: Broken Function Auth** | Batch/admin endpoints restricted to admin role + internal network |
+| **API6: Sensitive Flows** | File uploads scanned by antivirus; PDFs stripped of JavaScript |
+| **API7: SSRF** | Source URL whitelist (government domains only); no user-controlled redirects |
+| **API8: Misconfig** | HTML sanitized with bleach; PDF JS disabled; no eval() in parsers |
+| **API9: Improper Inventory** | Parser version tracked per document; old parser versions deprecated |
+| **API10: Unsafe Consumption** | All external document content treated as untrusted; sandboxed parsing |

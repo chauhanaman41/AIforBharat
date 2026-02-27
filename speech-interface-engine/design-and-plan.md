@@ -551,3 +551,156 @@ def generate_civic_ssml(response: dict, language: str) -> str:
 | Voice adoption rate (% of users) | > 15% |
 | User satisfaction (voice experience) | > 4.0/5.0 |
 | Languages supported (production quality) | 12+ |
+
+---
+
+## 14. Security Hardening
+
+### 14.1 Rate Limiting
+
+<!-- SECURITY: Voice sessions are GPU-intensive (Riva ASR/TTS).
+     Rate limits prevent GPU exhaustion and abuse.
+     OWASP Reference: API4:2023 Unrestricted Resource Consumption -->
+
+```yaml
+rate_limits:
+  # SECURITY: WebSocket voice session creation — prevent session flooding
+  "/ws/voice/session":
+    per_user:
+      max_concurrent_sessions: 2  # No more than 2 simultaneous voice sessions
+      sessions_per_hour: 20
+    per_ip:
+      max_concurrent_sessions: 5
+      sessions_per_hour: 30
+
+  # SECURITY: Voice session duration limits
+  session_limits:
+    max_duration_minutes: 30    # Auto-close after 30 min
+    max_turns_per_session: 100  # Prevent infinite conversation loops
+    idle_timeout_seconds: 120   # Close if no audio for 2 min
+
+  # SECURITY: Audio upload rate — prevent bandwidth abuse
+  audio_stream_limits:
+    max_chunk_size_bytes: 65536  # 64KB per audio chunk
+    max_chunks_per_second: 20    # 100ms frames × 20 = 2 seconds of audio
+    max_total_audio_mb: 50       # Per session
+
+  # SECURITY: TTS request limits — prevent GPU abuse
+  "/api/v1/speech/synthesize":
+    per_user:
+      requests_per_minute: 20
+      burst: 5
+    max_text_length: 5000  # Characters per TTS request
+
+  rate_limit_response:
+    status: 429
+    body:
+      error: "rate_limit_exceeded"
+      message: "Voice service rate limit reached. Please wait before starting a new session."
+```
+
+### 14.2 Input Validation & Sanitization
+
+<!-- SECURITY: Audio streams and text inputs must be validated
+     to prevent injection, malformed audio attacks, and abuse.
+     OWASP Reference: API3:2023, API8:2023 -->
+
+```python
+# SECURITY: Audio stream validation
+AUDIO_VALIDATION = {
+    "allowed_formats": ["pcm", "wav", "ogg"],
+    "required_sample_rate": 16000,  # 16kHz
+    "required_bit_depth": 16,
+    "required_channels": 1,  # Mono
+    "max_silence_ratio": 0.95,  # Reject if > 95% silence (likely abuse)
+    "min_audio_duration_ms": 200,  # Reject very short clips
+    "max_audio_duration_ms": 30000,  # 30 seconds per utterance
+}
+
+# SECURITY: TTS text input validation — prevent SSML injection
+TTS_INPUT_SCHEMA = {
+    "type": "object",
+    "required": ["text", "language"],
+    "additionalProperties": False,
+    "properties": {
+        "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5000,
+            "description": "Text to synthesize — SSML tags are sanitized server-side"
+        },
+        "language": {
+            "type": "string",
+            "enum": ["hi-IN","en-IN","bn-IN","te-IN","ta-IN","mr-IN",
+                     "gu-IN","kn-IN","ml-IN","pa-IN","or-IN","ur-IN"]
+        },
+        "voice": {
+            "type": "string",
+            "pattern": "^[a-z]{2}-(female|male)-[0-9]+$"
+        },
+        "speed": {
+            "type": "number",
+            "minimum": 0.5,
+            "maximum": 2.0
+        }
+    }
+}
+
+# SECURITY: SSML sanitization — prevent injection of malicious SSML
+def sanitize_ssml(text: str) -> str:
+    """Strip or escape SSML tags that could cause TTS engine abuse."""
+    # Only allow safe SSML tags
+    ALLOWED_TAGS = ["speak", "break", "emphasis", "prosody", "say-as"]
+    # Remove any tags not in the allowlist
+    text = re.sub(r'<(?!/?({})[\s>]).*?>'.format('|'.join(ALLOWED_TAGS)), '', text)
+    # Prevent SSML entities that could cause resource exhaustion
+    text = re.sub(r'<!ENTITY', '', text)
+    text = re.sub(r'<!DOCTYPE', '', text)
+    return text
+
+# SECURITY: Profanity and injection filter on transcriptions
+def sanitize_transcript(transcript: str) -> str:
+    """Filter transcription output before sending to downstream engines."""
+    # Remove potential prompt injection patterns before sending to Neural Network
+    transcript = re.sub(r'(ignore|forget|disregard)\s+(previous|all|system)', '', transcript, flags=re.I)
+    transcript = transcript[:2000]  # Truncate excessively long transcriptions
+    return transcript
+```
+
+### 14.3 Secure API Key & Secret Management
+
+```yaml
+secrets_management:
+  environment_variables:
+    - RIVA_API_KEY              # NVIDIA Riva ASR/TTS service auth
+    - RIVA_ENDPOINT             # Riva gRPC endpoint
+    - KAFKA_SASL_PASSWORD       # Event bus auth
+    - REDIS_PASSWORD            # Session state cache
+    - NIM_API_KEY               # NVIDIA NIM for NLU models
+
+  # SECURITY: Audio data retention policy
+  audio_data_policy:
+    store_audio: false          # Do NOT store raw audio by default
+    store_transcripts: true     # Store anonymized transcripts for improvement
+    retention_days: 30          # Auto-delete after 30 days
+    user_consent_required: true # Audio storage only with explicit consent
+
+  rotation_policy:
+    riva_api_key: 180_days
+    service_tokens: 90_days
+```
+
+### 14.4 OWASP Compliance
+
+| OWASP Risk | Mitigation |
+|---|---|
+| **API1: BOLA** | Voice sessions bound to authenticated user; session tokens non-transferable |
+| **API2: Broken Auth** | WebSocket connections require valid JWT; session-level re-auth for sensitive actions |
+| **API3: Broken Property Auth** | TTS input schema rejects unexpected fields; audio format strictly validated |
+| **API4: Resource Consumption** | Session duration limits, concurrent session caps, audio size limits |
+| **API5: Broken Function Auth** | Admin endpoints (model config) restricted to ops team |
+| **API6: Sensitive Flows** | Voice biometrics (future) requires multi-factor confirmation |
+| **API7: SSRF** | No user-controlled URLs; SSML sanitized to prevent entity injection |
+| **API8: Misconfig** | TLS on WebSocket (WSS only); no plaintext audio transport |
+| **API9: Improper Inventory** | ASR/TTS model versions tracked; deprecated models decommissioned |
+| **API10: Unsafe Consumption** | Riva responses validated; audio output size-limited; transcript sanitized |

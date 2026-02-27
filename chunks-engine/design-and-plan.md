@@ -317,3 +317,143 @@ Document arrives from Policy Fetching / Gov Data Sync Engine
 | Duplicate detection rate | > 95% |
 | Re-chunking latency | < 30s per document |
 | Chunk-to-retrieval relevance | > 85% (measured via RAG eval) |
+
+---
+
+## 14. Security Hardening
+
+### 14.1 Rate Limiting
+
+<!-- SECURITY: Chunking is a backend/internal engine — primarily called by
+     Document Understanding and Policy Fetching engines.
+     Public endpoints are limited; internal endpoints rate-limited per service.
+     OWASP Reference: API4:2023 Unrestricted Resource Consumption -->
+
+```yaml
+rate_limits:
+  # SECURITY: Manual re-chunking trigger — admin only
+  "/api/v1/chunks/reprocess":
+    per_user:
+      requests_per_minute: 5
+      burst: 2
+    require_role: admin
+
+  # SECURITY: Chunk search/retrieval — used by RAG pipeline
+  "/api/v1/chunks/search":
+    per_user:
+      requests_per_minute: 60
+      burst: 15
+    per_ip:
+      requests_per_minute: 30
+
+  # SECURITY: Chunk metadata retrieval
+  "/api/v1/chunks/{chunk_id}":
+    per_user:
+      requests_per_minute: 60
+
+  # SECURITY: Internal ingestion endpoint
+  internal_endpoints:
+    "/internal/chunks/ingest":
+      per_service:
+        requests_per_minute: 200
+      allowed_callers: ["document-understanding-engine", "policy-fetching-engine"]
+
+  rate_limit_response:
+    status: 429
+    body:
+      error: "rate_limit_exceeded"
+      message: "Chunking service rate limit reached."
+```
+
+### 14.2 Input Validation & Sanitization
+
+<!-- SECURITY: Chunks engine processes document text — must validate
+     to prevent injection into vector embeddings.
+     OWASP Reference: API3:2023, API8:2023 -->
+
+```python
+# SECURITY: Document ingestion schema
+INGESTION_SCHEMA = {
+    "type": "object",
+    "required": ["document_id", "content", "source_type"],
+    "additionalProperties": False,
+    "properties": {
+        "document_id": {
+            "type": "string",
+            "pattern": "^doc_[a-zA-Z0-9]{12,32}$"
+        },
+        "content": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 500000  # ~500KB text max
+        },
+        "source_type": {
+            "type": "string",
+            "enum": ["gazette", "notification", "circular", "guideline", "faq", "amendment"]
+        },
+        "metadata": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "scheme_id": {"type": "string", "pattern": "^sch_[a-zA-Z0-9]+$"},
+                "language": {"type": "string", "enum": ["en", "hi", "bn", "te", "mr", "ta", "gu", "kn"]},
+                "effective_date": {"type": "string", "format": "date"},
+                "region": {"type": "string", "maxLength": 100}
+            }
+        }
+    }
+}
+
+# SECURITY: Chunk search validation — prevent embedding injection
+SEARCH_SCHEMA = {
+    "type": "object",
+    "required": ["query"],
+    "additionalProperties": False,
+    "properties": {
+        "query": {"type": "string", "minLength": 2, "maxLength": 1000},
+        "top_k": {"type": "integer", "minimum": 1, "maximum": 50},
+        "filters": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "scheme_id": {"type": "string"},
+                "source_type": {"type": "string", "enum": ["gazette","notification","circular","guideline","faq","amendment"]},
+                "min_date": {"type": "string", "format": "date"},
+                "max_date": {"type": "string", "format": "date"}
+            }
+        }
+    }
+}
+```
+
+### 14.3 Secure API Key & Secret Management
+
+```yaml
+secrets_management:
+  environment_variables:
+    - DB_PASSWORD               # PostgreSQL (chunk metadata)
+    - MILVUS_API_KEY            # Vector DB for embeddings
+    - KAFKA_SASL_PASSWORD       # Event bus auth
+    - NIM_API_KEY               # NVIDIA NIM for embedding generation
+    - REDIS_PASSWORD            # Deduplication cache
+
+  rotation_policy:
+    db_credentials: 90_days
+    milvus_key: 90_days
+    nim_api_key: 180_days
+```
+
+### 14.4 OWASP Compliance
+
+| OWASP Risk | Mitigation |
+|---|---|
+| **API1: BOLA** | Chunks are public policy data — no user-level ownership; admin-only for mutations |
+| **API2: Broken Auth** | Internal ingestion requires service token; search requires valid JWT |
+| **API3: Broken Property Auth** | `additionalProperties: false`; source_type enum validated |
+| **API4: Resource Consumption** | Content size limits; top_k caps; internal throughput limits |
+| **API5: Broken Function Auth** | Re-chunking and ingestion restricted to admin/internal callers |
+| **API6: Sensitive Flows** | No PII in chunks — only policy text; no sensitive mutations |
+| **API7: SSRF** | No URL inputs; content provided as plain text |
+| **API8: Misconfig** | Chunking parameters (size, overlap) in config — not API-modifiable |
+| **API9: Improper Inventory** | Chunk versions tracked; superseded chunks marked with lineage |
+| **API10: Unsafe Consumption** | Embedding model outputs validated for dimensionality and NaN checks |

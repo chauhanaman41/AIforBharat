@@ -382,3 +382,157 @@ For the MVP launch, prioritize these 6 sources:
 4. **eGazette** — amendment and notification tracking
 5. **Income Tax Portal** (https://www.incometax.gov.in) — tax-related policies
 6. **Census India** (https://censusindia.gov.in) — demographic reference data
+
+---
+
+## 14. Security Hardening
+
+### 14.1 Rate Limiting
+
+<!-- SECURITY: Policy fetching is a backend crawler — rate limits apply to:
+     1. Admin endpoints that trigger crawls
+     2. Outbound requests to government portals (respect their limits)
+     OWASP Reference: API4:2023 Unrestricted Resource Consumption -->
+
+```yaml
+rate_limits:
+  # SECURITY: Manual crawl trigger — admin only
+  "/api/v1/crawl/trigger":
+    per_user:
+      requests_per_hour: 10
+      burst: 2
+    require_role: admin
+
+  # SECURITY: Crawl status and results
+  "/api/v1/crawl/status":
+    per_user:
+      requests_per_minute: 20
+    require_role: [admin, auditor]
+
+  # SECURITY: Fetched policy retrieval
+  "/api/v1/policies/raw/{policy_id}":
+    per_user:
+      requests_per_minute: 30
+
+  # SECURITY: Outbound crawl rate — be a good citizen
+  outbound_limits:
+    default:
+      requests_per_minute: 5
+      concurrent_requests: 2
+      respect_robots_txt: true
+      respect_429: true
+      backoff: exponential
+      user_agent: "AIforBharat-PolicyBot/1.0 (+https://aiforBharat.in/bot)"
+    "data.gov.in":
+      requests_per_minute: 30  # API with higher quota
+    "egazette.gov.in":
+      requests_per_minute: 10
+
+  rate_limit_response:
+    status: 429
+    body:
+      error: "rate_limit_exceeded"
+      message: "Policy crawl rate limit reached."
+```
+
+### 14.2 Input Validation & Sanitization
+
+<!-- SECURITY: Crawled content is untrusted external data.
+     Must be sanitized before storage and downstream processing.
+     OWASP Reference: API3:2023, API8:2023, API10:2023 -->
+
+```python
+# SECURITY: Crawl trigger schema — admin only
+CRAWL_TRIGGER_SCHEMA = {
+    "type": "object",
+    "required": ["source"],
+    "additionalProperties": False,
+    "properties": {
+        "source": {
+            "type": "string",
+            "enum": ["data_gov", "pib", "india_code", "egazette", "income_tax", "census"]
+        },
+        "scope": {
+            "type": "string",
+            "enum": ["incremental", "full"],
+            "default": "incremental"
+        },
+        "category_filter": {
+            "type": "string",
+            "maxLength": 100
+        }
+    }
+}
+
+# SECURITY: URL validation — only crawl whitelisted domains
+ALLOWED_DOMAINS = [
+    "data.gov.in",
+    "egazette.gov.in",
+    "pib.gov.in",
+    "indiacode.nic.in",
+    "www.incometax.gov.in",
+    "censusindia.gov.in",
+    "www.india.gov.in",
+    "pmkisan.gov.in",
+]
+
+def validate_crawl_url(url: str) -> bool:
+    """Ensure URL belongs to whitelisted government domain. Prevent SSRF."""
+    from urllib.parse import urlparse
+    parsed = urlparse(url)
+    # Only HTTPS
+    if parsed.scheme != "https":
+        return False
+    # Domain must be in allowlist (no IP addresses, no internal URLs)
+    return any(parsed.hostname == d or parsed.hostname.endswith('.' + d) for d in ALLOWED_DOMAINS)
+
+# SECURITY: Fetched content sanitization
+def sanitize_crawled_content(html: str) -> str:
+    """Strip dangerous content from crawled HTML before storage."""
+    import bleach
+    return bleach.clean(
+        html,
+        tags=['p','br','table','tr','td','th','ul','ol','li','h1','h2','h3','h4','h5','strong','em','a','span','div'],
+        attributes={'a': ['href']},
+        strip=True
+    )[:2000000]  # 2MB max
+```
+
+### 14.3 Secure API Key & Secret Management
+
+```yaml
+secrets_management:
+  environment_variables:
+    - DATA_GOV_API_KEY          # data.gov.in API key (replaces hard-coded key_env reference)
+    - DB_PASSWORD               # PostgreSQL (crawl state, policy metadata)
+    - KAFKA_SASL_PASSWORD       # Event bus auth
+    - S3_ACCESS_KEY_ID          # Raw policy document storage
+    - S3_SECRET_ACCESS_KEY      # Raw policy document storage
+    - REDIS_PASSWORD            # Crawl deduplication cache
+
+  rotation_policy:
+    data_gov_api_key: 180_days
+    db_credentials: 90_days
+    s3_credentials: 90_days
+
+  # SECURITY: Remove hard-coded key references
+  migration_notes:
+    - "Move key_env from source config YAML to environment variables"
+    - "Never commit API keys in config files or source code"
+    - "Use AWS Secrets Manager or HashiCorp Vault in production"
+```
+
+### 14.4 OWASP Compliance
+
+| OWASP Risk | Mitigation |
+|---|---|
+| **API1: BOLA** | Policy data is public; no user-level ownership; admin-only for mutations |
+| **API2: Broken Auth** | Crawl trigger requires admin JWT; status requires admin/auditor |
+| **API3: Broken Property Auth** | Source enum whitelist; no arbitrary URL crawling |
+| **API4: Resource Consumption** | Outbound rate limits; robots.txt respected; concurrent request caps |
+| **API5: Broken Function Auth** | All crawl management endpoints admin-only |
+| **API6: Sensitive Flows** | Full re-crawl requires explicit admin action |
+| **API7: SSRF** | Domain allowlist; HTTPS only; no user-supplied URLs |
+| **API8: Misconfig** | User-Agent identifies bot; robots.txt compliance |
+| **API9: Improper Inventory** | Source configs versioned; deprecated sources cleaned up |
+| **API10: Unsafe Consumption** | All crawled content sanitized with bleach; schema validated |

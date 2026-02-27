@@ -334,3 +334,214 @@ Subsequently:
 | **UMANG** | https://web.umang.gov.in | Unified Mobile Application — integration info and reference architecture |
 
 > ⚠️ **Important:** Full Aadhaar eKYC integration requires UIDAI licensing approval from the Government of India. MVP phase uses public stats and hashed references only.
+
+---
+
+## 16. Security Hardening
+
+### 16.1 Rate Limiting
+
+<!-- SECURITY: Identity endpoints handle sensitive PII — rate limits prevent
+     data scraping, brute-force token enumeration, and abuse of ZK proof APIs.
+     OWASP Reference: API4:2023 Unrestricted Resource Consumption -->
+
+```yaml
+rate_limits:
+  # SECURITY: Identity retrieval — prevent enumeration attacks
+  "/api/v1/identity/{token}":
+    per_user:
+      requests_per_minute: 30
+      burst: 5
+    per_ip:
+      requests_per_minute: 20
+      burst: 5
+
+  # SECURITY: Profile decryption is expensive — limit strictly
+  "/api/v1/identity/{token}/profile":
+    per_user:
+      requests_per_minute: 10
+      burst: 3
+
+  # SECURITY: ZK proof — compute-intensive, limit abuse
+  "/api/v1/identity/{token}/verify":
+    per_user:
+      requests_per_minute: 15
+      burst: 5
+
+  # SECURITY: Data export — very expensive, strict limits
+  "/api/v1/identity/{token}/export":
+    per_user:
+      requests_per_hour: 3
+      requests_per_day: 5
+      burst: 1
+
+  # SECURITY: Deletion — irreversible, strict limits
+  "DELETE /api/v1/identity/{token}":
+    per_user:
+      requests_per_day: 1
+      require_confirmation: true  # Double confirmation required
+
+  # SECURITY: Role updates — admin-only, rate limited
+  "/api/v1/identity/{token}/roles":
+    per_user:
+      requests_per_minute: 5
+
+  rate_limit_response:
+    status: 429
+    headers:
+      Retry-After: "<seconds>"
+      X-RateLimit-Limit: "<limit>"
+      X-RateLimit-Remaining: "<remaining>"
+    body:
+      error: "rate_limit_exceeded"
+      message: "Too many requests to identity service. Please retry later."
+```
+
+### 16.2 Input Validation & Sanitization
+
+<!-- SECURITY: Identity tokens, role updates, and delegation requests
+     are strictly validated to prevent injection and authorization bypass.
+     OWASP Reference: API3:2023, API8:2023 -->
+
+```python
+# SECURITY: Identity token format — strict pattern prevents injection
+IDENTITY_TOKEN_SCHEMA = {
+    "type": "string",
+    "pattern": "^idt_[a-zA-Z0-9]{12,32}$",  # Alphanumeric, fixed prefix
+    "description": "Identity tokens must match idt_ prefix + 12-32 alphanumeric chars"
+}
+
+# SECURITY: Role update request — enum-only values, no arbitrary strings
+ROLE_UPDATE_SCHEMA = {
+    "type": "object",
+    "required": ["roles"],
+    "additionalProperties": False,
+    "properties": {
+        "roles": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": ["citizen", "farmer", "business", "guardian", "admin"]
+            },
+            "minItems": 1,
+            "maxItems": 5,
+            "uniqueItems": True
+        }
+    }
+}
+
+# SECURITY: Delegation request — strict validation
+DELEGATION_SCHEMA = {
+    "type": "object",
+    "required": ["delegatee_token", "permissions", "type"],
+    "additionalProperties": False,
+    "properties": {
+        "delegatee_token": {
+            "type": "string",
+            "pattern": "^idt_[a-zA-Z0-9]{12,32}$"
+        },
+        "type": {
+            "type": "string",
+            "enum": ["parent_child", "guardian_ward", "business_owner"]
+        },
+        "permissions": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": ["read:schemes", "apply:schemes", "read:profile", "update:profile"]
+            },
+            "minItems": 1,
+            "maxItems": 10
+        },
+        "expires_at": {
+            "type": "string",
+            "format": "date-time"
+        }
+    }
+}
+
+# SECURITY: ZK Proof request — prevent arbitrary attribute access
+ZK_PROOF_SCHEMA = {
+    "type": "object",
+    "required": ["claims"],
+    "additionalProperties": False,
+    "properties": {
+        "claims": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["attribute", "operator", "value"],
+                "additionalProperties": False,
+                "properties": {
+                    "attribute": {
+                        "type": "string",
+                        "enum": ["age", "income_annual", "state", "gender", "bpl_status",
+                                 "land_holding", "marital_status", "dependents_count"]
+                    },
+                    "operator": {
+                        "type": "string",
+                        "enum": ["==", "!=", ">=", "<=", ">", "<"]
+                    },
+                    "value": {
+                        "oneOf": [
+                            {"type": "number"},
+                            {"type": "string", "maxLength": 64},
+                            {"type": "boolean"}
+                        ]
+                    }
+                }
+            },
+            "minItems": 1,
+            "maxItems": 10  # Prevent DoS via excessive claims
+        }
+    }
+}
+```
+
+### 16.3 Secure API Key & Secret Management
+
+<!-- SECURITY: Encryption keys for PII vault are managed exclusively
+     via HSM/KMS — never in application code or config files.
+     OWASP Reference: API1:2023 -->
+
+```yaml
+secrets_management:
+  environment_variables:
+    - KMS_ENDPOINT              # HSM/KMS service endpoint
+    - KMS_ACCESS_KEY_ID         # KMS authentication
+    - KMS_SECRET_ACCESS_KEY     # KMS authentication (rotated)
+    - DB_PASSWORD               # PostgreSQL identity vault password
+    - REDIS_PASSWORD            # Session cache password
+    - KAFKA_SASL_PASSWORD       # Event bus auth
+    - MASTER_ENCRYPTION_KEY_ID  # KMS key ID for PII encryption
+
+  # SECURITY: Per-user encryption keys stored in HSM, never in app memory long-term
+  key_management:
+    provider: aws_cloudhsm  # Or HashiCorp Vault Transit
+    key_rotation: 90_days
+    key_wrapping: RSA-2048  # Master key wraps per-user AES-256 keys
+    key_cache_ttl: 300      # Cache decrypted keys for 5 min max
+    audit_every_access: true  # Log every key retrieval with accessor + purpose
+
+  # SECURITY: No PII or encryption keys in logs, responses, or error messages
+  redaction:
+    - fields: ["name_enc", "phone_enc", "email_enc", "address_enc"]
+      action: "never_log"
+    - fields: ["aadhaar_hash", "pan_hash"]
+      action: "mask_in_logs"  # Show first 4 chars only
+```
+
+### 16.4 OWASP Compliance
+
+| OWASP Risk | Mitigation |
+|---|---|
+| **API1: BOLA** | Identity token ownership verified via JWT `sub`; delegation checked for cross-user access |
+| **API2: Broken Auth** | PII decryption requires valid JWT + audit trail entry |
+| **API3: Broken Property Auth** | `additionalProperties: false` on all schemas; ZK proofs hide raw data |
+| **API4: Resource Consumption** | Compute-heavy ZK proofs and data exports rate-limited strictly |
+| **API5: Broken Function Auth** | Role updates restricted to admin; delegation requires both-party consent |
+| **API6: Sensitive Flows** | Data export and deletion require re-authentication + confirmation |
+| **API7: SSRF** | No external URLs accepted in identity operations |
+| **API8: Misconfig** | AES-256-GCM encryption, TLS 1.3, no debug endpoints in production |
+| **API9: Improper Inventory** | Versioned identity schemas with migration support |
+| **API10: Unsafe Consumption** | KMS/HSM responses validated; timeout on all external calls |

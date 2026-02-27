@@ -294,3 +294,208 @@ Client request arrives
 | Request logging completeness | 100% |
 | Circuit breaker response time | < 1ms |
 | TLS handshake time (P95) | < 50ms |
+
+---
+
+## 14. Security Hardening
+
+### 14.1 Rate Limiting (Enhanced)
+
+<!-- SECURITY: Rate limiting is the first line of defense at the gateway layer.
+     All limits are enforced via Redis-backed sliding window counters.
+     OWASP Reference: API4:2023 Unrestricted Resource Consumption -->
+
+```yaml
+rate_limits:
+  global:
+    requests_per_second: 10000
+    burst_capacity: 15000
+    algorithm: sliding_window  # More accurate than fixed window
+
+  per_ip:
+    requests_per_minute: 100
+    burst: 20
+    # SECURITY: Prevents single-IP abuse; X-Forwarded-For validated against trusted proxies only
+    trust_proxy_depth: 1  # Only trust immediate upstream proxy
+    block_duration_seconds: 300  # 5-minute block after repeated violations
+
+  per_user:  # Keyed on JWT sub claim
+    default:
+      requests_per_minute: 60
+      burst: 10
+    ai_queries:
+      requests_per_minute: 20
+      burst: 5
+    auth:
+      requests_per_minute: 10
+      burst: 3
+
+  per_endpoint:
+    "/api/v1/auth/otp/send":
+      requests_per_minute: 5
+      per: ip  # OTP abuse prevention
+    "/api/v1/auth/login":
+      requests_per_minute: 10
+      per: ip
+    "/api/v1/auth/register":
+      requests_per_minute: 5
+      per: ip
+    "/api/v1/ai/query":
+      requests_per_minute: 20
+      per: user
+    "/api/v1/simulate":
+      requests_per_minute: 10
+      per: user
+    "/api/v1/vectors/search":
+      requests_per_minute: 30
+      per: user
+    "/api/v1/identity/*/export":
+      requests_per_minute: 2
+      per: user  # Data export is expensive
+    "/health":
+      requests_per_minute: 60
+      per: ip  # Health checks are lightweight
+    "/metrics":
+      requests_per_minute: 10
+      per: ip
+      ip_whitelist: ["10.0.0.0/8", "172.16.0.0/12"]  # Internal only
+
+  # SECURITY: Graceful 429 response with Retry-After header
+  rate_limit_response:
+    status: 429
+    headers:
+      Retry-After: "<computed_seconds>"
+      X-RateLimit-Limit: "<limit>"
+      X-RateLimit-Remaining: "<remaining>"
+      X-RateLimit-Reset: "<reset_epoch>"
+    body:
+      error: "rate_limit_exceeded"
+      message: "Too many requests. Please retry after the specified time."
+      retry_after_seconds: "<computed_seconds>"
+```
+
+### 14.2 Input Validation & Sanitization
+
+<!-- SECURITY: All requests are validated at the gateway before reaching backend engines.
+     OWASP Reference: API3:2023 Broken Object Property Level Authorization,
+     API8:2023 Security Misconfiguration -->
+
+```yaml
+input_validation:
+  # Reject requests with unexpected Content-Type
+  allowed_content_types:
+    - application/json
+    - multipart/form-data
+    - application/x-www-form-urlencoded
+
+  # Maximum request body sizes per endpoint category
+  max_body_size:
+    default: 1MB
+    file_upload: 10MB  # Document uploads
+    voice_stream: 5MB  # Audio chunks
+
+  # Reject oversized headers (prevents header injection attacks)
+  max_header_size: 8KB
+  max_url_length: 2048
+  max_query_params: 20
+
+  # SECURITY: Strip or reject unexpected fields in JSON bodies
+  strict_schema_validation: true
+  reject_unknown_fields: true
+
+  # SECURITY: Parameter pollution prevention
+  reject_duplicate_params: true
+
+  # SECURITY: Path traversal prevention
+  block_path_patterns:
+    - "../"
+    - "..%2f"
+    - "%2e%2e/"
+    - "/etc/"
+    - "/proc/"
+
+  # SECURITY: SQL injection / NoSQL injection patterns blocked at WAF
+  waf_rules:
+    - sql_injection
+    - xss_reflected
+    - xss_stored
+    - command_injection
+    - local_file_inclusion
+    - remote_file_inclusion
+    - log4j_jndi
+```
+
+### 14.3 Secure API Key & Secret Management
+
+<!-- SECURITY: No API keys, tokens, or secrets are ever hard-coded.
+     All secrets loaded from environment variables or secrets manager.
+     OWASP Reference: API1:2023 Broken Object Level Authorization -->
+
+```yaml
+secrets_management:
+  provider: aws_secrets_manager  # Or HashiCorp Vault
+  rotation_policy:
+    jwt_signing_keys: 90_days
+    api_keys: 180_days
+    tls_certificates: auto  # Let's Encrypt auto-renewal
+
+  # SECURITY: All secrets loaded from environment variables at startup
+  environment_variables:
+    - JWT_PUBLIC_KEY        # RS256 public key for JWT validation
+    - JWT_PRIVATE_KEY       # RS256 private key (only on auth service)
+    - REDIS_PASSWORD        # Rate limiting backend
+    - CONSUL_TOKEN          # Service discovery auth
+    - KAFKA_SASL_PASSWORD   # Event bus authentication
+    - SENTRY_DSN            # Error monitoring
+    - DATADOG_API_KEY       # Observability
+
+  # SECURITY: Keys never exposed in logs, responses, or error messages
+  redaction_rules:
+    - pattern: "Bearer [A-Za-z0-9\\-._~+/]+=*"
+      replace: "Bearer [REDACTED]"
+    - pattern: "api_key=[^&]+"
+      replace: "api_key=[REDACTED]"
+    - pattern: "password=.*"
+      replace: "password=[REDACTED]"
+
+  # SECURITY: No API keys in client-side code or responses
+  client_side_exposure_prevention:
+    strip_internal_headers:
+      - X-Internal-API-Key
+      - X-Service-Token
+      - X-Debug-Token
+    never_return_in_response:
+      - database_connection_strings
+      - internal_service_urls
+      - encryption_keys
+```
+
+### 14.4 OWASP API Security Top 10 Compliance
+
+| OWASP Risk | Mitigation | Implementation |
+|---|---|---|
+| **API1: Broken Object Level Auth** | JWT scopes + object ownership check | Gateway verifies JWT scopes; backend enforces ownership |
+| **API2: Broken Authentication** | RS256 JWT, short-lived tokens (1hr), refresh rotation | Login Engine issues; Gateway validates |
+| **API3: Broken Object Property Level Auth** | Schema-based field filtering per role | Gateway strips unauthorized fields from responses |
+| **API4: Unrestricted Resource Consumption** | Multi-layer rate limiting (IP + user + endpoint) | Redis sliding window, graceful 429s |
+| **API5: Broken Function Level Auth** | Role-based route access control | Admin endpoints gated by VPN + admin role |
+| **API6: Unrestricted Access to Sensitive Flows** | Captcha on registration, OTP cooldown, progressive delays | Gateway + Login Engine coordination |
+| **API7: Server-Side Request Forgery** | Allowlisted backend hosts, no user-controlled URLs in forwarding | Routing table is static, no open redirects |
+| **API8: Security Misconfiguration** | Security headers on all responses, TLS 1.3 only | CSP, HSTS, X-Frame-Options, X-Content-Type-Options |
+| **API9: Improper Inventory Management** | API versioning, deprecated endpoint alerts | Version routing, sunset headers |
+| **API10: Unsafe Consumption of APIs** | Validate all backend responses, circuit breakers | Response schema validation, timeout enforcement |
+
+### 14.5 Security Headers (Enforced on All Responses)
+
+```yaml
+security_headers:
+  Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+  Content-Security-Policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' wss://*.aifor.bharat;"
+  X-Content-Type-Options: "nosniff"
+  X-Frame-Options: "DENY"
+  X-XSS-Protection: "0"  # Deprecated; CSP is preferred
+  Referrer-Policy: "strict-origin-when-cross-origin"
+  Permissions-Policy: "camera=(), microphone=(self), geolocation=(), payment=()"
+  Cache-Control: "no-store"  # For authenticated responses
+  X-Request-Id: "<generated_uuid>"  # Tracing correlation
+```

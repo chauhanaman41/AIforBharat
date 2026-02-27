@@ -590,3 +590,163 @@ def calculate_income_tax(income: float, regime: str = "new", deductions: dict = 
 - **Union Budget** → Scheme-level allocation for benefit projection accuracy
 - **RBI DBIE** → Interest rate projections for loan/savings simulations
 - **RBI Inflation** → Real-value adjustment for multi-year projections
+
+---
+
+## 16. Security Hardening
+
+### 16.1 Rate Limiting
+
+<!-- SECURITY: Simulations are compute-intensive (multi-engine evaluation + LLM summary).
+     Rate limits prevent GPU/CPU exhaustion.
+     OWASP Reference: API4:2023 Unrestricted Resource Consumption -->
+
+```yaml
+rate_limits:
+  # SECURITY: Single simulation — runs eligibility + tax + subsidy calculators
+  "/api/v1/simulate":
+    per_user:
+      requests_per_minute: 10
+      requests_per_hour: 60
+      burst: 3
+    per_ip:
+      requests_per_minute: 5
+
+  # SECURITY: Multi-variable simulation — exponentially more compute
+  "/api/v1/simulate/multi":
+    per_user:
+      requests_per_minute: 5
+      burst: 2
+
+  # SECURITY: Time-series projection — RAPIDS GPU operation
+  "/api/v1/simulate/project":
+    per_user:
+      requests_per_minute: 5
+      burst: 2
+
+  # SECURITY: Bookmarked scenarios — lightweight reads
+  "/api/v1/simulate/bookmarks":
+    per_user:
+      requests_per_minute: 30
+
+  rate_limit_response:
+    status: 429
+    body:
+      error: "rate_limit_exceeded"
+      message: "Simulation rate limit reached. Please wait before running another scenario."
+    headers:
+      Retry-After: "<seconds>"
+```
+
+### 16.2 Input Validation & Sanitization
+
+<!-- SECURITY: Simulation parameters mutate user profiles (in-memory clones).
+     Invalid inputs could cause logic errors or resource exhaustion.
+     OWASP Reference: API3:2023, API8:2023 -->
+
+```python
+# SECURITY: Simulation request schema — strict parameter validation
+SIMULATION_REQUEST_SCHEMA = {
+    "type": "object",
+    "required": ["parameters"],
+    "additionalProperties": False,
+    "properties": {
+        "parameters": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 5,  # Max 5 simultaneous parameter changes
+            "items": {
+                "type": "object",
+                "required": ["field", "simulated_value"],
+                "additionalProperties": False,
+                "properties": {
+                    "field": {
+                        "type": "string",
+                        "enum": [
+                            "demographics.state", "demographics.district",
+                            "demographics.urban_rural",
+                            "economic.annual_income", "economic.employer_type",
+                            "economic.land_holding", "economic.bpl_status",
+                            "family.dependents_count", "family.children_count",
+                            "family.marital_status",
+                            "identity.age", "identity.gender"
+                        ]
+                    },
+                    "simulated_value": {
+                        "oneOf": [
+                            {"type": "string", "maxLength": 64},
+                            {"type": "number", "minimum": 0, "maximum": 100000000},
+                            {"type": "boolean"},
+                            {"type": "integer", "minimum": 0, "maximum": 200}
+                        ]
+                    }
+                }
+            }
+        },
+        "options": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "include_tax_comparison": {"type": "boolean"},
+                "include_subsidy_impact": {"type": "boolean"},
+                "include_time_projection": {"type": "boolean"},
+                "projection_years": {"type": "integer", "minimum": 1, "maximum": 10},
+                "language": {
+                    "type": "string",
+                    "enum": ["en", "hi", "bn", "te", "mr", "ta", "gu", "kn"]
+                }
+            }
+        }
+    }
+}
+
+# SECURITY: Validate simulation value ranges against field type
+FIELD_VALUE_CONSTRAINTS = {
+    "demographics.state": {"type": "string", "enum": ["AP","AR","AS","BR","CG","GA","GJ","HR","HP","JH","KA","KL","MP","MH","MN","ML","MZ","NL","OD","PB","RJ","SK","TN","TS","TR","UP","UK","WB"]},
+    "economic.annual_income": {"type": "number", "min": 0, "max": 100000000},
+    "identity.age": {"type": "integer", "min": 0, "max": 150},
+    "family.dependents_count": {"type": "integer", "min": 0, "max": 20},
+}
+
+# SECURITY: Simulation results always include disclaimer
+DISCLAIMER = "Simulation based on current policy data. Actual outcomes may vary. This is not legal or financial advice."
+```
+
+### 16.3 Secure API Key & Secret Management
+
+```yaml
+secrets_management:
+  environment_variables:
+    - DB_PASSWORD               # PostgreSQL (scenario bookmarks)
+    - REDIS_PASSWORD            # Simulation result cache
+    - KAFKA_SASL_PASSWORD       # Event bus auth
+    - NIM_API_KEY               # NLP summary generation via Llama 3.1
+    - ELIGIBILITY_SERVICE_TOKEN # Internal service-to-service auth
+    - METADATA_SERVICE_TOKEN    # User metadata service auth
+
+  rotation_policy:
+    db_credentials: 90_days
+    service_tokens: 90_days
+    nim_api_key: 180_days
+
+  # SECURITY: Simulation results are ephemeral — no PII stored in results
+  data_handling:
+    clone_profiles_in_memory_only: true
+    never_persist_simulated_pii: true
+    cache_ttl_minutes: 30
+```
+
+### 16.4 OWASP Compliance
+
+| OWASP Risk | Mitigation |
+|---|---|
+| **API1: BOLA** | Users can only simulate against their own profile; cross-user simulation requires admin |
+| **API2: Broken Auth** | JWT validation; simulation results linked to authenticated user |
+| **API3: Broken Property Auth** | `additionalProperties: false`; field enum whitelist prevents arbitrary mutations |
+| **API4: Resource Consumption** | Max 5 params per simulation; projection capped at 10 years; rate limited |
+| **API5: Broken Function Auth** | Admin-only endpoints for system-wide simulations |
+| **API6: Sensitive Flows** | Simulated profiles never persisted; always ephemeral in-memory clones |
+| **API7: SSRF** | No external URL inputs; all data from internal services only |
+| **API8: Misconfig** | No eval() on simulation parameters; all mutations via switch-case logic |
+| **API9: Improper Inventory** | Scenario templates versioned; deprecated templates flagged |
+| **API10: Unsafe Consumption** | Eligibility/Tax engine responses validated; timeouts enforced |

@@ -327,3 +327,148 @@ Event arrives from Event Bus (Kafka / NATS)
 | Query latency (recent data, P95) | < 2 seconds |
 | Data durability | 99.999999999% (11 nines) |
 | Tier migration success rate | > 99.99% |
+
+---
+
+## 14. Security Hardening
+
+### 14.1 Rate Limiting
+
+<!-- SECURITY: Raw data store is append-only — rate limits prevent
+     storage exhaustion and excessive audit log generation.
+     OWASP Reference: API4:2023 Unrestricted Resource Consumption -->
+
+```yaml
+rate_limits:
+  # SECURITY: Event ingestion — high throughput but bounded
+  "/api/v1/events/ingest":
+    per_service:
+      requests_per_second: 1000  # Internal services only
+    allowed_callers: ["api-gateway", "government-data-sync-engine", "document-understanding-engine"]
+
+  # SECURITY: Event query — audit trail retrieval
+  "/api/v1/events/query":
+    per_user:
+      requests_per_minute: 20
+      burst: 5
+    require_role: [admin, auditor]
+
+  # SECURITY: Compliance export — large data volumes
+  "/api/v1/events/export":
+    per_user:
+      requests_per_hour: 3
+    require_role: admin
+    require_mfa: true
+    max_export_rows: 1000000
+
+  # SECURITY: Hash chain verification
+  "/api/v1/events/verify-chain":
+    per_user:
+      requests_per_minute: 5
+    require_role: [admin, auditor]
+
+  rate_limit_response:
+    status: 429
+    body:
+      error: "rate_limit_exceeded"
+      message: "Raw data store rate limit reached."
+```
+
+### 14.2 Input Validation & Sanitization
+
+<!-- SECURITY: Raw data store ingests events from all engines.
+     Strict schema validation prevents storage pollution and injection.
+     OWASP Reference: API3:2023, API8:2023 -->
+
+```python
+# SECURITY: Event ingestion schema
+EVENT_SCHEMA = {
+    "type": "object",
+    "required": ["event_type", "source_engine", "timestamp", "payload"],
+    "additionalProperties": False,
+    "properties": {
+        "event_type": {
+            "type": "string",
+            "enum": ["user_action", "system_event", "policy_update", "eligibility_check",
+                     "simulation_run", "document_processed", "sync_completed", "anomaly_detected"]
+        },
+        "source_engine": {
+            "type": "string",
+            "enum": ["api-gateway", "login-register", "identity", "eligibility-rules",
+                     "document-understanding", "speech-interface", "neural-network",
+                     "simulation", "anomaly-detection", "government-data-sync",
+                     "policy-fetching", "metadata", "chunks", "trust-scoring"]
+        },
+        "timestamp": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "payload": {
+            "type": "object",
+            "maxProperties": 50,
+            "description": "Event-specific data — validated against sub-schema per event_type"
+        },
+        "correlation_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+        }
+    }
+}
+
+# SECURITY: Hash chain integrity — every event includes hash of previous event
+def compute_event_hash(event: dict, previous_hash: str) -> str:
+    """Compute SHA-256 hash chain for tamper detection."""
+    import json, hashlib
+    canonical = json.dumps(event, sort_keys=True, default=str)
+    chain_input = f"{previous_hash}:{canonical}"
+    return hashlib.sha256(chain_input.encode()).hexdigest()
+
+# SECURITY: PII scrubbing before raw storage
+def scrub_pii_from_event(event: dict) -> dict:
+    """Remove or hash PII fields before committing to raw store."""
+    PII_FIELDS = ["phone", "email", "aadhaar", "pan", "name", "address"]
+    payload = event.get("payload", {})
+    for field in PII_FIELDS:
+        if field in payload:
+            payload[field] = hashlib.sha256(str(payload[field]).encode()).hexdigest()[:16]
+    return event
+```
+
+### 14.3 Secure API Key & Secret Management
+
+```yaml
+secrets_management:
+  environment_variables:
+    - DB_PASSWORD               # PostgreSQL / TimescaleDB
+    - S3_ACCESS_KEY_ID          # Object storage (cold tier)
+    - S3_SECRET_ACCESS_KEY      # Object storage (cold tier)
+    - KAFKA_SASL_PASSWORD       # Event bus auth
+    - REDIS_PASSWORD            # Deduplication cache
+    - ENCRYPTION_KEY            # Event payload encryption at rest
+
+  rotation_policy:
+    db_credentials: 90_days
+    s3_credentials: 90_days
+    encryption_key: 365_days
+
+  # SECURITY: Raw data store is the compliance backbone — immutability critical
+  immutability_controls:
+    append_only: true            # No UPDATE or DELETE on raw events
+    s3_object_lock: true         # WORM compliance for cold tier
+    hash_chain_verification: true # Periodic chain validation
+```
+
+### 14.4 OWASP Compliance
+
+| OWASP Risk | Mitigation |
+|---|---|
+| **API1: BOLA** | Events queryable by admin/auditor only; no user-level event access |
+| **API2: Broken Auth** | Ingestion via service tokens only; query/export requires admin JWT + MFA |
+| **API3: Broken Property Auth** | Event schema with source_engine enum; payload size capped |
+| **API4: Resource Consumption** | Ingestion throughput bounded; export row limits enforced |
+| **API5: Broken Function Auth** | Export requires admin + MFA; ingestion restricted to internal services |
+| **API6: Sensitive Flows** | Hash chain ensures tamper detection; PII scrubbed before storage |
+| **API7: SSRF** | No URL inputs; event ingestion only |
+| **API8: Misconfig** | S3 Object Lock enabled; no public bucket access; TLS required |
+| **API9: Improper Inventory** | Event schema versioned; old events queryable but new schema enforced |
+| **API10: Unsafe Consumption** | All ingested events validated against schema; malformed events rejected |
