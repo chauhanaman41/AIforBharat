@@ -16,13 +16,23 @@ os.chdir(r"d:\AIForBharat\AIforBharat")
 
 RESULTS = []
 
-def start_engine(module, port, wait=4.0):
+def start_engine(module, port, wait=6.0):
     proc = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", f"{module}.main:app", "--port", str(port)],
-        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         cwd=r"d:\AIForBharat\AIforBharat",
     )
-    time.sleep(wait)
+    # Poll health endpoint instead of just sleeping — some engines need
+    # extra time for DB seeding (E11, E15, E16, E18)
+    deadline = time.time() + max(wait, 15.0)
+    while time.time() < deadline:
+        time.sleep(1)
+        try:
+            r = httpx.get(f"http://localhost:{port}/health", timeout=2)
+            if r.status_code == 200:
+                break
+        except Exception:
+            pass
     return proc
 
 def stop_engine(proc):
@@ -31,6 +41,8 @@ def stop_engine(proc):
         proc.wait(timeout=5)
     except:
         proc.kill()
+    # Give OS time to release file handles and ports (Windows specific)
+    time.sleep(2)
 
 def test_get(url, label):
     try:
@@ -108,8 +120,8 @@ ENGINES = [
         "tests": [
             {"method": "GET", "path": "/health", "label": "Health Check"},
             {"method": "POST", "path": "/raw-data/events", "label": "Store Event", "payload": {
-                "event_type": "TEST_EVENT", "source": "test_script", "user_id": "usr_test001",
-                "data": {"action": "testing", "engine": "raw_data_store"}
+                "event_type": "TEST_EVENT", "source_engine": "test_script", "user_id": "usr_test001",
+                "payload": {"action": "testing", "engine": "raw_data_store"}
             }},
             {"method": "GET", "path": "/raw-data/events", "label": "List Events"},
         ]
@@ -135,10 +147,13 @@ ENGINES = [
         "tests": [
             {"method": "GET", "path": "/health", "label": "Health Check"},
             {"method": "POST", "path": "/processed-metadata/store", "label": "Store Metadata", "payload": {
-                "user_id": "usr_test001", "full_name": "Test User", "phone": "9876543210",
-                "age": 35, "gender": "male", "state": "Bihar", "district": "Patna",
-                "annual_income": 180000, "occupation": "farmer", "caste_category": "OBC",
-                "education": "secondary", "marital_status": "married"
+                "user_id": "usr_test001",
+                "processed_data": {
+                    "full_name": "Test User", "phone": "9876543210",
+                    "age": 35, "gender": "male", "state": "Bihar", "district": "Patna",
+                    "annual_income": 180000, "occupation": "farmer", "caste_category": "OBC",
+                    "education": "secondary", "marital_status": "married"
+                }
             }},
         ]
     },
@@ -162,7 +177,7 @@ ENGINES = [
         "tests": [
             {"method": "GET", "path": "/health", "label": "Health Check"},
             {"method": "POST", "path": "/ai/intent", "label": "Intent Classification", "payload": {
-                "text": "Tell me about PM-KISAN scheme", "language": "english"
+                "message": "Tell me about PM-KISAN scheme"
             }},
         ]
     },
@@ -198,7 +213,7 @@ ENGINES = [
             {"method": "GET", "path": "/chunks/stats", "label": "Chunk Stats"},
             {"method": "POST", "path": "/chunks/create", "label": "Create Chunks", "payload": {
                 "document_id": "doc_test001",
-                "content": "PM-KISAN is a Central Sector scheme providing income support of Rs.6000 per year to farmer families. The scheme aims to supplement the financial needs of the farmers in procuring various inputs to ensure proper crop health.",
+                "text": "PM-KISAN is a Central Sector scheme providing income support of Rs.6000 per year to farmer families. The scheme aims to supplement the financial needs of the farmers in procuring various inputs to ensure proper crop health.",
                 "strategy": "fixed", "chunk_size": 100, "overlap": 20
             }},
         ]
@@ -256,7 +271,8 @@ ENGINES = [
             {"method": "GET", "path": "/health", "label": "Health Check"},
             {"method": "GET", "path": "/eligibility/schemes", "label": "List Schemes"},
             {"method": "POST", "path": "/eligibility/check", "label": "Check Eligibility", "payload": {
-                "user_profile": {
+                "user_id": "usr_test001",
+                "profile": {
                     "age": 35, "annual_income": 180000, "state": "Bihar",
                     "occupation": "farmer", "land_holding_acres": 3.5,
                     "caste_category": "OBC", "gender": "male"
@@ -284,12 +300,12 @@ ENGINES = [
             {"method": "GET", "path": "/health", "label": "Health Check"},
             {"method": "POST", "path": "/simulate/what-if", "label": "What-If Simulation", "payload": {
                 "user_id": "usr_test001",
-                "base_profile": {"age": 28, "annual_income": 400000, "occupation": "salaried", "gender": "male", "state": "Delhi"},
-                "modified_profile": {"age": 28, "annual_income": 180000, "occupation": "farmer", "gender": "male", "state": "Bihar", "land_holding_acres": 3}
+                "current_profile": {"age": 28, "annual_income": 400000, "occupation": "salaried", "gender": "male", "state": "Delhi"},
+                "changes": {"annual_income": 180000, "occupation": "farmer", "state": "Bihar", "land_holding_acres": 3}
             }},
             {"method": "POST", "path": "/simulate/life-event", "label": "Life Event Simulation", "payload": {
                 "user_id": "usr_test001",
-                "base_profile": {"age": 28, "annual_income": 400000, "occupation": "salaried", "gender": "male", "state": "Delhi"},
+                "current_profile": {"age": 28, "annual_income": 400000, "occupation": "salaried", "gender": "male", "state": "Delhi"},
                 "life_event": "job_loss"
             }},
         ]
@@ -337,8 +353,8 @@ ENGINES = [
             {"method": "GET", "path": "/health", "label": "Health Check"},
             {"method": "POST", "path": "/documents/parse", "label": "Parse Document", "payload": {
                 "policy_id": "pol_test001",
-                "content": "PM-KISAN: Eligibility criteria include being a farmer with land holding up to 5 acres and annual income below Rs. 6,00,000. Benefits include Rs. 6000 per year. Deadline for application is March 31, 2025.",
-                "title": "PM-KISAN Overview", "source": "test"
+                "text": "PM-KISAN: Eligibility criteria include being a farmer with land holding up to 5 acres and annual income below Rs. 6,00,000. Benefits include Rs. 6000 per year. Deadline for application is March 31, 2025.",
+                "title": "PM-KISAN Overview"
             }},
         ]
     },
@@ -355,7 +371,7 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"  [ERR] {engine['name']} FAILED TO START: {e}")
             RESULTS.append({"engine": engine["name"], "port": engine["port"], "tests": [{"endpoint": "STARTUP", "status": "CRASH", "response": str(e)[:200]}]})
-        time.sleep(1)
+        time.sleep(2)
 
     print("\n" + "=" * 60)
     print("  SUMMARY")

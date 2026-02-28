@@ -326,6 +326,28 @@ async def get_document_chunks(document_id: str):
         })
 
 
+@app.get("/chunks/stats", response_model=ApiResponse, tags=["Stats"])
+async def chunk_stats():
+    """Get chunking statistics."""
+    async with AsyncSessionLocal() as session:
+        from sqlalchemy import func
+        total = (await session.execute(
+            select(func.count(DocumentChunk.id))
+        )).scalar() or 0
+        unique_docs = (await session.execute(
+            select(func.count(func.distinct(DocumentChunk.document_id)))
+        )).scalar() or 0
+        avg_size = (await session.execute(
+            select(func.avg(DocumentChunk.chunk_size))
+        )).scalar() or 0
+
+        return ApiResponse(data={
+            "total_chunks": total,
+            "unique_documents": unique_docs,
+            "avg_chunk_size": round(avg_size),
+        })
+
+
 @app.get("/chunks/{chunk_id}", response_model=ApiResponse, tags=["Query"])
 async def get_chunk(chunk_id: str):
     """Get a specific chunk by ID."""
@@ -368,25 +390,3 @@ async def rechunk_document(data: ReChunkRequest):
         chunk_size=data.chunk_size,
     )
     return await create_chunks(req)
-
-
-@app.get("/chunks/stats", response_model=ApiResponse, tags=["Stats"])
-async def chunk_stats():
-    """Get chunking statistics."""
-    async with AsyncSessionLocal() as session:
-        from sqlalchemy import func
-        total = (await session.execute(
-            select(func.count(DocumentChunk.id))
-        )).scalar() or 0
-        unique_docs = (await session.execute(
-            select(func.count(func.distinct(DocumentChunk.document_id)))
-        )).scalar() or 0
-        avg_size = (await session.execute(
-            select(func.avg(DocumentChunk.chunk_size))
-        )).scalar() or 0
-
-        return ApiResponse(data={
-            "total_chunks": total,
-            "unique_documents": unique_docs,
-            "avg_chunk_size": round(avg_size),
-        })

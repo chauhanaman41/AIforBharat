@@ -1,0 +1,14 @@
+{
+  "event_id": "1c5a3754-d838-4c45-a887-64496cefce6b",
+  "event_type": "RAG_QUERY",
+  "source_engine": "orchestrator",
+  "user_id": "usr_de8f0170ee86",
+  "timestamp": "2026-02-28T16:43:44.241118",
+  "payload": {
+    "query": "Am I eligible for PM-KISAN if I own 3 acres of land?",
+    "intent": "eligibility_check",
+    "sources_count": 0
+  },
+  "hash": "3d768f552fefde03b80988bb647cb8ee535d0fa1092fa6a1a10edcd863afc22e",
+  "prev_hash": "9aea8202c947db4106415d1d33c600dbc03eef7873c70ee945708f6c961914ac"
+}

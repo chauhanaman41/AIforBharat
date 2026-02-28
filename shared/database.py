@@ -22,6 +22,7 @@ async_engine = create_async_engine(
     settings.DATABASE_URL,
     echo=settings.DEBUG,
     future=True,
+    connect_args={"timeout": 30},
 )
 
 AsyncSessionLocal = async_sessionmaker(
@@ -47,6 +48,15 @@ SyncSessionLocal = sessionmaker(
 # Enable WAL mode for SQLite (better concurrent read/write performance)
 @event.listens_for(sync_engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA journal_mode=WAL")
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+
+
+# Also enable WAL mode on the async (aiosqlite) engine
+@event.listens_for(async_engine.sync_engine, "connect")
+def set_sqlite_pragma_async(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA journal_mode=WAL")
     cursor.execute("PRAGMA foreign_keys=ON")

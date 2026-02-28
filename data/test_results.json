@@ -13,8 +13,8 @@
           "engine": "login_register",
           "status": "healthy",
           "version": "1.0.0",
-          "uptime_seconds": 5.174374103546143,
-          "timestamp": "2026-02-28T04:39:26.798347",
+          "uptime_seconds": 4.3736090660095215,
+          "timestamp": "2026-02-28T17:58:58.937646",
           "dependencies": {}
         }
       },
@@ -22,15 +22,31 @@
         "endpoint": "Register User",
         "method": "POST",
         "url": "http://localhost:8001/auth/register",
-        "status": "ERROR",
-        "response": "timed out"
+        "status": 409,
+        "response": {
+          "detail": "Phone number already registered"
+        }
       },
       {
         "endpoint": "Login",
         "method": "POST",
         "url": "http://localhost:8001/auth/login",
-        "status": "ERROR",
-        "response": "timed out"
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "Login successful",
+          "data": {
+            "user_id": "usr_c058ba84d482",
+            "name": "Test User",
+            "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfYzA1OGJhODRkNDgyIiwicm9sZXMiOlsiY2l0aXplbiJdLCJpYXQiOjE3NzIzMDE1NDMsImV4cCI6MTc3MjMwMzM0MywidHlwZSI6ImFjY2VzcyIsInN0YXRlIjpudWxsfQ.MFhZ_s8hYFH7sIGMaaRamUQzvNDMemdH89u7M9aPWr0",
+            "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfYzA1OGJhODRkNDgyIiwiaWF0IjoxNzcyMzAxNTQzLCJleHAiOjE3NzI5MDYzNDMsInR5cGUiOiJyZWZyZXNoIn0.kF2_W9KgyxqKiPkakLN-gWHEIs_R_9VpH1oejEAuTPA",
+            "token_type": "bearer"
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T17:59:03.303261",
+          "request_id": "11e67b9b-47c8-495c-a014-8ffc80b35483",
+          "trace_id": null
+        }
       }
     ]
   },
@@ -48,8 +64,8 @@
           "engine": "identity_engine",
           "status": "healthy",
           "version": "1.0.0",
-          "uptime_seconds": 4.958832502365112,
-          "timestamp": "2026-02-28T04:40:08.044601",
+          "uptime_seconds": 4.217220067977905,
+          "timestamp": "2026-02-28T17:59:12.417235",
           "dependencies": {}
         }
       },
@@ -57,8 +73,10 @@
         "endpoint": "Create Identity",
         "method": "POST",
         "url": "http://localhost:8002/identity/create",
-        "status": "ERROR",
-        "response": "timed out"
+        "status": 409,
+        "response": {
+          "detail": "Identity already exists for this user"
+        }
       }
     ]
   },
@@ -76,8 +94,8 @@
           "engine": "raw_data_store",
           "status": "healthy",
           "version": "1.0.0",
-          "uptime_seconds": 5.322409629821777,
-          "timestamp": "2026-02-28T04:40:32.179147",
+          "uptime_seconds": 4.408113718032837,
+          "timestamp": "2026-02-28T17:59:23.624370",
           "dependencies": {}
         }
       },
@@ -85,27 +103,19 @@
         "endpoint": "Store Event",
         "method": "POST",
         "url": "http://localhost:8003/raw-data/events",
-        "status": 422,
+        "status": 200,
         "response": {
-          "detail": [
-            {
-              "type": "missing",
-              "loc": [
-                "body",
-                "source_engine"
-              ],
-              "msg": "Field required",
-              "input": {
-                "event_type": "TEST_EVENT",
-                "source": "test_script",
-                "user_id": "usr_test001",
-                "data": {
-                  "action": "testing",
-                  "engine": "raw_data_store"
-                }
-              }
-            }
-          ]
+          "success": true,
+          "message": "Event stored",
+          "data": {
+            "event_id": "4ae0259c-ef85-4f18-984c-d349577f9f3f",
+            "hash": "e095ef9b419bd5a6a37ba4f6b319c446fa98890ae1a907bc8bec31530a7040ac",
+            "timestamp": "2026-02-28T17:59:25.670452"
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T17:59:25.671459",
+          "request_id": "40963f45-9c31-4a1e-b7ef-603098e700c2",
+          "trace_id": null
         }
       },
       {
@@ -117,12 +127,686 @@
           "success": true,
           "message": "OK",
           "data": {
-            "events": [],
-            "count": 0
+            "events": [
+              {
+                "event_id": "ff885b57-7baf-4966-9bdb-19f727a7f235",
+                "event_type": "SIMULATION_RUN",
+                "source_engine": "orchestrator",
+                "user_id": "usr_95e3cd8def1c",
+                "timestamp": "2026-02-28T06:57:26.589856",
+                "payload": {
+                  "changes": {
+                    "annual_income": 400000
+                  }
+                },
+                "hash": "82207ee9bee5d868123a4501fd370832126dd3afc3887249105a813c202967fb",
+                "prev_hash": "bb5dcad2e52972bffef788581e64f7faedb83e5f3754efbb7f72d3ab81e586f4"
+              },
+              {
+                "event_id": "f88fca42-dded-4890-b8ef-c4f0787b5c26",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T17:49:35.526994",
+                "payload": {
+                  "event_id": "f2b88226-5cfd-47ad-8bf9-7f43377aaa8e",
+                  "hash": "533b10113fed860a9acd91e94855fb4b4291eb11be8c0ccd9ffb60abfa231e9c"
+                },
+                "hash": "c220217bd64322e7c8aa3879b1ac5c76305a1e5259a8b57138baab99351dc42f",
+                "prev_hash": "533b10113fed860a9acd91e94855fb4b4291eb11be8c0ccd9ffb60abfa231e9c"
+              },
+              {
+                "event_id": "f63f3b79-b164-40fa-8c85-0404aecea320",
+                "event_type": "ELIGIBILITY_CHECKED",
+                "source_engine": "orchestrator",
+                "user_id": "usr_de8f0170ee86",
+                "timestamp": "2026-02-28T16:43:38.165637",
+                "payload": {
+                  "eligible": 4,
+                  "partial": 3,
+                  "total_checked": 10
+                },
+                "hash": "e8919bf62933133fd7a5c099a5f1cfe9eba2824a7928eefce135df7d5aeddba4",
+                "prev_hash": "05dcfc27c333432fbc20d6565bff311aa125575a11c2fced9e9f994ae08ff086"
+              },
+              {
+                "event_id": "f4dcba2a-ec84-42f0-86fd-acb2c84a4bf0",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T06:03:42.844190",
+                "payload": {
+                  "event_id": "e9d92f19-a1a6-4540-bc6b-46acddb10eb1",
+                  "hash": "b575aa7284b2c4c08fb28bf403f602445832bd2e4960a63925cef39a1ed5d672"
+                },
+                "hash": "c8dcd2feb87c32b16ae4590a3ee7f20173f63ec953765b7e4350334ea8f9a43b",
+                "prev_hash": "b575aa7284b2c4c08fb28bf403f602445832bd2e4960a63925cef39a1ed5d672"
+              },
+              {
+                "event_id": "f2f69109-68f5-43b8-809e-fcffb4e43508",
+                "event_type": "VOICE_QUERY",
+                "source_engine": "orchestrator",
+                "user_id": "usr_721cc6c43572",
+                "timestamp": "2026-02-28T17:49:41.153536",
+                "payload": {
+                  "query": "Tell me about PM Awas Yojana",
+                  "language": "english",
+                  "intent": "scheme_query"
+                },
+                "hash": "30e165d32c2bb1300b98f050e9a443bb55f288116f17740a3bf7a4e68ed5cc36",
+                "prev_hash": "c220217bd64322e7c8aa3879b1ac5c76305a1e5259a8b57138baab99351dc42f"
+              },
+              {
+                "event_id": "f2b88226-5cfd-47ad-8bf9-7f43377aaa8e",
+                "event_type": "RAG_QUERY",
+                "source_engine": "orchestrator",
+                "user_id": "usr_721cc6c43572",
+                "timestamp": "2026-02-28T17:49:35.526994",
+                "payload": {
+                  "query": "Am I eligible for PM-KISAN if I own 3 acres of land?",
+                  "intent": "eligibility_check",
+                  "sources_count": 2
+                },
+                "hash": "533b10113fed860a9acd91e94855fb4b4291eb11be8c0ccd9ffb60abfa231e9c",
+                "prev_hash": "30b4dfa8aded9362d64f7d14c682c0c252f1191817145a28164ef1f1b58c3314"
+              },
+              {
+                "event_id": "f277097d-e193-4166-8011-e8cef6a2c2c3",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T16:43:39.315945",
+                "payload": {
+                  "event_id": "74855929-65d5-4121-916d-4cf28db53915",
+                  "hash": "a0a485f71d42ca9a78ec24a1e4817a7cc45e1b28e8fc07cef69818890b5fedd3"
+                },
+                "hash": "9aea8202c947db4106415d1d33c600dbc03eef7873c70ee945708f6c961914ac",
+                "prev_hash": "a0a485f71d42ca9a78ec24a1e4817a7cc45e1b28e8fc07cef69818890b5fedd3"
+              },
+              {
+                "event_id": "ed60b0f9-6d60-4aad-9424-f52d55bd2b22",
+                "event_type": "SIMULATION_RUN",
+                "source_engine": "orchestrator",
+                "user_id": "usr_721cc6c43572",
+                "timestamp": "2026-02-28T17:49:30.868894",
+                "payload": {
+                  "changes": {
+                    "annual_income": 400000
+                  }
+                },
+                "hash": "c83bdcd8caa39584707f851d087661d7f38bb2032dcc23bbc172c04fa7f2de5d",
+                "prev_hash": "451ab038d6b8f9c331785c9bb292ab10cd76fcafe7a98ef6c461362448d22f62"
+              },
+              {
+                "event_id": "e9e0885a-ece1-4939-8887-de994b941d6d",
+                "event_type": "TEST_EVENT",
+                "source_engine": "test_script",
+                "user_id": "usr_test001",
+                "timestamp": "2026-02-28T17:23:54.193149",
+                "payload": {
+                  "action": "testing",
+                  "engine": "raw_data_store"
+                },
+                "hash": "e095ef9b419bd5a6a37ba4f6b319c446fa98890ae1a907bc8bec31530a7040ac",
+                "prev_hash": "GENESIS"
+              },
+              {
+                "event_id": "e9d92f19-a1a6-4540-bc6b-46acddb10eb1",
+                "event_type": "VOICE_QUERY",
+                "source_engine": "orchestrator",
+                "user_id": "usr_1824554fdeaa",
+                "timestamp": "2026-02-28T06:03:42.843069",
+                "payload": {
+                  "query": "Tell me about PM Awas Yojana",
+                  "language": "english",
+                  "intent": "scheme_query"
+                },
+                "hash": "b575aa7284b2c4c08fb28bf403f602445832bd2e4960a63925cef39a1ed5d672",
+                "prev_hash": "6e1b0111f7c87f1425196fc79dd6fa4cc3d5197f9b838b923dce2a682d4d64fe"
+              },
+              {
+                "event_id": "d5d195f7-b137-4c3a-8759-a5b1837bd7e9",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T06:30:16.668817",
+                "payload": {
+                  "event_id": "ba4ff3d9-717d-414d-ab05-568b5eae4595",
+                  "hash": "94a427ab955f560df14787918700b653bc56ef5d436890ed9295fabb3281d34f"
+                },
+                "hash": "84b7485b45389859cd3ead29827983798908466d308a949d4667d5f3f2fab25b",
+                "prev_hash": "94a427ab955f560df14787918700b653bc56ef5d436890ed9295fabb3281d34f"
+              },
+              {
+                "event_id": "d2bae18b-4205-433b-8241-7291980b1f43",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T17:08:12.895514",
+                "payload": {
+                  "event_id": "0898922a-19ec-443c-8093-dd5af82061d9",
+                  "hash": "e095ef9b419bd5a6a37ba4f6b319c446fa98890ae1a907bc8bec31530a7040ac"
+                },
+                "hash": "3b72d6077f042013d555aeb06c093c20c68859c8d8c63e29b5ab66a8982d72fb",
+                "prev_hash": "e095ef9b419bd5a6a37ba4f6b319c446fa98890ae1a907bc8bec31530a7040ac"
+              },
+              {
+                "event_id": "d1d7195a-e4e6-4d78-a6ad-2d1e4c66fe22",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T17:23:54.194652",
+                "payload": {
+                  "event_id": "e9e0885a-ece1-4939-8887-de994b941d6d",
+                  "hash": "e095ef9b419bd5a6a37ba4f6b319c446fa98890ae1a907bc8bec31530a7040ac"
+                },
+                "hash": "d245afbe23681df3fcf2089cf859faea12eb4b9e3ea84199d93f378628c890bd",
+                "prev_hash": "e095ef9b419bd5a6a37ba4f6b319c446fa98890ae1a907bc8bec31530a7040ac"
+              },
+              {
+                "event_id": "ccb67d42-4e9a-4736-96f8-39ae1c201272",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T06:57:25.880241",
+                "payload": {
+                  "event_id": "1850ddfe-b523-4e83-a43f-ab2ce8b83669",
+                  "hash": "7707bafa18a6aa85ce658c6447789dd7a4f9057f268158adf4d4d2ffdef15ee3"
+                },
+                "hash": "bb5dcad2e52972bffef788581e64f7faedb83e5f3754efbb7f72d3ab81e586f4",
+                "prev_hash": "7707bafa18a6aa85ce658c6447789dd7a4f9057f268158adf4d4d2ffdef15ee3"
+              },
+              {
+                "event_id": "c1d17a24-adbf-4cea-bcc2-ae7d7231b5d0",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T17:49:30.869900",
+                "payload": {
+                  "event_id": "ed60b0f9-6d60-4aad-9424-f52d55bd2b22",
+                  "hash": "c83bdcd8caa39584707f851d087661d7f38bb2032dcc23bbc172c04fa7f2de5d"
+                },
+                "hash": "30b4dfa8aded9362d64f7d14c682c0c252f1191817145a28164ef1f1b58c3314",
+                "prev_hash": "c83bdcd8caa39584707f851d087661d7f38bb2032dcc23bbc172c04fa7f2de5d"
+              },
+              {
+                "event_id": "bbab5746-9525-42d2-8e2f-74d8b436ed34",
+                "event_type": "ELIGIBILITY_CHECKED",
+                "source_engine": "orchestrator",
+                "user_id": "usr_721cc6c43572",
+                "timestamp": "2026-02-28T17:49:29.527669",
+                "payload": {
+                  "eligible": 4,
+                  "partial": 3,
+                  "total_checked": 10
+                },
+                "hash": "c181d2d7de6b7dbc0b2b524a766463403f4d0652936ee552a92a10b86d70b26a",
+                "prev_hash": "aa01f6ff68e510efbc5b8d74f5a4f1189106e60e58e918de469b79e8d3982737"
+              },
+              {
+                "event_id": "bb2a4d92-9720-45c6-abed-23dee7c3acd8",
+                "event_type": "USER_ONBOARDED",
+                "source_engine": "orchestrator",
+                "user_id": "usr_2e5b1d1d251f",
+                "timestamp": "2026-02-28T06:30:07.793178",
+                "payload": {
+                  "phone": "9891****",
+                  "steps_completed": 7,
+                  "degraded": []
+                },
+                "hash": "e22f4e904987eee6c0a4d55b4ff7a4911c1246f69ce0590f2972f8c14b4bb2d3",
+                "prev_hash": "GENESIS"
+              },
+              {
+                "event_id": "ba4ff3d9-717d-414d-ab05-568b5eae4595",
+                "event_type": "VOICE_QUERY",
+                "source_engine": "orchestrator",
+                "user_id": "usr_2e5b1d1d251f",
+                "timestamp": "2026-02-28T06:30:16.667231",
+                "payload": {
+                  "query": "Tell me about PM Awas Yojana",
+                  "language": "english",
+                  "intent": "scheme_query"
+                },
+                "hash": "94a427ab955f560df14787918700b653bc56ef5d436890ed9295fabb3281d34f",
+                "prev_hash": "6b21f4e1cb35dcdf92ff9e03de600ab904ab58ca2ec26cd6512a2332f4054122"
+              },
+              {
+                "event_id": "b7536efb-5a31-4745-9d17-ec523c41e21f",
+                "event_type": "ELIGIBILITY_CHECKED",
+                "source_engine": "orchestrator",
+                "user_id": "usr_2e5b1d1d251f",
+                "timestamp": "2026-02-28T06:30:08.340436",
+                "payload": {
+                  "eligible": 4,
+                  "partial": 3,
+                  "total_checked": 10
+                },
+                "hash": "b58f162db06b79368de18c59518b76b490b1454e04e00c98e6adec54554f0460",
+                "prev_hash": "fbcc419013b39626e248f813bdf380bc0da8eb76faab8da288d20295ead7bf7c"
+              },
+              {
+                "event_id": "ae6727f3-7f58-4e6d-84e1-eaf459ea0bb8",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T06:03:38.879998",
+                "payload": {
+                  "event_id": "898d3f0a-ceb8-4605-adbf-7e02a8c316a7",
+                  "hash": "2a7bc556b7e8a86742798d4e0e058182aeb2cbd283a500c9eb499307661d5536"
+                },
+                "hash": "3698b7118b251ec605f8c52c676a73993108c89628784a7d6aa7b75a59fde127",
+                "prev_hash": "2a7bc556b7e8a86742798d4e0e058182aeb2cbd283a500c9eb499307661d5536"
+              },
+              {
+                "event_id": "a336af55-40f5-4959-9647-d1b9f3f0a6f5",
+                "event_type": "SIMULATION_RUN",
+                "source_engine": "orchestrator",
+                "user_id": "usr_2e5b1d1d251f",
+                "timestamp": "2026-02-28T06:30:08.903290",
+                "payload": {
+                  "changes": {
+                    "annual_income": 400000
+                  }
+                },
+                "hash": "9a313fc1e28dac9598a1ceeac8b2f652379a28140cd0e4687b84ae57c5b1b4ac",
+                "prev_hash": "b214dddf123d6ae9ce50f96a256ac01efdf0f2e402cb22644711e903b5d47d42"
+              },
+              {
+                "event_id": "a2c60535-f06c-41dc-8c5d-c89cb1ec2770",
+                "event_type": "USER_ONBOARDED",
+                "source_engine": "orchestrator",
+                "user_id": "usr_95e3cd8def1c",
+                "timestamp": "2026-02-28T06:57:24.441628",
+                "payload": {
+                  "phone": "9851****",
+                  "steps_completed": 7,
+                  "degraded": []
+                },
+                "hash": "d13a3b35cfb2e51e7780c2b10001277361861c54707f39634f52b16bb350013d",
+                "prev_hash": "GENESIS"
+              },
+              {
+                "event_id": "a17acb0e-0a6d-4671-a70b-a48045e050f4",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T05:59:49.801108",
+                "payload": {
+                  "event_id": "8a5df3f1-1c37-4b66-91e5-928d565ff03f",
+                  "hash": "433ebb4f0a3669f04186bd05e3bf44e464988a43b675b4d4d0f94bb6bdd6a286"
+                },
+                "hash": "3e6d3cbb34b5449df9a144047eba621b8465006fe0399cfe2d7ad66fb95f81a6",
+                "prev_hash": "433ebb4f0a3669f04186bd05e3bf44e464988a43b675b4d4d0f94bb6bdd6a286"
+              },
+              {
+                "event_id": "a07b36c3-97a6-4360-99e5-61b66f6d8012",
+                "event_type": "USER_ONBOARDED",
+                "source_engine": "orchestrator",
+                "user_id": "usr_721cc6c43572",
+                "timestamp": "2026-02-28T17:49:26.372913",
+                "payload": {
+                  "phone": "9899****",
+                  "steps_completed": 7,
+                  "degraded": []
+                },
+                "hash": "075281993e398a0d8d213a62878decfc96d8ae7d8128bc5264a3ced4aa577595",
+                "prev_hash": "GENESIS"
+              },
+              {
+                "event_id": "9ecdbe29-384b-4b1a-abbd-5de788b101e6",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T06:57:30.008125",
+                "payload": {
+                  "event_id": "9b10ea32-1d39-442d-b19e-021a8cf0c054",
+                  "hash": "27363e13f574237c8633a2eac8f45c24f425348154507c08c32c6a82209d3029"
+                },
+                "hash": "bf5550f43000260b12509f6ea7d9352cf615c2177553b493b862e9af97501e3a",
+                "prev_hash": "27363e13f574237c8633a2eac8f45c24f425348154507c08c32c6a82209d3029"
+              },
+              {
+                "event_id": "9b10ea32-1d39-442d-b19e-021a8cf0c054",
+                "event_type": "VOICE_QUERY",
+                "source_engine": "orchestrator",
+                "user_id": "usr_95e3cd8def1c",
+                "timestamp": "2026-02-28T06:57:30.008125",
+                "payload": {
+                  "query": "Tell me about PM Awas Yojana",
+                  "language": "english",
+                  "intent": "scheme_query"
+                },
+                "hash": "27363e13f574237c8633a2eac8f45c24f425348154507c08c32c6a82209d3029",
+                "prev_hash": "4c50f02c10c15892c8e3e68a60f40e8cca603149b7fdfbc55ffed65b27ed7b53"
+              },
+              {
+                "event_id": "97acb9c6-18fe-4af6-b00a-054905b1f545",
+                "event_type": "USER_ONBOARDED",
+                "source_engine": "orchestrator",
+                "user_id": "usr_7dc71b95ad84",
+                "timestamp": "2026-02-28T06:01:53.226104",
+                "payload": {
+                  "phone": "9843****",
+                  "steps_completed": 7,
+                  "degraded": []
+                },
+                "hash": "c78b5303ce0303ed5f23ad15d8c25a223d2cc3cf5a599536e38a1e1df70d5dc9",
+                "prev_hash": "GENESIS"
+              },
+              {
+                "event_id": "8e4b9da4-d90c-4b55-8902-448b1d58a8aa",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T16:53:57.659010",
+                "payload": {
+                  "event_id": "3bf6d5f3-8e68-42a3-8da7-0ac524d1dd62",
+                  "hash": "01a61df63ffa6f1de68dd9a33d4089aab9d97c80f4b3cf259eae641ff9a26490"
+                },
+                "hash": "b20bf0d3c9c43634921650f24c39fca052e798019d294e4c2043beebf5b6d97d",
+                "prev_hash": "01a61df63ffa6f1de68dd9a33d4089aab9d97c80f4b3cf259eae641ff9a26490"
+              },
+              {
+                "event_id": "8d9e070d-853e-4a4a-aa35-079079807938",
+                "event_type": "RAG_QUERY",
+                "source_engine": "orchestrator",
+                "user_id": "usr_95e3cd8def1c",
+                "timestamp": "2026-02-28T06:57:28.621836",
+                "payload": {
+                  "query": "Am I eligible for PM-KISAN if I own 3 acres of land?",
+                  "intent": "eligibility_check",
+                  "sources_count": 0
+                },
+                "hash": "3324835c493d008ad08646a4ff4bf773ce4b98900b7de9f1f5b3c2d3f6b9e937",
+                "prev_hash": "17c376e6d0e4102bce48988741399f8b807529697194d5e9655fdcea5acae43b"
+              },
+              {
+                "event_id": "8c5f949e-fa57-4563-89dc-cb12dd47b8aa",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T17:16:21.512861",
+                "payload": {
+                  "event_id": "40d7c2b3-0f3a-46ab-9d1b-e0fee0dacfa7",
+                  "hash": "e095ef9b419bd5a6a37ba4f6b319c446fa98890ae1a907bc8bec31530a7040ac"
+                },
+                "hash": "69e207db450fb756c6e59f674c20f8a7aa4495e83cba8091168a66457a63a5c3",
+                "prev_hash": "e095ef9b419bd5a6a37ba4f6b319c446fa98890ae1a907bc8bec31530a7040ac"
+              },
+              {
+                "event_id": "8a97b753-0365-4b5d-acdf-8929e0b944c9",
+                "event_type": "TEST_EVENT",
+                "source_engine": "test_script",
+                "user_id": "usr_test001",
+                "timestamp": "2026-02-28T17:39:53.164121",
+                "payload": {
+                  "action": "testing",
+                  "engine": "raw_data_store"
+                },
+                "hash": "e095ef9b419bd5a6a37ba4f6b319c446fa98890ae1a907bc8bec31530a7040ac",
+                "prev_hash": "GENESIS"
+              },
+              {
+                "event_id": "8a5df3f1-1c37-4b66-91e5-928d565ff03f",
+                "event_type": "USER_ONBOARDED",
+                "source_engine": "orchestrator",
+                "user_id": "usr_00d14a2f740f",
+                "timestamp": "2026-02-28T05:59:49.797811",
+                "payload": {
+                  "phone": "9998****",
+                  "steps_completed": 7,
+                  "degraded": []
+                },
+                "hash": "433ebb4f0a3669f04186bd05e3bf44e464988a43b675b4d4d0f94bb6bdd6a286",
+                "prev_hash": "GENESIS"
+              },
+              {
+                "event_id": "898d3f0a-ceb8-4605-adbf-7e02a8c316a7",
+                "event_type": "ELIGIBILITY_CHECKED",
+                "source_engine": "orchestrator",
+                "user_id": "usr_1824554fdeaa",
+                "timestamp": "2026-02-28T06:03:38.878692",
+                "payload": {
+                  "eligible": 4,
+                  "partial": 3,
+                  "total_checked": 10
+                },
+                "hash": "2a7bc556b7e8a86742798d4e0e058182aeb2cbd283a500c9eb499307661d5536",
+                "prev_hash": "a4ceb79784926a8d84d2db7d737b775f6371d12710c015d389761bbf4782359e"
+              },
+              {
+                "event_id": "7e681963-f7c3-4450-9636-7952bd43a2d0",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T06:03:39.427393",
+                "payload": {
+                  "event_id": "0429b785-7ef0-4e30-89cf-5c210a93ac26",
+                  "hash": "98f2db3d47e88bf7a1bc0e2a2a53593fe7ff7aa92586687ef76d78b2a74198c7"
+                },
+                "hash": "6e1b0111f7c87f1425196fc79dd6fa4cc3d5197f9b838b923dce2a682d4d64fe",
+                "prev_hash": "98f2db3d47e88bf7a1bc0e2a2a53593fe7ff7aa92586687ef76d78b2a74198c7"
+              },
+              {
+                "event_id": "7d84beb7-3108-45ee-8c30-199644cf36c1",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T06:30:07.794185",
+                "payload": {
+                  "event_id": "bb2a4d92-9720-45c6-abed-23dee7c3acd8",
+                  "hash": "e22f4e904987eee6c0a4d55b4ff7a4911c1246f69ce0590f2972f8c14b4bb2d3"
+                },
+                "hash": "fbcc419013b39626e248f813bdf380bc0da8eb76faab8da288d20295ead7bf7c",
+                "prev_hash": "e22f4e904987eee6c0a4d55b4ff7a4911c1246f69ce0590f2972f8c14b4bb2d3"
+              },
+              {
+                "event_id": "7b42a487-f79a-4969-9354-27834b2993c2",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T17:59:25.671459",
+                "payload": {
+                  "event_id": "4ae0259c-ef85-4f18-984c-d349577f9f3f",
+                  "hash": "e095ef9b419bd5a6a37ba4f6b319c446fa98890ae1a907bc8bec31530a7040ac"
+                },
+                "hash": "72d9f5a7581af29592a6beecba510d2267b47a3d3fb6115093910d4ccbd8a021",
+                "prev_hash": "e095ef9b419bd5a6a37ba4f6b319c446fa98890ae1a907bc8bec31530a7040ac"
+              },
+              {
+                "event_id": "74855929-65d5-4121-916d-4cf28db53915",
+                "event_type": "SIMULATION_RUN",
+                "source_engine": "orchestrator",
+                "user_id": "usr_de8f0170ee86",
+                "timestamp": "2026-02-28T16:43:39.314880",
+                "payload": {
+                  "changes": {
+                    "annual_income": 400000
+                  }
+                },
+                "hash": "a0a485f71d42ca9a78ec24a1e4817a7cc45e1b28e8fc07cef69818890b5fedd3",
+                "prev_hash": "4b27d3837a9a01a6fd0d824f71ac86b0fece12d8ec2b0e167738366ccdc4399d"
+              },
+              {
+                "event_id": "742b6fa4-7bb1-4481-9779-3ab8319e394d",
+                "event_type": "VOICE_QUERY",
+                "source_engine": "orchestrator",
+                "user_id": "usr_de8f0170ee86",
+                "timestamp": "2026-02-28T16:43:54.351756",
+                "payload": {
+                  "query": "Tell me about PM Awas Yojana",
+                  "language": "english",
+                  "intent": "scheme_query"
+                },
+                "hash": "624a6a439143b064243354944f4b6abafbd82fc048f7cc25de40a4c9dc843619",
+                "prev_hash": "c844622c17a5a234abf10babced44c4e77d0d329ae15efd468c8c52f81c0a4d2"
+              },
+              {
+                "event_id": "72311aab-f24c-4575-ba6f-95e8ab3eb68b",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T06:57:26.590862",
+                "payload": {
+                  "event_id": "ff885b57-7baf-4966-9bdb-19f727a7f235",
+                  "hash": "82207ee9bee5d868123a4501fd370832126dd3afc3887249105a813c202967fb"
+                },
+                "hash": "17c376e6d0e4102bce48988741399f8b807529697194d5e9655fdcea5acae43b",
+                "prev_hash": "82207ee9bee5d868123a4501fd370832126dd3afc3887249105a813c202967fb"
+              },
+              {
+                "event_id": "6854902e-8859-4a69-b5a8-22735afe56d9",
+                "event_type": "USER_ONBOARDED",
+                "source_engine": "orchestrator",
+                "user_id": "usr_1824554fdeaa",
+                "timestamp": "2026-02-28T06:03:38.333594",
+                "payload": {
+                  "phone": "9863****",
+                  "steps_completed": 7,
+                  "degraded": []
+                },
+                "hash": "7c8ec90eaa453f6901e0f0d626b0a285845886abc87bffba2238a7355f5b275b",
+                "prev_hash": "GENESIS"
+              },
+              {
+                "event_id": "60b702b5-ef04-4c47-915a-1623e4f6095f",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T16:43:38.165637",
+                "payload": {
+                  "event_id": "f63f3b79-b164-40fa-8c85-0404aecea320",
+                  "hash": "e8919bf62933133fd7a5c099a5f1cfe9eba2824a7928eefce135df7d5aeddba4"
+                },
+                "hash": "4b27d3837a9a01a6fd0d824f71ac86b0fece12d8ec2b0e167738366ccdc4399d",
+                "prev_hash": "e8919bf62933133fd7a5c099a5f1cfe9eba2824a7928eefce135df7d5aeddba4"
+              },
+              {
+                "event_id": "5f217d12-4a4c-4aa2-94b5-4fb6bac8cd24",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T17:49:41.154729",
+                "payload": {
+                  "event_id": "f2f69109-68f5-43b8-809e-fcffb4e43508",
+                  "hash": "30e165d32c2bb1300b98f050e9a443bb55f288116f17740a3bf7a4e68ed5cc36"
+                },
+                "hash": "6df3b8149258dac41b9aec1170d14b69717d797b80f1eb355c051483116d5dab",
+                "prev_hash": "30e165d32c2bb1300b98f050e9a443bb55f288116f17740a3bf7a4e68ed5cc36"
+              },
+              {
+                "event_id": "524be4fb-134a-41d1-99b3-18202c537708",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T16:43:54.352513",
+                "payload": {
+                  "event_id": "742b6fa4-7bb1-4481-9779-3ab8319e394d",
+                  "hash": "624a6a439143b064243354944f4b6abafbd82fc048f7cc25de40a4c9dc843619"
+                },
+                "hash": "7b0a476c651a9bc3e72e3d36cef62f496b887cf5545e9c40a74989f88d986443",
+                "prev_hash": "624a6a439143b064243354944f4b6abafbd82fc048f7cc25de40a4c9dc843619"
+              },
+              {
+                "event_id": "5041ffe1-3b22-460c-9202-98d435a5c0d0",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T06:01:53.227111",
+                "payload": {
+                  "event_id": "97acb9c6-18fe-4af6-b00a-054905b1f545",
+                  "hash": "c78b5303ce0303ed5f23ad15d8c25a223d2cc3cf5a599536e38a1e1df70d5dc9"
+                },
+                "hash": "28e26b0ebd07f4c86428f38e9323dbf3789f467eee98384bd19369b9b9c11e32",
+                "prev_hash": "c78b5303ce0303ed5f23ad15d8c25a223d2cc3cf5a599536e38a1e1df70d5dc9"
+              },
+              {
+                "event_id": "4ec226db-5250-40e6-84f5-f19a447ed4a6",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T14:36:31.485786",
+                "payload": {
+                  "event_id": "4528f264-1f50-4c36-abdd-10027b0132c6",
+                  "hash": "930e82bfa43d523f4c5bfc1a0db391f5202ec9646dbd666cd3efeaa72de6b1aa"
+                },
+                "hash": "dca863d2cde8f781811dbf0c0e98a4b8742f431dbd5ac7c5402d58f2d8bc24ab",
+                "prev_hash": "930e82bfa43d523f4c5bfc1a0db391f5202ec9646dbd666cd3efeaa72de6b1aa"
+              },
+              {
+                "event_id": "4dd28444-2278-4a95-b6d7-f3f36939b9c0",
+                "event_type": "TEST_EVENT",
+                "source_engine": "test_script",
+                "user_id": "usr_test001",
+                "timestamp": "2026-02-28T17:32:10.484639",
+                "payload": {
+                  "action": "testing",
+                  "engine": "raw_data_store"
+                },
+                "hash": "e095ef9b419bd5a6a37ba4f6b319c446fa98890ae1a907bc8bec31530a7040ac",
+                "prev_hash": "GENESIS"
+              },
+              {
+                "event_id": "4ae0259c-ef85-4f18-984c-d349577f9f3f",
+                "event_type": "TEST_EVENT",
+                "source_engine": "test_script",
+                "user_id": "usr_test001",
+                "timestamp": "2026-02-28T17:59:25.670452",
+                "payload": {
+                  "action": "testing",
+                  "engine": "raw_data_store"
+                },
+                "hash": "e095ef9b419bd5a6a37ba4f6b319c446fa98890ae1a907bc8bec31530a7040ac",
+                "prev_hash": "GENESIS"
+              },
+              {
+                "event_id": "4741f8f5-f4e1-4105-88ce-2cb38f9e9227",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T17:32:10.485897",
+                "payload": {
+                  "event_id": "4dd28444-2278-4a95-b6d7-f3f36939b9c0",
+                  "hash": "e095ef9b419bd5a6a37ba4f6b319c446fa98890ae1a907bc8bec31530a7040ac"
+                },
+                "hash": "78f93181f03be8d2b34b35ce71be925196f4a061c5be2f07d2d9396e3e4dc226",
+                "prev_hash": "e095ef9b419bd5a6a37ba4f6b319c446fa98890ae1a907bc8bec31530a7040ac"
+              },
+              {
+                "event_id": "4528f264-1f50-4c36-abdd-10027b0132c6",
+                "event_type": "USER_ONBOARDED",
+                "source_engine": "orchestrator",
+                "user_id": "usr_fe9484d1fc2c",
+                "timestamp": "2026-02-28T14:36:31.481324",
+                "payload": {
+                  "phone": "9876****",
+                  "steps_completed": 7,
+                  "degraded": []
+                },
+                "hash": "930e82bfa43d523f4c5bfc1a0db391f5202ec9646dbd666cd3efeaa72de6b1aa",
+                "prev_hash": "GENESIS"
+              },
+              {
+                "event_id": "4329836b-0208-4b40-a71f-f4152eb8a786",
+                "event_type": "RAW_DATA_STORED",
+                "source_engine": "raw_data_store",
+                "user_id": null,
+                "timestamp": "2026-02-28T06:03:38.334742",
+                "payload": {
+                  "event_id": "6854902e-8859-4a69-b5a8-22735afe56d9",
+                  "hash": "7c8ec90eaa453f6901e0f0d626b0a285845886abc87bffba2238a7355f5b275b"
+                },
+                "hash": "a4ceb79784926a8d84d2db7d737b775f6371d12710c015d389761bbf4782359e",
+                "prev_hash": "7c8ec90eaa453f6901e0f0d626b0a285845886abc87bffba2238a7355f5b275b"
+              }
+            ],
+            "count": 50
           },
           "errors": null,
-          "timestamp": "2026-02-28T04:40:36.317277",
-          "request_id": "8ab6e760-bf6b-4a9a-ab5b-6ecea50af1c9"
+          "timestamp": "2026-02-28T17:59:27.746317",
+          "request_id": "3cc58354-694b-4c01-a5e5-be110db67ee4",
+          "trace_id": null
         }
       }
     ]
@@ -141,8 +825,8 @@
           "engine": "metadata_engine",
           "status": "healthy",
           "version": "1.0.0",
-          "uptime_seconds": 5.028639554977417,
-          "timestamp": "2026-02-28T04:40:43.423037",
+          "uptime_seconds": 4.2857584953308105,
+          "timestamp": "2026-02-28T17:59:36.847698",
           "dependencies": {}
         }
       },
@@ -172,11 +856,12 @@
               "farmer_category": "small"
             },
             "metadata_version": "1.0",
-            "processed_at": "2026-02-28T04:40:45.482846"
+            "processed_at": "2026-02-28T17:59:38.917461"
           },
           "errors": null,
-          "timestamp": "2026-02-28T04:40:45.484997",
-          "request_id": "4f463b12-17db-4b9d-8c08-0cd6670c8f0d"
+          "timestamp": "2026-02-28T17:59:38.918470",
+          "request_id": "1e1fe963-fa94-410a-996c-4f4ce70e27fd",
+          "trace_id": null
         }
       }
     ]
@@ -190,15 +875,30 @@
         "endpoint": "Health Check",
         "method": "GET",
         "url": "http://localhost:8005/health",
-        "status": "ERROR",
-        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+        "status": 200,
+        "response": {
+          "engine": "processed_metadata_store",
+          "status": "healthy",
+          "version": "1.0.0",
+          "uptime_seconds": 4.24192476272583,
+          "timestamp": "2026-02-28T17:59:48.014033",
+          "dependencies": {}
+        }
       },
       {
         "endpoint": "Store Metadata",
         "method": "POST",
         "url": "http://localhost:8005/processed-metadata/store",
-        "status": "ERROR",
-        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "Metadata stored successfully",
+          "data": null,
+          "errors": null,
+          "timestamp": "2026-02-28T17:59:50.113660",
+          "request_id": "d4b78578-ae67-4207-a2bd-e32aa2e9cfa2",
+          "trace_id": null
+        }
       }
     ]
   },
@@ -211,22 +911,56 @@
         "endpoint": "Health Check",
         "method": "GET",
         "url": "http://localhost:8006/health",
-        "status": "ERROR",
-        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+        "status": 200,
+        "response": {
+          "engine": "vector_database",
+          "status": "healthy",
+          "version": "1.0.0",
+          "uptime_seconds": 3.74996280670166,
+          "timestamp": "2026-02-28T17:59:59.221589",
+          "dependencies": {}
+        }
       },
       {
         "endpoint": "Vector Stats",
         "method": "GET",
         "url": "http://localhost:8006/vectors/stats",
-        "status": "ERROR",
-        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "OK",
+          "data": {
+            "total_vectors": 2,
+            "index_size": 2,
+            "embedding_dim": 1024,
+            "namespaces": {
+              "policies": 2
+            }
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T18:00:01.306733",
+          "request_id": "07c0b411-55a1-43e9-9b0d-a458ad84799e",
+          "trace_id": null
+        }
       },
       {
         "endpoint": "Upsert Vector",
         "method": "POST",
         "url": "http://localhost:8006/vectors/upsert",
-        "status": "ERROR",
-        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "Vector upserted",
+          "data": {
+            "vector_id": "cafcbd2c4dc5",
+            "dimensions": 1024,
+            "index_size": 3
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T18:00:04.700241",
+          "request_id": "d8ec6569-4238-4a9c-88b2-97a3ad38d180",
+          "trace_id": null
+        }
       }
     ]
   },
@@ -244,8 +978,8 @@
           "engine": "neural_network_engine",
           "status": "healthy",
           "version": "1.0.0",
-          "uptime_seconds": 4.361668109893799,
-          "timestamp": "2026-02-28T04:41:23.076377",
+          "uptime_seconds": 3.698730707168579,
+          "timestamp": "2026-02-28T18:00:13.815999",
           "dependencies": {}
         }
       },
@@ -253,22 +987,20 @@
         "endpoint": "Intent Classification",
         "method": "POST",
         "url": "http://localhost:8007/ai/intent",
-        "status": 422,
+        "status": 200,
         "response": {
-          "detail": [
-            {
-              "type": "missing",
-              "loc": [
-                "body",
-                "message"
-              ],
-              "msg": "Field required",
-              "input": {
-                "text": "Tell me about PM-KISAN scheme",
-                "language": "english"
-              }
-            }
-          ]
+          "success": true,
+          "message": "OK",
+          "data": {
+            "intent": "scheme_query",
+            "entities": {},
+            "confidence": 0.6,
+            "language": "en"
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T18:00:16.872094",
+          "request_id": "ec554b0d-3b4d-4b9c-bdef-10ba3143bcbd",
+          "trace_id": null
         }
       }
     ]
@@ -287,8 +1019,8 @@
           "engine": "anomaly_detection_engine",
           "status": "healthy",
           "version": "1.0.0",
-          "uptime_seconds": 5.176739692687988,
-          "timestamp": "2026-02-28T04:41:32.255329",
+          "uptime_seconds": 4.281740427017212,
+          "timestamp": "2026-02-28T18:00:25.958215",
           "dependencies": {}
         }
       },
@@ -307,16 +1039,30 @@
             "anomalies": []
           },
           "errors": null,
-          "timestamp": "2026-02-28T04:41:34.312394",
-          "request_id": "8225b57b-dcf9-4fe3-aa29-e96a23b1ea1b"
+          "timestamp": "2026-02-28T18:00:28.028758",
+          "request_id": "c195b61c-3f61-4dd2-91fc-2f0d40998646",
+          "trace_id": null
         }
       },
       {
         "endpoint": "Anomaly Stats",
         "method": "GET",
         "url": "http://localhost:8008/anomaly/stats",
-        "status": "ERROR",
-        "response": "timed out"
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "OK",
+          "data": {
+            "total_anomalies": 0,
+            "open": 0,
+            "by_type": {},
+            "by_severity": {}
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T18:00:30.145475",
+          "request_id": "f6e59f1f-db1c-4db9-afec-35bbc543706a",
+          "trace_id": null
+        }
       }
     ]
   },
@@ -334,8 +1080,8 @@
           "engine": "api_gateway",
           "status": "healthy",
           "version": "1.0.0",
-          "uptime_seconds": 5.004429340362549,
-          "timestamp": "2026-02-28T04:41:53.471859",
+          "uptime_seconds": 4.086264133453369,
+          "timestamp": "2026-02-28T18:00:39.292212",
           "dependencies": {}
         }
       },
@@ -353,13 +1099,21 @@
             "engines": 21,
             "docs": "/docs",
             "health": "/health",
-            "routes": {
+            "composite_routes": {
+              "query": "POST /api/v1/query \u2014 Full RAG pipeline",
+              "onboard": "POST /api/v1/onboard \u2014 User onboarding pipeline",
+              "check_eligibility": "POST /api/v1/check-eligibility \u2014 Eligibility + AI explanation",
+              "ingest_policy": "POST /api/v1/ingest-policy \u2014 Policy ingestion pipeline",
+              "voice_query": "POST /api/v1/voice-query \u2014 Voice query pipeline",
+              "simulate": "POST /api/v1/simulate \u2014 What-if simulation + explanation"
+            },
+            "proxy_routes": {
               "auth": "/api/v1/auth/*",
               "identity": "/api/v1/identity/*",
               "metadata": "/api/v1/metadata/*",
               "eligibility": "/api/v1/eligibility/*",
               "schemes": "/api/v1/schemes/*",
-              "simulate": "/api/v1/simulate/*",
+              "simulate_direct": "/api/v1/simulate/*",
               "deadlines": "/api/v1/deadlines/*",
               "ai": "/api/v1/ai/*",
               "dashboard": "/api/v1/dashboard/*",
@@ -368,12 +1122,19 @@
               "analytics": "/api/v1/analytics/*",
               "trust": "/api/v1/trust/*",
               "profile": "/api/v1/profile/*",
-              "policies": "/api/v1/policies/*"
+              "policies": "/api/v1/policies/*",
+              "raw_data": "/api/v1/raw-data/*",
+              "processed_metadata": "/api/v1/processed-metadata/*",
+              "vectors": "/api/v1/vectors/*",
+              "anomaly": "/api/v1/anomaly/*",
+              "chunks": "/api/v1/chunks/*",
+              "gov_data": "/api/v1/gov-data/*"
             }
           },
           "errors": null,
-          "timestamp": "2026-02-28T04:41:55.540422",
-          "request_id": "23428a99-da75-4dd4-b718-155d48f321f8"
+          "timestamp": "2026-02-28T18:00:41.379838",
+          "request_id": "49a6239a-c4bd-4a01-a33b-fe931d442bd9",
+          "trace_id": null
         }
       }
     ]
@@ -392,8 +1153,8 @@
           "engine": "chunks_engine",
           "status": "healthy",
           "version": "1.0.0",
-          "uptime_seconds": 5.075438022613525,
-          "timestamp": "2026-02-28T04:42:02.623033",
+          "uptime_seconds": 4.157477855682373,
+          "timestamp": "2026-02-28T18:00:50.453400",
           "dependencies": {}
         }
       },
@@ -401,15 +1162,61 @@
         "endpoint": "Chunk Stats",
         "method": "GET",
         "url": "http://localhost:8010/chunks/stats",
-        "status": "ERROR",
-        "response": "timed out"
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "OK",
+          "data": {
+            "total_chunks": 4,
+            "unique_documents": 2,
+            "avg_chunk_size": 172
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T18:00:52.545219",
+          "request_id": "47e31c41-414b-4dcb-897d-8c51d77e1bab",
+          "trace_id": null
+        }
       },
       {
         "endpoint": "Create Chunks",
         "method": "POST",
         "url": "http://localhost:8010/chunks/create",
-        "status": "ERROR",
-        "response": "timed out"
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "OK",
+          "data": {
+            "document_id": "doc_test001",
+            "policy_id": null,
+            "strategy": "fixed",
+            "total_chunks": 3,
+            "avg_chunk_size": 87,
+            "chunks": [
+              {
+                "chunk_id": "761c0b4615e2",
+                "index": 0,
+                "content": "PM-KISAN is a Central Sector scheme providing income support of Rs.6000 per year to farmer families.",
+                "size": 100
+              },
+              {
+                "chunk_id": "3c8397fcac68",
+                "index": 1,
+                "content": "to farmer families. The scheme aims to supplement the financial needs of the farmers in procuring v",
+                "size": 99
+              },
+              {
+                "chunk_id": "0d3eaaa75ac3",
+                "index": 2,
+                "content": "rmers in procuring various inputs to ensure proper crop health.",
+                "size": 63
+              }
+            ]
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T18:00:54.602436",
+          "request_id": "8953b40a-b777-4067-a869-acd738ac3d1f",
+          "trace_id": null
+        }
       }
     ]
   },
@@ -422,22 +1229,237 @@
         "endpoint": "Health Check",
         "method": "GET",
         "url": "http://localhost:8011/health",
-        "status": "ERROR",
-        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+        "status": 200,
+        "response": {
+          "engine": "policy_fetching_engine",
+          "status": "healthy",
+          "version": "1.0.0",
+          "uptime_seconds": 4.224507570266724,
+          "timestamp": "2026-02-28T18:01:03.679235",
+          "dependencies": {}
+        }
       },
       {
         "endpoint": "List Policies",
         "method": "GET",
         "url": "http://localhost:8011/policies/list",
-        "status": "ERROR",
-        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "OK",
+          "data": [
+            {
+              "id": "7aa7a7827f91",
+              "policy_id": "SCHOLARSHIP-SC-ST-2024",
+              "title": "Post-Matric Scholarship for SC/ST Students",
+              "ministry": "Social Justice and Empowerment",
+              "document_type": "scheme",
+              "source_id": "seed_data",
+              "version": 1,
+              "change_type": "new",
+              "content_hash": "a8695b1c20dfdd1d5af83e202ca9ec522471f8ca95f7d099c65117a654145a95",
+              "processing_status": "parsed",
+              "fetched_at": "2026-02-28T04:55:15.390455"
+            },
+            {
+              "id": "6238b3f33bcb",
+              "policy_id": "NATIONAL-PENSION-2024",
+              "title": "National Pension System (NPS)",
+              "ministry": "Finance",
+              "document_type": "scheme",
+              "source_id": "seed_data",
+              "version": 1,
+              "change_type": "new",
+              "content_hash": "0a3f1c9474b9158bec37153da1690a3de71bb0b56207feaba57f0a35dc261400",
+              "processing_status": "parsed",
+              "fetched_at": "2026-02-28T04:55:15.384964"
+            },
+            {
+              "id": "c16f77ef5e44",
+              "policy_id": "SUKANYA-SAMRIDDHI-2024",
+              "title": "Sukanya Samriddhi Yojana",
+              "ministry": "Finance",
+              "document_type": "scheme",
+              "source_id": "seed_data",
+              "version": 1,
+              "change_type": "new",
+              "content_hash": "d5aa1ab20c9302ed382aa0d28015ebdec5a5c023a4d8b3583a0f03c29ddaeb5c",
+              "processing_status": "parsed",
+              "fetched_at": "2026-02-28T04:55:15.379004"
+            },
+            {
+              "id": "51a64ce57422",
+              "policy_id": "PMJJBY-2024",
+              "title": "Pradhan Mantri Jeevan Jyoti Bima Yojana",
+              "ministry": "Finance",
+              "document_type": "scheme",
+              "source_id": "seed_data",
+              "version": 1,
+              "change_type": "new",
+              "content_hash": "efb0eb54fe9488695475c3d054d5b5cc25a1ad2affd9dd514e2709c7a63c3342",
+              "processing_status": "parsed",
+              "fetched_at": "2026-02-28T04:55:15.374760"
+            },
+            {
+              "id": "65c970dabd5b",
+              "policy_id": "PMSBY-2024",
+              "title": "Pradhan Mantri Suraksha Bima Yojana",
+              "ministry": "Finance",
+              "document_type": "scheme",
+              "source_id": "seed_data",
+              "version": 1,
+              "change_type": "new",
+              "content_hash": "707a8d5ad932b97cad6a763f9e2787e7ccb1e15030fe152db517d582dd523c34",
+              "processing_status": "parsed",
+              "fetched_at": "2026-02-28T04:55:15.370713"
+            },
+            {
+              "id": "f11f0db3ff5c",
+              "policy_id": "MUDRA-YOJANA-2024",
+              "title": "Pradhan Mantri MUDRA Yojana",
+              "ministry": "Finance",
+              "document_type": "scheme",
+              "source_id": "seed_data",
+              "version": 1,
+              "change_type": "new",
+              "content_hash": "8537e19917ee6b6cfdf2cf8c0bea2dc51876c0b53a822cc8b8dcf838e68b4f4f",
+              "processing_status": "parsed",
+              "fetched_at": "2026-02-28T04:55:15.365949"
+            },
+            {
+              "id": "1693ff8bd274",
+              "policy_id": "PM-UJJWALA-2024",
+              "title": "Pradhan Mantri Ujjwala Yojana",
+              "ministry": "Petroleum and Natural Gas",
+              "document_type": "scheme",
+              "source_id": "seed_data",
+              "version": 1,
+              "change_type": "new",
+              "content_hash": "8469f8496c4c289346ec3903651dbc83c8dd5c2d171eadc58146019c09b6b0ef",
+              "processing_status": "parsed",
+              "fetched_at": "2026-02-28T04:55:15.361099"
+            },
+            {
+              "id": "e37b0b8a7938",
+              "policy_id": "AYUSHMAN-BHARAT-2024",
+              "title": "Ayushman Bharat - Pradhan Mantri Jan Arogya Yojana (AB-PMJAY)",
+              "ministry": "Health and Family Welfare",
+              "document_type": "scheme",
+              "source_id": "seed_data",
+              "version": 1,
+              "change_type": "new",
+              "content_hash": "b32b880d9d1812669eba48f1f234192afe025dd43f4bb364c3e6497cb9879ec2",
+              "processing_status": "parsed",
+              "fetched_at": "2026-02-28T04:55:15.356801"
+            },
+            {
+              "id": "88a0d005960b",
+              "policy_id": "PM-AWAS-YOJANA-2024",
+              "title": "Pradhan Mantri Awas Yojana (Urban & Gramin)",
+              "ministry": "Housing and Urban Affairs",
+              "document_type": "scheme",
+              "source_id": "seed_data",
+              "version": 1,
+              "change_type": "new",
+              "content_hash": "0910742b376cb1860e5ea52427b03b93759659bd36edee8a64cda2905e47f33e",
+              "processing_status": "parsed",
+              "fetched_at": "2026-02-28T04:55:15.352402"
+            },
+            {
+              "id": "7c0179cb8dd4",
+              "policy_id": "PM-KISAN-2024",
+              "title": "Pradhan Mantri Kisan Samman Nidhi",
+              "ministry": "Agriculture and Farmers Welfare",
+              "document_type": "scheme",
+              "source_id": "seed_data",
+              "version": 1,
+              "change_type": "new",
+              "content_hash": "dae7c5df5e044909fff3f9b30efa7d7fec9926752aa6921050093237772ae0f7",
+              "processing_status": "parsed",
+              "fetched_at": "2026-02-28T04:55:15.346867"
+            }
+          ],
+          "errors": null,
+          "timestamp": "2026-02-28T18:01:05.743366",
+          "request_id": "a9702d48-7fae-43dc-8e2c-65ed6e156a83",
+          "trace_id": null
+        }
       },
       {
         "endpoint": "List Sources",
         "method": "GET",
         "url": "http://localhost:8011/policies/sources/list",
-        "status": "ERROR",
-        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "OK",
+          "data": [
+            {
+              "source_id": "data_gov_in",
+              "name": "data.gov.in",
+              "url": "https://api.data.gov.in/resource/",
+              "type": "api",
+              "schedule": "0 */6 * * *",
+              "is_active": true,
+              "total_crawls": 0,
+              "success_rate": 0.0,
+              "last_crawled": null,
+              "last_status": "pending"
+            },
+            {
+              "source_id": "gazette_india",
+              "name": "Gazette of India",
+              "url": "https://egazette.gov.in/",
+              "type": "scraper",
+              "schedule": "*/30 * * * *",
+              "is_active": true,
+              "total_crawls": 0,
+              "success_rate": 0.0,
+              "last_crawled": null,
+              "last_status": "pending"
+            },
+            {
+              "source_id": "pmkisan_portal",
+              "name": "PM-KISAN Portal",
+              "url": "https://pmkisan.gov.in/",
+              "type": "scraper",
+              "schedule": "0 0 * * *",
+              "is_active": true,
+              "total_crawls": 0,
+              "success_rate": 0.0,
+              "last_crawled": null,
+              "last_status": "pending"
+            },
+            {
+              "source_id": "myscheme_gov",
+              "name": "MyScheme Portal",
+              "url": "https://www.myscheme.gov.in/",
+              "type": "scraper",
+              "schedule": "0 */12 * * *",
+              "is_active": true,
+              "total_crawls": 0,
+              "success_rate": 0.0,
+              "last_crawled": null,
+              "last_status": "pending"
+            },
+            {
+              "source_id": "rbi_notifications",
+              "name": "RBI Notifications",
+              "url": "https://www.rbi.org.in/scripts/BS_CircularIndexDisplay.aspx",
+              "type": "scraper",
+              "schedule": "0 */4 * * *",
+              "is_active": true,
+              "total_crawls": 0,
+              "success_rate": 0.0,
+              "last_crawled": null,
+              "last_status": "pending"
+            }
+          ],
+          "errors": null,
+          "timestamp": "2026-02-28T18:01:07.813286",
+          "request_id": "ef9ef2ac-9c4a-4539-a473-f255329d53be",
+          "trace_id": null
+        }
       }
     ]
   },
@@ -455,8 +1477,8 @@
           "engine": "json_user_info_generator",
           "status": "healthy",
           "version": "1.0.0",
-          "uptime_seconds": 5.08498740196228,
-          "timestamp": "2026-02-28T04:42:56.188470",
+          "uptime_seconds": 4.347322225570679,
+          "timestamp": "2026-02-28T18:01:16.958212",
           "dependencies": {}
         }
       },
@@ -464,8 +1486,33 @@
         "endpoint": "Generate Profile",
         "method": "POST",
         "url": "http://localhost:8012/profile/generate",
-        "status": "ERROR",
-        "response": "timed out"
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "OK",
+          "data": {
+            "user_id": "usr_test001",
+            "generated_at": "2026-02-28T18:01:19.000340",
+            "profile_version": "1.0",
+            "data_sources": [],
+            "completeness": {
+              "percentage": 0,
+              "sources_available": 0,
+              "sources_total": 5,
+              "missing": [
+                "metadata_engine",
+                "eligibility_engine",
+                "trust_scoring_engine",
+                "anomaly_detection_engine",
+                "deadline_engine"
+              ]
+            }
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T18:01:19.025297",
+          "request_id": "adc7ed0c-0c0c-487b-b10c-1214446a80c3",
+          "trace_id": null
+        }
       }
     ]
   },
@@ -478,22 +1525,52 @@
         "endpoint": "Health Check",
         "method": "GET",
         "url": "http://localhost:8013/health",
-        "status": "ERROR",
-        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+        "status": 200,
+        "response": {
+          "engine": "analytics_warehouse",
+          "status": "healthy",
+          "version": "1.0.0",
+          "uptime_seconds": 4.279311418533325,
+          "timestamp": "2026-02-28T18:01:28.132909",
+          "dependencies": {}
+        }
       },
       {
         "endpoint": "Dashboard Summary",
         "method": "GET",
         "url": "http://localhost:8013/analytics/dashboard",
-        "status": "ERROR",
-        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "OK",
+          "data": {
+            "total_events": 13,
+            "unique_users": 2,
+            "uptime_seconds": 6.4,
+            "top_event_types": [],
+            "top_schemes": [],
+            "top_engines": []
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T18:01:30.222399",
+          "request_id": "17667e6b-eac3-429d-93ec-46bac564c44c",
+          "trace_id": null
+        }
       },
       {
         "endpoint": "Record Event",
         "method": "POST",
         "url": "http://localhost:8013/analytics/events",
-        "status": "ERROR",
-        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "Event recorded",
+          "data": null,
+          "errors": null,
+          "timestamp": "2026-02-28T18:01:32.324220",
+          "request_id": "360aec55-56c5-4080-af56-d980b02701cb",
+          "trace_id": null
+        }
       }
     ]
   },
@@ -511,8 +1588,8 @@
           "engine": "dashboard_interface",
           "status": "healthy",
           "version": "1.0.0",
-          "uptime_seconds": 5.0821661949157715,
-          "timestamp": "2026-02-28T04:43:37.655407",
+          "uptime_seconds": 4.293745994567871,
+          "timestamp": "2026-02-28T18:01:41.439390",
           "dependencies": {}
         }
       },
@@ -520,22 +1597,260 @@
         "endpoint": "Engines Status",
         "method": "GET",
         "url": "http://localhost:8014/dashboard/engines/status",
-        "status": "ERROR",
-        "response": "timed out"
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "OK",
+          "data": {
+            "engines": [
+              {
+                "id": 1,
+                "name": "Login & Register",
+                "port": 8001,
+                "path": "login-register-engine"
+              },
+              {
+                "id": 2,
+                "name": "Identity Engine",
+                "port": 8002,
+                "path": "identity-engine"
+              },
+              {
+                "id": 3,
+                "name": "Raw Data Store",
+                "port": 8003,
+                "path": "raw-data-store"
+              },
+              {
+                "id": 4,
+                "name": "Metadata Engine",
+                "port": 8004,
+                "path": "metadata-engine"
+              },
+              {
+                "id": 5,
+                "name": "Processed Metadata Store",
+                "port": 8005,
+                "path": "processed-user-metadata-store"
+              },
+              {
+                "id": 6,
+                "name": "Vector Database",
+                "port": 8006,
+                "path": "vector-database"
+              },
+              {
+                "id": 7,
+                "name": "Neural Network",
+                "port": 8007,
+                "path": "neural-network-engine"
+              },
+              {
+                "id": 8,
+                "name": "Anomaly Detection",
+                "port": 8008,
+                "path": "anomaly-detection-engine"
+              },
+              {
+                "id": 9,
+                "name": "API Gateway",
+                "port": 8000,
+                "path": "api-gateway"
+              },
+              {
+                "id": 10,
+                "name": "Chunks Engine",
+                "port": 8010,
+                "path": "chunks-engine"
+              },
+              {
+                "id": 11,
+                "name": "Policy Fetching",
+                "port": 8011,
+                "path": "policy-fetching-engine"
+              },
+              {
+                "id": 12,
+                "name": "JSON User Info Gen",
+                "port": 8012,
+                "path": "json-user-info-generator"
+              },
+              {
+                "id": 13,
+                "name": "Analytics Warehouse",
+                "port": 8013,
+                "path": "analytics-warehouse"
+              },
+              {
+                "id": 14,
+                "name": "Dashboard Interface",
+                "port": 8014,
+                "path": "dashboard-interface"
+              },
+              {
+                "id": 15,
+                "name": "Eligibility Rules",
+                "port": 8015,
+                "path": "eligibility-rules-engine"
+              },
+              {
+                "id": 16,
+                "name": "Deadline Monitoring",
+                "port": 8016,
+                "path": "deadline-monitoring-engine"
+              },
+              {
+                "id": 17,
+                "name": "Simulation Engine",
+                "port": 8017,
+                "path": "simulation-engine"
+              },
+              {
+                "id": 18,
+                "name": "Gov Data Sync",
+                "port": 8018,
+                "path": "government-data-sync-engine"
+              },
+              {
+                "id": 19,
+                "name": "Trust Scoring",
+                "port": 8019,
+                "path": "trust-scoring-engine"
+              },
+              {
+                "id": 20,
+                "name": "Speech Interface",
+                "port": 8020,
+                "path": "speech-interface-engine"
+              },
+              {
+                "id": 21,
+                "name": "Document Understanding",
+                "port": 8021,
+                "path": "document-understanding-engine"
+              }
+            ],
+            "total": 21
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T18:01:43.512277",
+          "request_id": "15e35b8a-5270-4e1f-ae22-2da16430dfde",
+          "trace_id": null
+        }
       },
       {
         "endpoint": "Schemes Listing",
         "method": "GET",
         "url": "http://localhost:8014/dashboard/schemes",
-        "status": "ERROR",
-        "response": "timed out"
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "OK",
+          "data": {
+            "schemes": [
+              {
+                "id": "pm-kisan",
+                "name": "PM-KISAN",
+                "category": "Agriculture",
+                "beneficiaries": "14 Cr+",
+                "status": "Active"
+              },
+              {
+                "id": "pmay",
+                "name": "Pradhan Mantri Awas Yojana",
+                "category": "Housing",
+                "beneficiaries": "4 Cr+",
+                "status": "Active"
+              },
+              {
+                "id": "pmjay",
+                "name": "Ayushman Bharat (PMJAY)",
+                "category": "Health",
+                "beneficiaries": "55 Cr+",
+                "status": "Active"
+              },
+              {
+                "id": "ujjwala",
+                "name": "PM Ujjwala Yojana",
+                "category": "Energy",
+                "beneficiaries": "10 Cr+",
+                "status": "Active"
+              },
+              {
+                "id": "mudra",
+                "name": "PM MUDRA Yojana",
+                "category": "Finance",
+                "beneficiaries": "40 Cr+",
+                "status": "Active"
+              },
+              {
+                "id": "pmsby",
+                "name": "PM Suraksha Bima Yojana",
+                "category": "Insurance",
+                "beneficiaries": "35 Cr+",
+                "status": "Active"
+              },
+              {
+                "id": "pmjjby",
+                "name": "PM Jeevan Jyoti Bima Yojana",
+                "category": "Insurance",
+                "beneficiaries": "16 Cr+",
+                "status": "Active"
+              },
+              {
+                "id": "ssy",
+                "name": "Sukanya Samriddhi Yojana",
+                "category": "Savings",
+                "beneficiaries": "3 Cr+",
+                "status": "Active"
+              },
+              {
+                "id": "nps",
+                "name": "National Pension System",
+                "category": "Pension",
+                "beneficiaries": "7 Cr+",
+                "status": "Active"
+              },
+              {
+                "id": "scst-scholarship",
+                "name": "SC/ST Post-Matric Scholarship",
+                "category": "Education",
+                "beneficiaries": "60 L+",
+                "status": "Active"
+              }
+            ],
+            "total": 10
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T18:01:45.573015",
+          "request_id": "ea182fa3-ba97-436d-b9bc-8913857f16a6",
+          "trace_id": null
+        }
       },
       {
         "endpoint": "Search",
         "method": "GET",
         "url": "http://localhost:8014/dashboard/search?q=kisan",
-        "status": "ERROR",
-        "response": "timed out"
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "OK",
+          "data": {
+            "query": "kisan",
+            "results": [
+              {
+                "type": "scheme",
+                "id": "pm-kisan",
+                "label": "PM-KISAN"
+              }
+            ],
+            "count": 1
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T18:01:47.637463",
+          "request_id": "d1665e7d-143c-4c08-89b1-f93fd06f8bf8",
+          "trace_id": null
+        }
       }
     ]
   },
@@ -548,22 +1863,369 @@
         "endpoint": "Health Check",
         "method": "GET",
         "url": "http://localhost:8015/health",
-        "status": "ERROR",
-        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+        "status": 200,
+        "response": {
+          "engine": "eligibility_rules_engine",
+          "status": "healthy",
+          "version": "1.0.0",
+          "uptime_seconds": 4.304950714111328,
+          "timestamp": "2026-02-28T18:01:56.742555",
+          "dependencies": {}
+        }
       },
       {
         "endpoint": "List Schemes",
         "method": "GET",
         "url": "http://localhost:8015/eligibility/schemes",
-        "status": "ERROR",
-        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "OK",
+          "data": [
+            {
+              "scheme_id": "PM-KISAN-2024",
+              "scheme_name": "PM Kisan Samman Nidhi",
+              "rule_count": 3
+            },
+            {
+              "scheme_id": "AYUSHMAN-BHARAT-2024",
+              "scheme_name": "Ayushman Bharat PM-JAY",
+              "rule_count": 2
+            },
+            {
+              "scheme_id": "PM-AWAS-YOJANA-2024",
+              "scheme_name": "PM Awas Yojana",
+              "rule_count": 2
+            },
+            {
+              "scheme_id": "PM-UJJWALA-2024",
+              "scheme_name": "PM Ujjwala Yojana",
+              "rule_count": 2
+            },
+            {
+              "scheme_id": "MUDRA-YOJANA-2024",
+              "scheme_name": "PM MUDRA Yojana",
+              "rule_count": 2
+            },
+            {
+              "scheme_id": "PMSBY-2024",
+              "scheme_name": "PM Suraksha Bima Yojana",
+              "rule_count": 2
+            },
+            {
+              "scheme_id": "PMJJBY-2024",
+              "scheme_name": "PM Jeevan Jyoti Bima Yojana",
+              "rule_count": 2
+            },
+            {
+              "scheme_id": "SUKANYA-SAMRIDDHI-2024",
+              "scheme_name": "Sukanya Samriddhi Yojana",
+              "rule_count": 2
+            },
+            {
+              "scheme_id": "NATIONAL-PENSION-2024",
+              "scheme_name": "National Pension System",
+              "rule_count": 2
+            },
+            {
+              "scheme_id": "SCHOLARSHIP-SC-ST-2024",
+              "scheme_name": "Post-Matric Scholarship SC/ST",
+              "rule_count": 2
+            }
+          ],
+          "errors": null,
+          "timestamp": "2026-02-28T18:01:58.800355",
+          "request_id": "d0901165-f080-42b4-8aa0-203c0fb62344",
+          "trace_id": null
+        }
       },
       {
         "endpoint": "Check Eligibility",
         "method": "POST",
         "url": "http://localhost:8015/eligibility/check",
-        "status": "ERROR",
-        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "OK",
+          "data": {
+            "user_id": "usr_test001",
+            "total_schemes_checked": 10,
+            "eligible": 4,
+            "partial": 3,
+            "ineligible": 2,
+            "needs_verification": 1,
+            "results": [
+              {
+                "scheme_id": "PM-KISAN-2024",
+                "scheme_name": "PM Kisan Samman Nidhi",
+                "verdict": "eligible",
+                "confidence": 1.0,
+                "matched_rules": [
+                  {
+                    "status": "passed",
+                    "field": "occupation",
+                    "operator": "contains",
+                    "expected": "farmer,agriculture,kisan",
+                    "actual": "farmer",
+                    "description": "Must be a farmer",
+                    "mandatory": true
+                  },
+                  {
+                    "status": "passed",
+                    "field": "annual_income",
+                    "operator": "lte",
+                    "expected": "200000",
+                    "actual": "180000",
+                    "description": "Income \u2264 \u20b92,00,000",
+                    "mandatory": true
+                  },
+                  {
+                    "status": "passed",
+                    "field": "land_holding_acres",
+                    "operator": "gt",
+                    "expected": "0",
+                    "actual": "3.5",
+                    "description": "Should have landholding",
+                    "mandatory": false
+                  }
+                ],
+                "unmet_rules": [],
+                "missing_fields": [],
+                "explanation": "You meet all eligibility criteria for PM Kisan Samman Nidhi."
+              },
+              {
+                "scheme_id": "PMSBY-2024",
+                "scheme_name": "PM Suraksha Bima Yojana",
+                "verdict": "eligible",
+                "confidence": 1.0,
+                "matched_rules": [
+                  {
+                    "status": "passed",
+                    "field": "age",
+                    "operator": "gte",
+                    "expected": "18",
+                    "actual": "35",
+                    "description": "Min age 18",
+                    "mandatory": true
+                  },
+                  {
+                    "status": "passed",
+                    "field": "age",
+                    "operator": "lte",
+                    "expected": "70",
+                    "actual": "35",
+                    "description": "Max age 70",
+                    "mandatory": true
+                  }
+                ],
+                "unmet_rules": [],
+                "missing_fields": [],
+                "explanation": "You meet all eligibility criteria for PM Suraksha Bima Yojana."
+              },
+              {
+                "scheme_id": "PMJJBY-2024",
+                "scheme_name": "PM Jeevan Jyoti Bima Yojana",
+                "verdict": "eligible",
+                "confidence": 1.0,
+                "matched_rules": [
+                  {
+                    "status": "passed",
+                    "field": "age",
+                    "operator": "gte",
+                    "expected": "18",
+                    "actual": "35",
+                    "description": "Min age 18",
+                    "mandatory": true
+                  },
+                  {
+                    "status": "passed",
+                    "field": "age",
+                    "operator": "lte",
+                    "expected": "50",
+                    "actual": "35",
+                    "description": "Max age 50",
+                    "mandatory": true
+                  }
+                ],
+                "unmet_rules": [],
+                "missing_fields": [],
+                "explanation": "You meet all eligibility criteria for PM Jeevan Jyoti Bima Yojana."
+              },
+              {
+                "scheme_id": "NATIONAL-PENSION-2024",
+                "scheme_name": "National Pension System",
+                "verdict": "eligible",
+                "confidence": 1.0,
+                "matched_rules": [
+                  {
+                    "status": "passed",
+                    "field": "age",
+                    "operator": "gte",
+                    "expected": "18",
+                    "actual": "35",
+                    "description": "Min age 18",
+                    "mandatory": true
+                  },
+                  {
+                    "status": "passed",
+                    "field": "age",
+                    "operator": "lte",
+                    "expected": "70",
+                    "actual": "35",
+                    "description": "Max age 70",
+                    "mandatory": true
+                  }
+                ],
+                "unmet_rules": [],
+                "missing_fields": [],
+                "explanation": "You meet all eligibility criteria for National Pension System."
+              },
+              {
+                "scheme_id": "PM-AWAS-YOJANA-2024",
+                "scheme_name": "PM Awas Yojana",
+                "verdict": "partial",
+                "confidence": 0.33,
+                "matched_rules": [
+                  {
+                    "status": "passed",
+                    "field": "annual_income",
+                    "operator": "lte",
+                    "expected": "1800000",
+                    "actual": "180000",
+                    "description": "Income \u2264 \u20b918,00,000 (MIG-II)",
+                    "mandatory": true
+                  }
+                ],
+                "unmet_rules": [],
+                "missing_fields": [
+                  "category"
+                ],
+                "explanation": "You may be eligible for PM Awas Yojana but we need more information: category."
+              },
+              {
+                "scheme_id": "MUDRA-YOJANA-2024",
+                "scheme_name": "PM MUDRA Yojana",
+                "verdict": "partial",
+                "confidence": 0.33,
+                "matched_rules": [
+                  {
+                    "status": "passed",
+                    "field": "age",
+                    "operator": "gte",
+                    "expected": "18",
+                    "actual": "35",
+                    "description": "Min age 18",
+                    "mandatory": true
+                  }
+                ],
+                "unmet_rules": [],
+                "missing_fields": [
+                  "employment_category"
+                ],
+                "explanation": "You may be eligible for PM MUDRA Yojana but we need more information: employment_category."
+              },
+              {
+                "scheme_id": "SCHOLARSHIP-SC-ST-2024",
+                "scheme_name": "Post-Matric Scholarship SC/ST",
+                "verdict": "partial",
+                "confidence": 0.33,
+                "matched_rules": [
+                  {
+                    "status": "passed",
+                    "field": "annual_income",
+                    "operator": "lte",
+                    "expected": "250000",
+                    "actual": "180000",
+                    "description": "Family income \u2264 \u20b92,50,000",
+                    "mandatory": true
+                  }
+                ],
+                "unmet_rules": [],
+                "missing_fields": [
+                  "category"
+                ],
+                "explanation": "You may be eligible for Post-Matric Scholarship SC/ST but we need more information: category."
+              },
+              {
+                "scheme_id": "AYUSHMAN-BHARAT-2024",
+                "scheme_name": "Ayushman Bharat PM-JAY",
+                "verdict": "needs_verification",
+                "confidence": 0.3,
+                "matched_rules": [
+                  {
+                    "status": "passed",
+                    "field": "annual_income",
+                    "operator": "lte",
+                    "expected": "500000",
+                    "actual": "180000",
+                    "description": "Income \u2264 \u20b95,00,000",
+                    "mandatory": false
+                  }
+                ],
+                "unmet_rules": [],
+                "missing_fields": [
+                  "is_bpl"
+                ],
+                "explanation": "We need additional information to determine your eligibility for Ayushman Bharat PM-JAY."
+              },
+              {
+                "scheme_id": "SUKANYA-SAMRIDDHI-2024",
+                "scheme_name": "Sukanya Samriddhi Yojana",
+                "verdict": "ineligible",
+                "confidence": 1.0,
+                "matched_rules": [],
+                "unmet_rules": [
+                  {
+                    "status": "failed",
+                    "field": "gender",
+                    "operator": "eq",
+                    "expected": "female",
+                    "actual": "male",
+                    "description": "For girl child",
+                    "mandatory": true
+                  },
+                  {
+                    "status": "failed",
+                    "field": "age",
+                    "operator": "lte",
+                    "expected": "10",
+                    "actual": "35",
+                    "description": "Girl must be below 10 years",
+                    "mandatory": true
+                  }
+                ],
+                "missing_fields": [],
+                "explanation": "You are not eligible for Sukanya Samriddhi Yojana. Criteria not met: For girl child; Girl must be below 10 years."
+              },
+              {
+                "scheme_id": "PM-UJJWALA-2024",
+                "scheme_name": "PM Ujjwala Yojana",
+                "verdict": "ineligible",
+                "confidence": 0.9,
+                "matched_rules": [],
+                "unmet_rules": [
+                  {
+                    "status": "failed",
+                    "field": "gender",
+                    "operator": "eq",
+                    "expected": "female",
+                    "actual": "male",
+                    "description": "Applicant must be female",
+                    "mandatory": true
+                  }
+                ],
+                "missing_fields": [
+                  "is_bpl"
+                ],
+                "explanation": "You are not eligible for PM Ujjwala Yojana. Criteria not met: Applicant must be female."
+              }
+            ]
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T18:02:00.861070",
+          "request_id": "5c1d36ea-44d9-44ab-8680-f86baebe537a",
+          "trace_id": null
+        }
       }
     ]
   },
@@ -576,22 +2238,113 @@
         "endpoint": "Health Check",
         "method": "GET",
         "url": "http://localhost:8016/health",
-        "status": "ERROR",
-        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+        "status": 200,
+        "response": {
+          "engine": "deadline_monitoring_engine",
+          "status": "healthy",
+          "version": "1.0.0",
+          "uptime_seconds": 4.263117790222168,
+          "timestamp": "2026-02-28T18:02:09.982451",
+          "dependencies": {}
+        }
       },
       {
         "endpoint": "List Deadlines",
         "method": "GET",
         "url": "http://localhost:8016/deadlines/list",
-        "status": "ERROR",
-        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "OK",
+          "data": [
+            {
+              "id": "bf5d10b3307e",
+              "scheme_id": "PM-KISAN-2024",
+              "scheme_name": "PM Kisan Samman Nidhi",
+              "deadline_type": "renewal",
+              "deadline_date": "2025-03-31",
+              "days_remaining": -335,
+              "urgency": 1.0,
+              "priority": "high",
+              "description": "eKYC renewal deadline for PM-KISAN installment",
+              "is_recurring": true
+            },
+            {
+              "id": "5231b0f6818f",
+              "scheme_id": "PMSBY-2024",
+              "scheme_name": "PM Suraksha Bima Yojana",
+              "deadline_type": "renewal",
+              "deadline_date": "2025-05-31",
+              "days_remaining": -274,
+              "urgency": 1.0,
+              "priority": "medium",
+              "description": "Annual renewal auto-debit consent",
+              "is_recurring": true
+            },
+            {
+              "id": "96d7fa6fe129",
+              "scheme_id": "PM-AWAS-YOJANA-2024",
+              "scheme_name": "PM Awas Yojana Urban",
+              "deadline_type": "application",
+              "deadline_date": "2025-06-30",
+              "days_remaining": -244,
+              "urgency": 1.0,
+              "priority": "high",
+              "description": "PMAY-U Phase IV application deadline",
+              "is_recurring": false
+            },
+            {
+              "id": "6d3e92a7077d",
+              "scheme_id": "SCHOLARSHIP-SC-ST-2024",
+              "scheme_name": "Post-Matric Scholarship SC/ST",
+              "deadline_type": "application",
+              "deadline_date": "2025-10-31",
+              "days_remaining": -121,
+              "urgency": 1.0,
+              "priority": "high",
+              "description": "Fresh/renewal applications for FY 2025-26",
+              "is_recurring": true
+            },
+            {
+              "id": "0477e6e87d5c",
+              "scheme_id": "AYUSHMAN-BHARAT-2024",
+              "scheme_name": "Ayushman Bharat PM-JAY",
+              "deadline_type": "enrollment",
+              "deadline_date": "2025-12-31",
+              "days_remaining": -60,
+              "urgency": 1.0,
+              "priority": "medium",
+              "description": "Open enrollment for Ayushman Bharat health insurance",
+              "is_recurring": true
+            }
+          ],
+          "errors": null,
+          "timestamp": "2026-02-28T18:02:12.079781",
+          "request_id": "4b54ba7e-d106-4706-8aa2-e34bc7b0b823",
+          "trace_id": null
+        }
       },
       {
         "endpoint": "Check Deadlines",
         "method": "POST",
         "url": "http://localhost:8016/deadlines/check",
-        "status": "ERROR",
-        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "OK",
+          "data": {
+            "user_id": "usr_test001",
+            "checked_at": "2026-02-28T18:02:14.166434",
+            "total_deadlines": 0,
+            "critical": 0,
+            "upcoming_7_days": 0,
+            "alerts": []
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T18:02:14.172549",
+          "request_id": "b5a3d1f0-26e6-4fba-b262-c2c1686d9807",
+          "trace_id": null
+        }
       }
     ]
   },
@@ -609,8 +2362,8 @@
           "engine": "simulation_engine",
           "status": "healthy",
           "version": "1.0.0",
-          "uptime_seconds": 5.102473735809326,
-          "timestamp": "2026-02-28T04:44:55.560340",
+          "uptime_seconds": 4.318341255187988,
+          "timestamp": "2026-02-28T18:02:23.284600",
           "dependencies": {}
         }
       },
@@ -618,91 +2371,184 @@
         "endpoint": "What-If Simulation",
         "method": "POST",
         "url": "http://localhost:8017/simulate/what-if",
-        "status": 422,
+        "status": 200,
         "response": {
-          "detail": [
-            {
-              "type": "missing",
-              "loc": [
-                "body",
-                "current_profile"
-              ],
-              "msg": "Field required",
-              "input": {
-                "user_id": "usr_test001",
-                "base_profile": {
-                  "age": 28,
-                  "annual_income": 400000,
-                  "occupation": "salaried",
-                  "gender": "male",
-                  "state": "Delhi"
-                },
-                "modified_profile": {
-                  "age": 28,
-                  "annual_income": 180000,
-                  "occupation": "farmer",
-                  "gender": "male",
-                  "state": "Bihar",
-                  "land_holding_acres": 3
-                }
-              }
+          "success": true,
+          "message": "OK",
+          "data": {
+            "scenario_type": "custom",
+            "changes_applied": {
+              "annual_income": 180000,
+              "occupation": "farmer",
+              "state": "Bihar",
+              "land_holding_acres": 3
             },
-            {
-              "type": "missing",
-              "loc": [
-                "body",
-                "changes"
-              ],
-              "msg": "Field required",
-              "input": {
-                "user_id": "usr_test001",
-                "base_profile": {
-                  "age": 28,
-                  "annual_income": 400000,
-                  "occupation": "salaried",
-                  "gender": "male",
-                  "state": "Delhi"
-                },
-                "modified_profile": {
-                  "age": 28,
-                  "annual_income": 180000,
-                  "occupation": "farmer",
-                  "gender": "male",
-                  "state": "Bihar",
-                  "land_holding_acres": 3
-                }
+            "original_eligible": [
+              {
+                "id": "AYUSHMAN-BHARAT-2024",
+                "name": "Ayushman Bharat PM-JAY"
+              },
+              {
+                "id": "PM-AWAS-YOJANA-2024",
+                "name": "PM Awas Yojana"
+              },
+              {
+                "id": "MUDRA-YOJANA-2024",
+                "name": "PM MUDRA Yojana"
+              },
+              {
+                "id": "PMSBY-2024",
+                "name": "PM Suraksha Bima Yojana"
+              },
+              {
+                "id": "PMJJBY-2024",
+                "name": "PM Jeevan Jyoti Bima Yojana"
               }
-            }
-          ]
+            ],
+            "new_eligible": [
+              {
+                "id": "PM-KISAN-2024",
+                "name": "PM Kisan Samman Nidhi"
+              },
+              {
+                "id": "AYUSHMAN-BHARAT-2024",
+                "name": "Ayushman Bharat PM-JAY"
+              },
+              {
+                "id": "PM-AWAS-YOJANA-2024",
+                "name": "PM Awas Yojana"
+              },
+              {
+                "id": "MUDRA-YOJANA-2024",
+                "name": "PM MUDRA Yojana"
+              },
+              {
+                "id": "PMSBY-2024",
+                "name": "PM Suraksha Bima Yojana"
+              },
+              {
+                "id": "PMJJBY-2024",
+                "name": "PM Jeevan Jyoti Bima Yojana"
+              },
+              {
+                "id": "SCHOLARSHIP-SC-ST-2024",
+                "name": "Post-Matric Scholarship SC/ST"
+              }
+            ],
+            "gained": [
+              {
+                "id": "PM-KISAN-2024",
+                "name": "PM Kisan Samman Nidhi",
+                "benefit": 6000
+              },
+              {
+                "id": "SCHOLARSHIP-SC-ST-2024",
+                "name": "Post-Matric Scholarship SC/ST",
+                "benefit": 50000
+              }
+            ],
+            "lost": [],
+            "net_benefit_change": 56000,
+            "recommendations": [
+              "You would become eligible for PM Kisan Samman Nidhi",
+              "You would become eligible for Post-Matric Scholarship SC/ST"
+            ]
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T18:02:25.389152",
+          "request_id": "aed5ec67-0615-4afe-97d6-079e77928f1c",
+          "trace_id": null
         }
       },
       {
         "endpoint": "Life Event Simulation",
         "method": "POST",
         "url": "http://localhost:8017/simulate/life-event",
-        "status": 422,
+        "status": 200,
         "response": {
-          "detail": [
-            {
-              "type": "missing",
-              "loc": [
-                "body",
-                "current_profile"
-              ],
-              "msg": "Field required",
-              "input": {
-                "user_id": "usr_test001",
-                "base_profile": {
-                  "age": 28,
-                  "annual_income": 400000,
-                  "occupation": "salaried",
-                  "gender": "male",
-                  "state": "Delhi"
-                },
-                "life_event": "job_loss"
+          "success": true,
+          "message": "OK",
+          "data": {
+            "scenario_type": "job_loss",
+            "changes_applied": {
+              "annual_income": 0,
+              "occupation": "unemployed"
+            },
+            "original_eligible": [
+              {
+                "id": "AYUSHMAN-BHARAT-2024",
+                "name": "Ayushman Bharat PM-JAY"
+              },
+              {
+                "id": "PM-AWAS-YOJANA-2024",
+                "name": "PM Awas Yojana"
+              },
+              {
+                "id": "MUDRA-YOJANA-2024",
+                "name": "PM MUDRA Yojana"
+              },
+              {
+                "id": "PMSBY-2024",
+                "name": "PM Suraksha Bima Yojana"
+              },
+              {
+                "id": "PMJJBY-2024",
+                "name": "PM Jeevan Jyoti Bima Yojana"
               }
-            }
-          ]
+            ],
+            "new_eligible": [
+              {
+                "id": "PM-KISAN-2024",
+                "name": "PM Kisan Samman Nidhi"
+              },
+              {
+                "id": "AYUSHMAN-BHARAT-2024",
+                "name": "Ayushman Bharat PM-JAY"
+              },
+              {
+                "id": "PM-AWAS-YOJANA-2024",
+                "name": "PM Awas Yojana"
+              },
+              {
+                "id": "MUDRA-YOJANA-2024",
+                "name": "PM MUDRA Yojana"
+              },
+              {
+                "id": "PMSBY-2024",
+                "name": "PM Suraksha Bima Yojana"
+              },
+              {
+                "id": "PMJJBY-2024",
+                "name": "PM Jeevan Jyoti Bima Yojana"
+              },
+              {
+                "id": "SCHOLARSHIP-SC-ST-2024",
+                "name": "Post-Matric Scholarship SC/ST"
+              }
+            ],
+            "gained": [
+              {
+                "id": "PM-KISAN-2024",
+                "name": "PM Kisan Samman Nidhi",
+                "benefit": 6000
+              },
+              {
+                "id": "SCHOLARSHIP-SC-ST-2024",
+                "name": "Post-Matric Scholarship SC/ST",
+                "benefit": 50000
+              }
+            ],
+            "lost": [],
+            "net_benefit_change": 56000,
+            "recommendations": [
+              "You would become eligible for PM Kisan Samman Nidhi",
+              "You would become eligible for Post-Matric Scholarship SC/ST"
+            ]
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T18:02:27.501381",
+          "request_id": "5926ac8a-1102-4141-8e60-7756e590b17c",
+          "trace_id": null
         }
       }
     ]
@@ -716,15 +2562,81 @@
         "endpoint": "Health Check",
         "method": "GET",
         "url": "http://localhost:8018/health",
-        "status": "ERROR",
-        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+        "status": 200,
+        "response": {
+          "engine": "government_data_sync_engine",
+          "status": "healthy",
+          "version": "1.0.0",
+          "uptime_seconds": 4.300214767456055,
+          "timestamp": "2026-02-28T18:02:36.606541",
+          "dependencies": {}
+        }
       },
       {
         "endpoint": "List Datasets",
         "method": "GET",
         "url": "http://localhost:8018/gov-data/datasets",
-        "status": "ERROR",
-        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "OK",
+          "data": [
+            {
+              "dataset_id": "nfhs5_district",
+              "name": "NFHS-5 District Factsheet Data",
+              "source": "data.gov.in",
+              "category": "nfhs",
+              "records": 5,
+              "is_cached": true,
+              "status": "synced",
+              "last_synced": "2026-02-28T04:55:37.580169"
+            },
+            {
+              "dataset_id": "census_2011_population",
+              "name": "Census 2011 Population Data",
+              "source": "data.gov.in",
+              "category": "census",
+              "records": 0,
+              "is_cached": true,
+              "status": "synced",
+              "last_synced": "2026-02-28T04:55:37.588423"
+            },
+            {
+              "dataset_id": "sdg_india_index",
+              "name": "SDG India Index",
+              "source": "data.gov.in",
+              "category": "sdg",
+              "records": 0,
+              "is_cached": true,
+              "status": "synced",
+              "last_synced": "2026-02-28T04:55:37.591425"
+            },
+            {
+              "dataset_id": "poverty_headcount",
+              "name": "Poverty Headcount Ratio",
+              "source": "data.gov.in",
+              "category": "economic",
+              "records": 6,
+              "is_cached": true,
+              "status": "synced",
+              "last_synced": "2026-02-28T04:55:37.594936"
+            },
+            {
+              "dataset_id": "scheme_beneficiaries",
+              "name": "Scheme Beneficiary Statistics",
+              "source": "local",
+              "category": "schemes",
+              "records": 5,
+              "is_cached": true,
+              "status": "synced",
+              "last_synced": "2026-02-28T04:55:37.601247"
+            }
+          ],
+          "errors": null,
+          "timestamp": "2026-02-28T18:02:38.667574",
+          "request_id": "5fc45fb1-c61d-440c-b91d-d1b77fb4ab2d",
+          "trace_id": null
+        }
       }
     ]
   },
@@ -742,8 +2654,8 @@
           "engine": "trust_scoring_engine",
           "status": "healthy",
           "version": "1.0.0",
-          "uptime_seconds": 5.199695348739624,
-          "timestamp": "2026-02-28T04:45:19.976336",
+          "uptime_seconds": 4.285338640213013,
+          "timestamp": "2026-02-28T18:02:47.784707",
           "dependencies": {}
         }
       },
@@ -751,8 +2663,58 @@
         "endpoint": "Compute Trust Score",
         "method": "POST",
         "url": "http://localhost:8019/trust/compute",
-        "status": "ERROR",
-        "response": "timed out"
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "OK",
+          "data": {
+            "overall_score": 69.9,
+            "trust_level": "MEDIUM",
+            "components": {
+              "data_completeness": {
+                "score": 58.1,
+                "weight": "30%"
+              },
+              "anomaly_check": {
+                "score": 100.0,
+                "weight": "25%"
+              },
+              "consistency": {
+                "score": 100.0,
+                "weight": "20%"
+              },
+              "behavior": {
+                "score": 50.0,
+                "weight": "15%"
+              },
+              "verification": {
+                "score": 0.0,
+                "weight": "10%"
+              }
+            },
+            "positive_factors": [
+              "Core field 'name' provided",
+              "Core field 'phone' provided",
+              "Core field 'state' provided",
+              "Core field 'gender' provided",
+              "Field 'district' provided",
+              "Field 'annual_income' provided",
+              "Field 'occupation' provided",
+              "No anomalies detected",
+              "Profile data is internally consistent"
+            ],
+            "negative_factors": [
+              "Missing critical field: date_of_birth",
+              "Missing field: pincode",
+              "Missing field: category",
+              "Document verification not available (DigiLocker integration pending)"
+            ]
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T18:02:49.867996",
+          "request_id": "ae3fed02-e932-4c75-9c1d-91bcdebf5833",
+          "trace_id": null
+        }
       }
     ]
   },
@@ -765,22 +2727,102 @@
         "endpoint": "Health Check",
         "method": "GET",
         "url": "http://localhost:8020/health",
-        "status": "ERROR",
-        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+        "status": 200,
+        "response": {
+          "engine": "speech_interface_engine",
+          "status": "healthy",
+          "version": "1.0.0",
+          "uptime_seconds": 3.681117057800293,
+          "timestamp": "2026-02-28T18:02:58.978851",
+          "dependencies": {}
+        }
       },
       {
         "endpoint": "List Languages",
         "method": "GET",
         "url": "http://localhost:8020/speech/languages",
-        "status": "ERROR",
-        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "OK",
+          "data": [
+            {
+              "name": "hindi",
+              "code": "hi-IN"
+            },
+            {
+              "name": "english",
+              "code": "en-IN"
+            },
+            {
+              "name": "bengali",
+              "code": "bn-IN"
+            },
+            {
+              "name": "tamil",
+              "code": "ta-IN"
+            },
+            {
+              "name": "telugu",
+              "code": "te-IN"
+            },
+            {
+              "name": "marathi",
+              "code": "mr-IN"
+            },
+            {
+              "name": "gujarati",
+              "code": "gu-IN"
+            },
+            {
+              "name": "kannada",
+              "code": "kn-IN"
+            },
+            {
+              "name": "malayalam",
+              "code": "ml-IN"
+            },
+            {
+              "name": "punjabi",
+              "code": "pa-IN"
+            },
+            {
+              "name": "odia",
+              "code": "or-IN"
+            },
+            {
+              "name": "assamese",
+              "code": "as-IN"
+            },
+            {
+              "name": "urdu",
+              "code": "ur-IN"
+            }
+          ],
+          "errors": null,
+          "timestamp": "2026-02-28T18:03:01.052590",
+          "request_id": "5663cd68-76e7-4f27-9923-c8ffba94bc74",
+          "trace_id": null
+        }
       },
       {
         "endpoint": "Detect Language",
         "method": "POST",
         "url": "http://localhost:8020/speech/detect-language",
-        "status": "ERROR",
-        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "OK",
+          "data": {
+            "language": "english",
+            "language_code": "en-IN",
+            "script_detected": false
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T18:03:03.127386",
+          "request_id": "5b55230b-67b8-4b4b-8a37-48e34480fb85",
+          "trace_id": null
+        }
       }
     ]
   },
@@ -798,8 +2840,8 @@
           "engine": "document_understanding_engine",
           "status": "healthy",
           "version": "1.0.0",
-          "uptime_seconds": 4.093827724456787,
-          "timestamp": "2026-02-28T04:46:01.436729",
+          "uptime_seconds": 3.7230935096740723,
+          "timestamp": "2026-02-28T18:03:12.250050",
           "dependencies": {}
         }
       },
@@ -807,24 +2849,58 @@
         "endpoint": "Parse Document",
         "method": "POST",
         "url": "http://localhost:8021/documents/parse",
-        "status": 422,
+        "status": 200,
         "response": {
-          "detail": [
-            {
-              "type": "missing",
-              "loc": [
-                "body",
-                "text"
-              ],
-              "msg": "Field required",
-              "input": {
-                "policy_id": "pol_test001",
-                "content": "PM-KISAN: Eligibility criteria include being a farmer with land holding up to 5 acres and annual income below Rs. 6,00,000. Benefits include Rs. 6000 per year. Deadline for application is March 31, 2025.",
-                "title": "PM-KISAN Overview",
-                "source": "test"
+          "success": true,
+          "message": "OK",
+          "data": {
+            "parsed_id": "8ca8c597b542",
+            "policy_id": "pol_test001",
+            "title": "PM-KISAN Overview",
+            "extraction_method": "rule_based",
+            "confidence": 0.6,
+            "eligibility_criteria": [
+              "PM-KISAN: Eligibility criteria include being a farmer with land holding up to 5 acres and annual income below Rs. 6,00,000. Benefits include Rs. 6000 per year. Deadline for application is March 31, 2025.",
+              "farmer with land holding up to 5 acres and annual income below Rs. 6,00,000. Benefits include Rs. 6000 per year. Deadline for application is March 31, 2025."
+            ],
+            "benefits": [
+              "to 5 acres and annual income below Rs. 6,00,000. Benefits include Rs. 6000 per year. Deadline for application is March 31, 2025.",
+              "and holding up to 5 acres and annual income below Rs. 6,00,000. Benefits include Rs. 6000 per year. Deadline for application is March 31, 2025.",
+              "nnual income below Rs. 6,00,000. Benefits include Rs. 6000 per year. Deadline for application is March 31, 2025.",
+              "ome below Rs. 6,00,000. Benefits include Rs. 6000 per year. Deadline for application is March 31, 2025."
+            ],
+            "required_documents": [],
+            "deadlines": [
+              "Rs. 6,00,000. Benefits include Rs. 6000 per year. Deadline for application is March 31, 2025."
+            ],
+            "amounts": [
+              {
+                "amount": 600000.0,
+                "context": "acres and annual income below Rs. 6,00,000. Benefits include Rs. 6000 per year. Deadline for"
+              },
+              {
+                "amount": 6000.0,
+                "context": "s. 6,00,000. Benefits include Rs. 6000 per year. Deadline for application is March 31, 20"
+              },
+              {
+                "amount": 6000.0,
+                "context": "s. 6,00,000. Benefits include Rs. 6000 per year. Deadline for application is March 31, 2025."
               }
-            }
-          ]
+            ],
+            "age_limits": {
+              "max_age": 5
+            },
+            "income_limits": {
+              "max_annual_income": 600000.0
+            },
+            "target_categories": [
+              "Farmer"
+            ]
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T18:03:14.291938",
+          "request_id": "ba75f1d1-669b-4513-a1eb-549a0cb4e157",
+          "trace_id": null
         }
       }
     ]

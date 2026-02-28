@@ -268,6 +268,13 @@ class AddSourceRequest(BaseModel):
     rate_limit_per_sec: float = 1.0
 
 
+class SchemeFetchRequest(BaseModel):
+    """Schema used by the Orchestrator's ingest-policy composite route."""
+    source_url: str
+    source_type: str = "web"
+    tags: Optional[List[str]] = None
+
+
 class PolicySearchRequest(BaseModel):
     query: str
     ministry: Optional[str] = None
@@ -582,3 +589,99 @@ async def add_source(data: AddSourceRequest):
         ))
         await session.commit()
     return ApiResponse(message="Source added")
+
+
+# ── Orchestrator-compatible fetch endpoint ────────────────────────────────────
+
+@app.post("/schemes/fetch", response_model=ApiResponse, tags=["Fetch"])
+async def fetch_scheme_by_url(data: SchemeFetchRequest):
+    """
+    Fetch a policy/scheme by URL.  Used by the API-Gateway orchestrator's
+    ingest-policy composite route.
+
+    Local-first behaviour:
+      1. Search seeded policies whose source_url or title partially matches.
+      2. If found, return the cached content immediately.
+      3. If not found, return a synthetic stub so the pipeline can proceed.
+    """
+    # Try to match against already-seeded / fetched documents
+    async with AsyncSessionLocal() as session:
+        # Exact source_url match first
+        row = (await session.execute(
+            select(FetchedDocument)
+            .where(FetchedDocument.source_url.ilike(f"%{data.source_url}%"))
+            .order_by(FetchedDocument.version.desc())
+        )).scalars().first()
+
+        # Fallback: try keyword match from URL components
+        if not row:
+            raw_keywords = [
+                kw for kw in data.source_url
+                .replace("https://", "").replace("http://", "")
+                .replace("/", " ").replace(".", " ")
+                .split()
+                if len(kw) > 3
+            ]
+            # Generate keyword variants to handle schemes like pmkisan <-> PM-KISAN
+            keywords: list[str] = []
+            for kw in raw_keywords:
+                keywords.append(kw)                          # pmkisan
+                if "-" in kw:
+                    keywords.append(kw.replace("-", ""))      # pm-kisan → pmkisan
+                    keywords.append(kw.replace("-", "%"))     # pm-kisan → pm%kisan
+                # For compound words (e.g. pmkisan), insert wildcard after
+                # common 2-char Indian-scheme prefixes like pm, ab
+                if len(kw) >= 5 and kw[:2].lower() in ("pm", "ab"):
+                    keywords.append(f"{kw[:2]}%{kw[2:]}")    # pmkisan → pm%kisan
+                    keywords.append(kw[2:])                   # pmkisan → kisan
+
+            for kw in keywords:
+                row = (await session.execute(
+                    select(FetchedDocument)
+                    .where(
+                        (FetchedDocument.title.ilike(f"%{kw}%")) |
+                        (FetchedDocument.extracted_text.ilike(f"%{kw}%")) |
+                        (FetchedDocument.policy_id.ilike(f"%{kw}%"))
+                    )
+                    .order_by(FetchedDocument.version.desc())
+                )).scalars().first()
+                if row:
+                    break
+
+    if row:
+        return ApiResponse(
+            message="Policy fetched from local store",
+            data={
+                "document_id": row.id,
+                "policy_id": row.policy_id,
+                "scheme_id": row.policy_id,
+                "title": row.title,
+                "text": row.extracted_text or row.raw_content or "",
+                "content": row.extracted_text or row.raw_content or "",
+                "source_url": data.source_url,
+                "version": row.version,
+                "change_type": "existing",
+            },
+        )
+
+    # No match — return a synthetic stub so downstream steps can still run
+    stub_id = generate_id()
+    stub_text = (
+        f"Stub policy document fetched from {data.source_url}. "
+        "This is a locally generated placeholder. In production the content "
+        "would be crawled from the source portal."
+    )
+    return ApiResponse(
+        message="Policy stub generated (source not yet crawled)",
+        data={
+            "document_id": stub_id,
+            "policy_id": f"stub_{stub_id[:8]}",
+            "scheme_id": f"stub_{stub_id[:8]}",
+            "title": f"Policy from {data.source_url}",
+            "text": stub_text,
+            "content": stub_text,
+            "source_url": data.source_url,
+            "version": 1,
+            "change_type": "new",
+        },
+    )

@@ -1,0 +1,12 @@
+{
+  "event_id": "3bf6d5f3-8e68-42a3-8da7-0ac524d1dd62",
+  "event_type": "TEST_EVENT",
+  "source_engine": "test_script",
+  "user_id": "usr_test001",
+  "timestamp": "2026-02-28T16:53:57.656998",
+  "payload": {
+    "action": "testing"
+  },
+  "hash": "01a61df63ffa6f1de68dd9a33d4089aab9d97c80f4b3cf259eae641ff9a26490",
+  "prev_hash": "GENESIS"
+}

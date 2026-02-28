@@ -1,0 +1,310 @@
+{
+  "endpoints": [
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/register",
+      "description": "Register a new user account with phone and password",
+      "auth_required": false,
+      "parameters": {
+        "body": {
+          "phone": "string (10-digit Indian mobile)",
+          "password": "string (min 8 chars)",
+          "name": "string",
+          "state": "string (optional)",
+          "district": "string (optional)",
+          "language_preference": "string (default: 'en')",
+          "consent_data_processing": "boolean"
+        }
+      },
+      "response": "ApiResponse { user_id, phone, name, access_token, refresh_token }",
+      "source_file": "login-register-engine/routes.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/login",
+      "description": "Login with phone number and password to receive JWT tokens",
+      "auth_required": false,
+      "parameters": {
+        "body": {
+          "phone": "string",
+          "password": "string"
+        }
+      },
+      "response": "ApiResponse { user_id, name, access_token, refresh_token }",
+      "source_file": "login-register-engine/routes.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/otp/send",
+      "description": "Send OTP to phone number (Local mode: logged to console)",
+      "auth_required": false,
+      "parameters": {
+        "body": {
+          "phone": "string",
+          "purpose": "string (e.g., 'login')"
+        }
+      },
+      "response": "ApiResponse { otp_id, phone, expires_in_seconds }",
+      "source_file": "login-register-engine/routes.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/otp/verify",
+      "description": "Verify an OTP code for a phone number",
+      "auth_required": false,
+      "parameters": {
+        "body": {
+          "phone": "string",
+          "otp_code": "string (6-digit)"
+        }
+      },
+      "response": "ApiResponse { verified: boolean }",
+      "source_file": "login-register-engine/routes.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/token/refresh",
+      "description": "Renew access token using a valid refresh token",
+      "auth_required": false,
+      "parameters": {
+        "body": {
+          "refresh_token": "string"
+        }
+      },
+      "response": "ApiResponse { access_token, refresh_token }",
+      "source_file": "login-register-engine/routes.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/logout",
+      "description": "Revoke all refresh tokens for the current user",
+      "auth_required": true,
+      "parameters": {
+        "header": { "Authorization": "Bearer <access_token>" }
+      },
+      "response": "ApiResponse { message }",
+      "source_file": "login-register-engine/routes.py"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/auth/me",
+      "description": "Get current authenticated user profile",
+      "auth_required": true,
+      "parameters": {
+        "header": { "Authorization": "Bearer <access_token>" }
+      },
+      "response": "ApiResponse { user_id, phone, name, state, roles, ... }",
+      "source_file": "login-register-engine/routes.py"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/auth/profile",
+      "description": "Update user profile fields",
+      "auth_required": true,
+      "parameters": {
+        "header": { "Authorization": "Bearer <access_token>" },
+        "body": {
+          "name": "string?", "email": "string?", "date_of_birth": "string?", "gender": "string?", "state": "string?", "district": "string?", "pincode": "string?", "language_preference": "string?"
+        }
+      },
+      "response": "ApiResponse { user_id, updated_fields }",
+      "source_file": "login-register-engine/routes.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/identity/create",
+      "description": "Create a new identity vault entry (encrypted PII storage)",
+      "auth_required": true,
+      "parameters": {
+        "body": {
+          "user_id": "string", "name": "string?", "phone": "string?", "email": "string?", "address": "string?", "dob": "string?", "aadhaar": "string?", "pan": "string?"
+        }
+      },
+      "response": "ApiResponse { identity_token, user_id }",
+      "source_file": "identity-engine/routes.py"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/identity/{token}",
+      "description": "Retrieve decrypted identity by token",
+      "auth_required": true,
+      "parameters": { "path": { "token": "string" } },
+      "response": "ApiResponse { identity_token, user_id, name, phone, email, address, dob, ... }",
+      "source_file": "identity-engine/routes.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/eligibility/check",
+      "description": "Check user eligibility across all or specified schemes",
+      "auth_required": true,
+      "parameters": {
+        "body": {
+          "user_id": "string",
+          "profile": "object (with age, income, state, etc.)",
+          "scheme_ids": "array (optional)"
+        }
+      },
+      "response": "ApiResponse { user_id, total_schemes_checked, results: [...] }",
+      "source_file": "eligibility-rules-engine/main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/eligibility/history/{user_id}",
+      "description": "Get previous eligibility check results for a user",
+      "auth_required": true,
+      "parameters": { "path": { "user_id": "string" } },
+      "response": "ApiResponse [ { scheme_id, verdict, explanation, ... } ]",
+      "source_file": "eligibility-rules-engine/main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/ai/chat",
+      "description": "Conversational AI for scheme-related queries using NVIDIA NIM",
+      "auth_required": true,
+      "parameters": {
+        "body": {
+          "user_id": "string",
+          "session_id": "string (optional)",
+          "message": "string",
+          "context": "array (optional history)",
+          "max_tokens": "int",
+          "temperature": "float"
+        }
+      },
+      "response": "ApiResponse { response, session_id, latency_ms }",
+      "source_file": "neural-network-engine/main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/ai/rag",
+      "description": "Retrieval-Augmented Generation query using context passages",
+      "auth_required": true,
+      "parameters": {
+        "body": {
+          "user_id": "string",
+          "question": "string",
+          "context_passages": "array (strings from vector db)"
+        }
+      },
+      "response": "ApiResponse { answer, context_used, question }",
+      "source_file": "neural-network-engine/main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/ai/intent",
+      "description": "Classify user intent and extract entities from a message",
+      "auth_required": true,
+      "parameters": { "body": { "message": "string", "user_id": "string?" } },
+      "response": "ApiResponse { intent, entities, confidence, language }",
+      "source_file": "neural-network-engine/main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/ai/summarize",
+      "description": "Summarize scheme text in simple language",
+      "auth_required": true,
+      "parameters": { "body": { "text": "string", "max_length": "int" } },
+      "response": "ApiResponse { summary, original_length }",
+      "source_file": "neural-network-engine/main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/ai/translate",
+      "description": "Translate text between Indian languages",
+      "auth_required": true,
+      "parameters": {
+        "body": { "text": "string", "source_lang": "string", "target_lang": "string" }
+      },
+      "response": "ApiResponse { original, translated, source_lang, target_lang }",
+      "source_file": "neural-network-engine/main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/dashboard/home/{user_id}",
+      "description": "Main dashboard view aggregator for widgets, stats, and navigation",
+      "auth_required": true,
+      "parameters": { "path": { "user_id": "string" } },
+      "response": "ApiResponse { user_id, widgets, navigation, quick_actions }",
+      "source_file": "dashboard-interface/main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/dashboard/schemes",
+      "description": "List of schemes with basic metadata for dashboard overview",
+      "auth_required": true,
+      "response": "ApiResponse { schemes, total }",
+      "source_file": "dashboard-interface/main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/dashboard/search",
+      "description": "Global keyword-based search across schemes and features",
+      "auth_required": true,
+      "parameters": { "query": { "q": "string (min 2 chars)" } },
+      "response": "ApiResponse { query, results, count }",
+      "source_file": "dashboard-interface/main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/dashboard/engines/status",
+      "description": "Health status of all 21 microservice engines",
+      "auth_required": true,
+      "response": "ApiResponse { engines, total: 21 }",
+      "source_file": "dashboard-interface/main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/simulate/what-if",
+      "description": "Simulate eligibility changes based on profile updates",
+      "auth_required": true,
+      "parameters": {
+        "body": {
+          "user_id": "string",
+          "current_profile": "object",
+          "changes": "object",
+          "scenario_type": "string"
+        }
+      },
+      "response": "Simulated schemes gained/lost",
+      "source_file": "walkthrough.md"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/voice/query",
+      "description": "Voice query processing with language detection",
+      "auth_required": true,
+      "parameters": {
+        "body": { "text": "string", "language": "string" }
+      },
+      "response": "AI response + detected language",
+      "source_file": "walkthrough.md"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/vectors/search",
+      "description": "Semantic search with optional filters",
+      "auth_required": true,
+      "parameters": {
+        "body": { "query": "string", "filters": "object?" }
+      },
+      "response": "Vector results with metadata",
+      "source_file": "vector-database/design-and-plan.md"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/trust/compute",
+      "description": "Compute composite trust score (0-100)",
+      "auth_required": true,
+      "parameters": {
+        "body": { "user_id": "string", "profile": "object" }
+      },
+      "response": "Trust score object",
+      "source_file": "trust-scoring-engine/README.md"
+    }
+  ],
+  "summary": {
+    "total_endpoints": 25,
+    "requires_auth": 20,
+    "most_common_methods": ["POST", "GET"]
+  }
+}

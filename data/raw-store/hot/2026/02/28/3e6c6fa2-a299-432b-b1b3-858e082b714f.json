@@ -1,0 +1,14 @@
+{
+  "event_id": "3e6c6fa2-a299-432b-b1b3-858e082b714f",
+  "event_type": "RAG_QUERY",
+  "source_engine": "orchestrator",
+  "user_id": "usr_37350131d985",
+  "timestamp": "2026-02-28T18:15:22.256317",
+  "payload": {
+    "query": "Check my eligibility",
+    "intent": "scheme_query",
+    "sources_count": 3
+  },
+  "hash": "4398009e070f272b0dc2a9c48ad65ec08f307da0cbc1509c3a08018ecc7b018e",
+  "prev_hash": "96c486b7985f38915b80dbf0c4a25969e4941672a8d709c6410a4390c702f501"
+}

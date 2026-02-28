@@ -1,0 +1,14 @@
+{
+  "event_id": "74855929-65d5-4121-916d-4cf28db53915",
+  "event_type": "SIMULATION_RUN",
+  "source_engine": "orchestrator",
+  "user_id": "usr_de8f0170ee86",
+  "timestamp": "2026-02-28T16:43:39.314880",
+  "payload": {
+    "changes": {
+      "annual_income": 400000
+    }
+  },
+  "hash": "a0a485f71d42ca9a78ec24a1e4817a7cc45e1b28e8fc07cef69818890b5fedd3",
+  "prev_hash": "4b27d3837a9a01a6fd0d824f71ac86b0fece12d8ec2b0e167738366ccdc4399d"
+}

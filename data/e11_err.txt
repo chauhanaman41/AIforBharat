@@ -1,0 +1,78 @@
+2026-02-28 23:00:24,370 [cache] INFO: Cache initialized: namespace=policies, ttl=3600s, dir=D:\AIForBharat\AIforBharat\data\cache\policies
+INFO:     Started server process [15732]
+INFO:     Waiting for application startup.
+2026-02-28 23:00:24,388 [policy_fetching_engine] INFO: \U0001f680 Policy Fetching Engine starting...
+2026-02-28 23:00:24,392 [sqlalchemy.engine.Engine] INFO: BEGIN (implicit)
+2026-02-28 23:00:24,396 [sqlalchemy.engine.Engine] INFO: PRAGMA main.table_info("fetched_documents")
+2026-02-28 23:00:24,399 [sqlalchemy.engine.Engine] INFO: [raw sql] ()
+2026-02-28 23:00:24,402 [sqlalchemy.engine.Engine] INFO: PRAGMA main.table_info("source_configs")
+2026-02-28 23:00:24,406 [sqlalchemy.engine.Engine] INFO: [raw sql] ()
+2026-02-28 23:00:24,408 [sqlalchemy.engine.Engine] INFO: COMMIT
+2026-02-28 23:00:24,413 [sqlalchemy.engine.Engine] INFO: BEGIN (implicit)
+2026-02-28 23:00:24,418 [sqlalchemy.engine.Engine] INFO: SELECT source_configs.id, source_configs.source_id, source_configs.name, source_configs.url, source_configs.source_type, source_configs.schedule_cron, source_configs.api_key_env, source_configs.rate_limit_per_sec, source_configs.is_active, source_configs.last_crawled_at, source_configs.last_status, source_configs.total_crawls, source_configs.success_count, source_configs.failure_count, source_configs.created_at 
+FROM source_configs 
+WHERE source_configs.source_id = ?
+2026-02-28 23:00:24,419 [sqlalchemy.engine.Engine] INFO: [generated in 0.00077s] ('data_gov_in',)
+2026-02-28 23:00:24,420 [sqlalchemy.engine.Engine] INFO: SELECT source_configs.id, source_configs.source_id, source_configs.name, source_configs.url, source_configs.source_type, source_configs.schedule_cron, source_configs.api_key_env, source_configs.rate_limit_per_sec, source_configs.is_active, source_configs.last_crawled_at, source_configs.last_status, source_configs.total_crawls, source_configs.success_count, source_configs.failure_count, source_configs.created_at 
+FROM source_configs 
+WHERE source_configs.source_id = ?
+2026-02-28 23:00:24,421 [sqlalchemy.engine.Engine] INFO: [cached since 0.002312s ago] ('gazette_india',)
+2026-02-28 23:00:24,421 [sqlalchemy.engine.Engine] INFO: SELECT source_configs.id, source_configs.source_id, source_configs.name, source_configs.url, source_configs.source_type, source_configs.schedule_cron, source_configs.api_key_env, source_configs.rate_limit_per_sec, source_configs.is_active, source_configs.last_crawled_at, source_configs.last_status, source_configs.total_crawls, source_configs.success_count, source_configs.failure_count, source_configs.created_at 
+FROM source_configs 
+WHERE source_configs.source_id = ?
+2026-02-28 23:00:24,421 [sqlalchemy.engine.Engine] INFO: [cached since 0.003334s ago] ('pmkisan_portal',)
+2026-02-28 23:00:24,423 [sqlalchemy.engine.Engine] INFO: SELECT source_configs.id, source_configs.source_id, source_configs.name, source_configs.url, source_configs.source_type, source_configs.schedule_cron, source_configs.api_key_env, source_configs.rate_limit_per_sec, source_configs.is_active, source_configs.last_crawled_at, source_configs.last_status, source_configs.total_crawls, source_configs.success_count, source_configs.failure_count, source_configs.created_at 
+FROM source_configs 
+WHERE source_configs.source_id = ?
+2026-02-28 23:00:24,423 [sqlalchemy.engine.Engine] INFO: [cached since 0.004625s ago] ('myscheme_gov',)
+2026-02-28 23:00:24,424 [sqlalchemy.engine.Engine] INFO: SELECT source_configs.id, source_configs.source_id, source_configs.name, source_configs.url, source_configs.source_type, source_configs.schedule_cron, source_configs.api_key_env, source_configs.rate_limit_per_sec, source_configs.is_active, source_configs.last_crawled_at, source_configs.last_status, source_configs.total_crawls, source_configs.success_count, source_configs.failure_count, source_configs.created_at 
+FROM source_configs 
+WHERE source_configs.source_id = ?
+2026-02-28 23:00:24,424 [sqlalchemy.engine.Engine] INFO: [cached since 0.006049s ago] ('rbi_notifications',)
+2026-02-28 23:00:24,425 [sqlalchemy.engine.Engine] INFO: COMMIT
+2026-02-28 23:00:24,426 [policy_fetching_engine] INFO: Seeded 5 default sources
+2026-02-28 23:00:24,429 [sqlalchemy.engine.Engine] INFO: BEGIN (implicit)
+2026-02-28 23:00:24,431 [sqlalchemy.engine.Engine] INFO: SELECT fetched_documents.id, fetched_documents.source_id, fetched_documents.source_url, fetched_documents.document_type, fetched_documents.format, fetched_documents.title, fetched_documents.ministry, fetched_documents.notification_number, fetched_documents.publication_date, fetched_documents.effective_date, fetched_documents.states_affected, fetched_documents.policy_id, fetched_documents.content_hash, fetched_documents.content_size_bytes, fetched_documents.local_storage_path, fetched_documents.raw_content, fetched_documents.extracted_text, fetched_documents.version, fetched_documents.previous_version_hash, fetched_documents.change_type, fetched_documents.change_summary, fetched_documents.processing_status, fetched_documents.fetch_timestamp, fetched_documents.next_crawl_at 
+FROM fetched_documents 
+WHERE fetched_documents.policy_id = ?
+2026-02-28 23:00:24,432 [sqlalchemy.engine.Engine] INFO: [generated in 0.00065s] ('PM-KISAN-2024',)
+2026-02-28 23:00:24,434 [sqlalchemy.engine.Engine] INFO: SELECT fetched_documents.id, fetched_documents.source_id, fetched_documents.source_url, fetched_documents.document_type, fetched_documents.format, fetched_documents.title, fetched_documents.ministry, fetched_documents.notification_number, fetched_documents.publication_date, fetched_documents.effective_date, fetched_documents.states_affected, fetched_documents.policy_id, fetched_documents.content_hash, fetched_documents.content_size_bytes, fetched_documents.local_storage_path, fetched_documents.raw_content, fetched_documents.extracted_text, fetched_documents.version, fetched_documents.previous_version_hash, fetched_documents.change_type, fetched_documents.change_summary, fetched_documents.processing_status, fetched_documents.fetch_timestamp, fetched_documents.next_crawl_at 
+FROM fetched_documents 
+WHERE fetched_documents.policy_id = ?
+2026-02-28 23:00:24,434 [sqlalchemy.engine.Engine] INFO: [cached since 0.002182s ago] ('PM-AWAS-YOJANA-2024',)
+2026-02-28 23:00:24,434 [sqlalchemy.engine.Engine] INFO: SELECT fetched_documents.id, fetched_documents.source_id, fetched_documents.source_url, fetched_documents.document_type, fetched_documents.format, fetched_documents.title, fetched_documents.ministry, fetched_documents.notification_number, fetched_documents.publication_date, fetched_documents.effective_date, fetched_documents.states_affected, fetched_documents.policy_id, fetched_documents.content_hash, fetched_documents.content_size_bytes, fetched_documents.local_storage_path, fetched_documents.raw_content, fetched_documents.extracted_text, fetched_documents.version, fetched_documents.previous_version_hash, fetched_documents.change_type, fetched_documents.change_summary, fetched_documents.processing_status, fetched_documents.fetch_timestamp, fetched_documents.next_crawl_at 
+FROM fetched_documents 
+WHERE fetched_documents.policy_id = ?
+2026-02-28 23:00:24,435 [sqlalchemy.engine.Engine] INFO: [cached since 0.003369s ago] ('AYUSHMAN-BHARAT-2024',)
+2026-02-28 23:00:24,435 [sqlalchemy.engine.Engine] INFO: SELECT fetched_documents.id, fetched_documents.source_id, fetched_documents.source_url, fetched_documents.document_type, fetched_documents.format, fetched_documents.title, fetched_documents.ministry, fetched_documents.notification_number, fetched_documents.publication_date, fetched_documents.effective_date, fetched_documents.states_affected, fetched_documents.policy_id, fetched_documents.content_hash, fetched_documents.content_size_bytes, fetched_documents.local_storage_path, fetched_documents.raw_content, fetched_documents.extracted_text, fetched_documents.version, fetched_documents.previous_version_hash, fetched_documents.change_type, fetched_documents.change_summary, fetched_documents.processing_status, fetched_documents.fetch_timestamp, fetched_documents.next_crawl_at 
+FROM fetched_documents 
+WHERE fetched_documents.policy_id = ?
+2026-02-28 23:00:24,436 [sqlalchemy.engine.Engine] INFO: [cached since 0.004467s ago] ('PM-UJJWALA-2024',)
+2026-02-28 23:00:24,437 [sqlalchemy.engine.Engine] INFO: SELECT fetched_documents.id, fetched_documents.source_id, fetched_documents.source_url, fetched_documents.document_type, fetched_documents.format, fetched_documents.title, fetched_documents.ministry, fetched_documents.notification_number, fetched_documents.publication_date, fetched_documents.effective_date, fetched_documents.states_affected, fetched_documents.policy_id, fetched_documents.content_hash, fetched_documents.content_size_bytes, fetched_documents.local_storage_path, fetched_documents.raw_content, fetched_documents.extracted_text, fetched_documents.version, fetched_documents.previous_version_hash, fetched_documents.change_type, fetched_documents.change_summary, fetched_documents.processing_status, fetched_documents.fetch_timestamp, fetched_documents.next_crawl_at 
+FROM fetched_documents 
+WHERE fetched_documents.policy_id = ?
+2026-02-28 23:00:24,438 [sqlalchemy.engine.Engine] INFO: [cached since 0.006302s ago] ('MUDRA-YOJANA-2024',)
+2026-02-28 23:00:24,439 [sqlalchemy.engine.Engine] INFO: SELECT fetched_documents.id, fetched_documents.source_id, fetched_documents.source_url, fetched_documents.document_type, fetched_documents.format, fetched_documents.title, fetched_documents.ministry, fetched_documents.notification_number, fetched_documents.publication_date, fetched_documents.effective_date, fetched_documents.states_affected, fetched_documents.policy_id, fetched_documents.content_hash, fetched_documents.content_size_bytes, fetched_documents.local_storage_path, fetched_documents.raw_content, fetched_documents.extracted_text, fetched_documents.version, fetched_documents.previous_version_hash, fetched_documents.change_type, fetched_documents.change_summary, fetched_documents.processing_status, fetched_documents.fetch_timestamp, fetched_documents.next_crawl_at 
+FROM fetched_documents 
+WHERE fetched_documents.policy_id = ?
+2026-02-28 23:00:24,439 [sqlalchemy.engine.Engine] INFO: [cached since 0.007496s ago] ('PMSBY-2024',)
+2026-02-28 23:00:24,440 [sqlalchemy.engine.Engine] INFO: SELECT fetched_documents.id, fetched_documents.source_id, fetched_documents.source_url, fetched_documents.document_type, fetched_documents.format, fetched_documents.title, fetched_documents.ministry, fetched_documents.notification_number, fetched_documents.publication_date, fetched_documents.effective_date, fetched_documents.states_affected, fetched_documents.policy_id, fetched_documents.content_hash, fetched_documents.content_size_bytes, fetched_documents.local_storage_path, fetched_documents.raw_content, fetched_documents.extracted_text, fetched_documents.version, fetched_documents.previous_version_hash, fetched_documents.change_type, fetched_documents.change_summary, fetched_documents.processing_status, fetched_documents.fetch_timestamp, fetched_documents.next_crawl_at 
+FROM fetched_documents 
+WHERE fetched_documents.policy_id = ?
+2026-02-28 23:00:24,440 [sqlalchemy.engine.Engine] INFO: [cached since 0.008535s ago] ('PMJJBY-2024',)
+2026-02-28 23:00:24,441 [sqlalchemy.engine.Engine] INFO: SELECT fetched_documents.id, fetched_documents.source_id, fetched_documents.source_url, fetched_documents.document_type, fetched_documents.format, fetched_documents.title, fetched_documents.ministry, fetched_documents.notification_number, fetched_documents.publication_date, fetched_documents.effective_date, fetched_documents.states_affected, fetched_documents.policy_id, fetched_documents.content_hash, fetched_documents.content_size_bytes, fetched_documents.local_storage_path, fetched_documents.raw_content, fetched_documents.extracted_text, fetched_documents.version, fetched_documents.previous_version_hash, fetched_documents.change_type, fetched_documents.change_summary, fetched_documents.processing_status, fetched_documents.fetch_timestamp, fetched_documents.next_crawl_at 
+FROM fetched_documents 
+WHERE fetched_documents.policy_id = ?
+2026-02-28 23:00:24,441 [sqlalchemy.engine.Engine] INFO: [cached since 0.009766s ago] ('SUKANYA-SAMRIDDHI-2024',)
+2026-02-28 23:00:24,443 [sqlalchemy.engine.Engine] INFO: SELECT fetched_documents.id, fetched_documents.source_id, fetched_documents.source_url, fetched_documents.document_type, fetched_documents.format, fetched_documents.title, fetched_documents.ministry, fetched_documents.notification_number, fetched_documents.publication_date, fetched_documents.effective_date, fetched_documents.states_affected, fetched_documents.policy_id, fetched_documents.content_hash, fetched_documents.content_size_bytes, fetched_documents.local_storage_path, fetched_documents.raw_content, fetched_documents.extracted_text, fetched_documents.version, fetched_documents.previous_version_hash, fetched_documents.change_type, fetched_documents.change_summary, fetched_documents.processing_status, fetched_documents.fetch_timestamp, fetched_documents.next_crawl_at 
+FROM fetched_documents 
+WHERE fetched_documents.policy_id = ?
+2026-02-28 23:00:24,443 [sqlalchemy.engine.Engine] INFO: [cached since 0.01122s ago] ('NATIONAL-PENSION-2024',)
+2026-02-28 23:00:24,445 [sqlalchemy.engine.Engine] INFO: SELECT fetched_documents.id, fetched_documents.source_id, fetched_documents.source_url, fetched_documents.document_type, fetched_documents.format, fetched_documents.title, fetched_documents.ministry, fetched_documents.notification_number, fetched_documents.publication_date, fetched_documents.effective_date, fetched_documents.states_affected, fetched_documents.policy_id, fetched_documents.content_hash, fetched_documents.content_size_bytes, fetched_documents.local_storage_path, fetched_documents.raw_content, fetched_documents.extracted_text, fetched_documents.version, fetched_documents.previous_version_hash, fetched_documents.change_type, fetched_documents.change_summary, fetched_documents.processing_status, fetched_documents.fetch_timestamp, fetched_documents.next_crawl_at 
+FROM fetched_documents 
+WHERE fetched_documents.policy_id = ?
+2026-02-28 23:00:24,445 [sqlalchemy.engine.Engine] INFO: [cached since 0.01307s ago] ('SCHOLARSHIP-SC-ST-2024',)
+2026-02-28 23:00:24,446 [sqlalchemy.engine.Engine] INFO: COMMIT
+2026-02-28 23:00:24,447 [policy_fetching_engine] INFO: Seeded 10 pre-loaded schemes
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8011 (Press CTRL+C to quit)

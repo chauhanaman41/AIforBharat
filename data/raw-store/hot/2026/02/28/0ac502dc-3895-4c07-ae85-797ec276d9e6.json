@@ -1,0 +1,14 @@
+{
+  "event_id": "0ac502dc-3895-4c07-ae85-797ec276d9e6",
+  "event_type": "VOICE_QUERY",
+  "source_engine": "orchestrator",
+  "user_id": "usr_fa075f245e32",
+  "timestamp": "2026-02-28T18:04:53.649467",
+  "payload": {
+    "query": "Tell me about PM Awas Yojana",
+    "language": "english",
+    "intent": "scheme_query"
+  },
+  "hash": "8d0e4f608de14bbbc47876a186c8215fd3e7456924d57cfa86eaafcee505d6ea",
+  "prev_hash": "2024622b61618317790a40dc022d919e00b13fa85d62773ba2ee67be1d90a421"
+}

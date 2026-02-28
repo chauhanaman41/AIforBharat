@@ -1,0 +1,14 @@
+{
+  "event_id": "2033b88e-093e-4b6d-959c-72cbfa09819a",
+  "event_type": "USER_ONBOARDED",
+  "source_engine": "orchestrator",
+  "user_id": "usr_de8f0170ee86",
+  "timestamp": "2026-02-28T16:43:35.384202",
+  "payload": {
+    "phone": "9858****",
+    "steps_completed": 7,
+    "degraded": []
+  },
+  "hash": "c82035a0c8b5953bce0167b35f3a7d3ee6994b08f796a49a9840ad7d6892bb31",
+  "prev_hash": "GENESIS"
+}

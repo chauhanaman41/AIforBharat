@@ -1,0 +1,14 @@
+{
+  "event_id": "bbab5746-9525-42d2-8e2f-74d8b436ed34",
+  "event_type": "ELIGIBILITY_CHECKED",
+  "source_engine": "orchestrator",
+  "user_id": "usr_721cc6c43572",
+  "timestamp": "2026-02-28T17:49:29.527669",
+  "payload": {
+    "eligible": 4,
+    "partial": 3,
+    "total_checked": 10
+  },
+  "hash": "c181d2d7de6b7dbc0b2b524a766463403f4d0652936ee552a92a10b86d70b26a",
+  "prev_hash": "aa01f6ff68e510efbc5b8d74f5a4f1189106e60e58e918de469b79e8d3982737"
+}

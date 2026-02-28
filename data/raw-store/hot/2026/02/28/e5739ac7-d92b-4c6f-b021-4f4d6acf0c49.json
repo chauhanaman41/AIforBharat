@@ -1,0 +1,14 @@
+{
+  "event_id": "e5739ac7-d92b-4c6f-b021-4f4d6acf0c49",
+  "event_type": "RAG_QUERY",
+  "source_engine": "orchestrator",
+  "user_id": "usr_37350131d985",
+  "timestamp": "2026-02-28T18:18:06.834613",
+  "payload": {
+    "query": "upcoming plans for student welfare in AP",
+    "intent": "scheme_query",
+    "sources_count": 3
+  },
+  "hash": "5df11d29b366421b4c8c21751404ab6b4baf4045a1c68d696371946f41cfa469",
+  "prev_hash": "4d13a8524ab7173104313f12134893841fa46dd35a89f360f7d99002917d8211"
+}

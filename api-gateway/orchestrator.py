@@ -221,7 +221,8 @@ async def audit_log(
     analytics_body = {
         "event_type": event_type,
         "user_id": user_id,
-        "properties": payload,
+        "engine": "orchestrator",
+        "payload": payload,
     }
 
     async def _post_audit():
@@ -230,7 +231,7 @@ async def audit_log(
         except Exception as e:
             logger.warning(f"Audit log to E3 failed (non-blocking): {e}")
         try:
-            await call_engine("analytics_warehouse", "/analytics/event", analytics_body, request_id=request_id)
+            await call_engine("analytics_warehouse", "/analytics/events", analytics_body, request_id=request_id)
         except Exception as e:
             logger.warning(f"Analytics event to E13 failed (non-blocking): {e}")
 
