@@ -1,1 +1,1 @@
-{"data": {"intent": "scheme_query", "entities": {}, "confidence": 0.6, "language": "en"}, "timestamp": 1772260214.5938559, "expires_at": 1772261114.5938559}
+{"data": {"intent": "scheme_query", "entities": {}, "confidence": 0.3, "language": "en", "degraded": true}, "timestamp": 1772261848.6228428, "expires_at": 1772262748.6228428}

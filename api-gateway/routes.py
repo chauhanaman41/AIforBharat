@@ -66,10 +66,12 @@ async def proxy_request(
     method = method or request.method
     target_url = f"{engine_url}{path}"
 
-    # Forward relevant headers
+    # Forward relevant headers (use X-Trace-ID for end-to-end tracing)
+    trace_id = getattr(request.state, "trace_id", "") or getattr(request.state, "request_id", "")
     headers = {
         "Content-Type": request.headers.get("content-type", "application/json"),
-        "X-Request-ID": getattr(request.state, "request_id", ""),
+        "X-Trace-ID": trace_id,
+        "X-Request-ID": trace_id,  # backward compat
     }
     if "authorization" in request.headers:
         headers["Authorization"] = request.headers["authorization"]

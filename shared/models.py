@@ -126,14 +126,57 @@ class AnomalyScore(str, Enum):
 
 # ── Core Models ───────────────────────────────────────────────────────────────
 
+class ErrorDetail(BaseModel):
+    """Detailed error information for the frontend."""
+    code: str = Field(..., description="Machine-readable error code (e.g., VECTOR_TIMEOUT)")
+    message: str = Field(..., description="Human-readable error message")
+    detail: Optional[str] = Field(None, description="Optional technical details or stack trace")
+    attr: Optional[str] = Field(None, description="The attribute that caused the error (for validation errors)")
+
+
+# ── Standardized Error Codes ──────────────────────────────────────────────────
+
+class ErrorCode:
+    """Machine-readable error codes returned to the frontend."""
+    # Infrastructure
+    VECTOR_TIMEOUT = "VECTOR_TIMEOUT"           # Retrieval service too slow
+    NIM_FAILURE = "NIM_FAILURE"                 # AI inference service down
+    ENGINE_UNAVAILABLE = "ENGINE_UNAVAILABLE"   # Downstream engine not responding
+    ENGINE_TIMEOUT = "ENGINE_TIMEOUT"           # Downstream engine timed out
+    CIRCUIT_OPEN = "CIRCUIT_OPEN"               # Circuit breaker tripped
+
+    # Auth
+    AUTH_EXPIRED = "AUTH_EXPIRED"               # JWT token expired
+    AUTH_INVALID = "AUTH_INVALID"               # JWT token malformed / invalid
+    AUTH_REQUIRED = "AUTH_REQUIRED"             # No token provided
+
+    # Rate limiting
+    RATE_LIMIT = "RATE_LIMIT"                   # Too many requests
+    BURST_LIMIT = "BURST_LIMIT"                 # Per-second burst exceeded
+
+    # Validation
+    VALIDATION_ERROR = "VALIDATION_ERROR"       # Request body validation failed
+    NOT_FOUND = "NOT_FOUND"                     # Resource not found
+
+    # Internal
+    INTERNAL_ERROR = "INTERNAL_ERROR"           # Unhandled server error
+    PARTIAL_FAILURE = "PARTIAL_FAILURE"         # Some pipeline steps degraded
+
+
+def make_error(code: str, message: str, detail: str = None, attr: str = None) -> ErrorDetail:
+    """Factory helper to construct an ErrorDetail."""
+    return ErrorDetail(code=code, message=message, detail=detail, attr=attr)
+
+
 class ApiResponse(BaseModel):
     """Standard API response wrapper used by all engines."""
     success: bool = True
     message: str = "OK"
     data: Any = None
-    errors: Optional[list[dict]] = None
+    errors: Optional[list[ErrorDetail]] = None
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     request_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    trace_id: Optional[str] = Field(default=None, description="X-Trace-ID for end-to-end request tracing")
 
 
 class PaginatedResponse(BaseModel):

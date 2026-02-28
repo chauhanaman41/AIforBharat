@@ -9,7 +9,7 @@
 
 ## Preamble: Key Architectural Observations
 
-> **Update (Feb 28):** All 21 engines have now been successfully tested via the `test_orchestration.py` suite. Furthermore, every engine's `README.md` has been updated with detailed "Orchestrator Integration" sections and dependency mappings that follow the design principles below.
+> **Update (Feb 28 - Guardrails):** All 21 engines have now been successfully tested via the `test_orchestration.py` suite. The architecture has been hardened with a set of Minimal Guardrails, including rate-limiting (Burst & RPM), an LLM Circuit Breaker (E7), and structured `NIMUnavailableError` fallback handlers. Re-running `test_orchestration.py` confirmed that the orchestrator elegantly handles E7 failures without dropping user requests. Furthermore, every engine's `README.md` has been updated with detailed "Orchestrator Integration" sections.
 
 Before defining the orchestration, three critical facts about the current system must be stated clearly — they shape every decision that follows.
 

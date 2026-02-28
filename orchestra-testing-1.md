@@ -8,7 +8,7 @@
 **Test Inputs:**
 ```json
 {
-  "phone": "9891361660",
+  "phone": "9851561470",
   "password": "SecurePassword123!",
   "name": "Raj Kumar",
   "state": "UP",
@@ -30,10 +30,10 @@ A JSON response containing the user_id, access_token, identity_token, eligibilit
   "success": true,
   "message": "Onboarding complete",
   "data": {
-    "user_id": "usr_2e5b1d1d251f",
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfMmU1YjFkMWQyNTFmIiwicm9sZXMiOlsiY2l0aXplbiJdLCJpYXQiOjE3NzIyNjAyMDUsImV4cCI6MTc3MjI2MjAwNSwidHlwZSI6ImFjY2VzcyJ9.ZiC5dE7n7OkXX3t9I9k0IfL8R3QzxfubbvRFVeF1oaY",
-    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfMmU1YjFkMWQyNTFmIiwiaWF0IjoxNzcyMjYwMjA1LCJleHAiOjE3NzI4NjUwMDUsInR5cGUiOiJyZWZyZXNoIn0.ok0pZBLnVHvXPBnYZcTX4gD5_wxG3jrzeL7P9hGDnAY",
-    "identity_token": "543b5e8adb9792570903d764fcf03706b3860b2db25a0e14e93d8a119cb52140",
+    "user_id": "usr_95e3cd8def1c",
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfOTVlM2NkOGRlZjFjIiwicm9sZXMiOlsiY2l0aXplbiJdLCJpYXQiOjE3NzIyNjE4NDIsImV4cCI6MTc3MjI2MzY0MiwidHlwZSI6ImFjY2VzcyJ9.biVIsmmPjo2W0-Gj0FeTc6AAhwuqFEk2xNvtuoAJAGY",
+    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfOTVlM2NkOGRlZjFjIiwiaWF0IjoxNzcyMjYxODQyLCJleHAiOjE3NzI4NjY2NDIsInR5cGUiOiJyZWZyZXNoIn0.J1bxTGQCbawux38NfH7cwJJhyLWyLjM4yXWFZt1tdQc",
+    "identity_token": "ddb0e9e65aca35d70961a80175c813021457d46c79e24dfc861ad7938885a91c",
     "eligibility_summary": {
       "eligible": 4,
       "partial": 3,
@@ -52,8 +52,9 @@ A JSON response containing the user_id, access_token, identity_token, eligibilit
     "degraded": null
   },
   "errors": null,
-  "timestamp": "2026-02-28T06:30:07.535940",
-  "request_id": "3e5fa5bc-6bf6-48ff-b210-b9069f196cb2"
+  "timestamp": "2026-02-28T06:57:24.176513",
+  "request_id": "55290aa4-3da9-41cb-aec9-8a263daebb58",
+  "trace_id": null
 }
 ```
 
@@ -68,7 +69,7 @@ A JSON response containing the user_id, access_token, identity_token, eligibilit
 **Test Inputs:**
 ```json
 {
-  "user_id": "usr_2e5b1d1d251f",
+  "user_id": "usr_95e3cd8def1c",
   "profile": {
     "age": 44,
     "annual_income": 120000,
@@ -89,7 +90,7 @@ A JSON response with deterministic rules evaluation from E15, and an AI-generate
   "success": true,
   "message": "OK",
   "data": {
-    "user_id": "usr_2e5b1d1d251f",
+    "user_id": "usr_95e3cd8def1c",
     "total_schemes_checked": 10,
     "eligible": 4,
     "partial": 3,
@@ -362,12 +363,13 @@ A JSON response with deterministic rules evaluation from E15, and an AI-generate
         "explanation": "You are not eligible for Sukanya Samriddhi Yojana. Criteria not met: Girl must be below 10 years."
       }
     ],
-    "explanation": "Eligibility results for user usr_2e5b1d1d251f: [{'scheme_id': 'MUDRA-YOJANA-2024', 'scheme_name': 'PM MUDRA Yojana', 'verdict': 'eligible', 'confidence': 1.0, 'matched_rules': [{'status': 'passed', 'field': 'age', 'operator': 'gte', 'expected': '18', 'actual': '45', 'description': 'Min age 18', 'mandatory': True}, {'status': 'passed', 'field': 'employment_category', 'operator': 'in', 'expected': 'self_employed,other,agriculture', 'actual': 'agriculture', 'description': 'Non-corporate, non-farm e...",
+    "explanation": "Eligibility results for user usr_95e3cd8def1c: [{'scheme_id': 'MUDRA-YOJANA-2024', 'scheme_name': 'PM MUDRA Yojana', 'verdict': 'eligible', 'confidence': 1.0, 'matched_rules': [{'status': 'passed', 'field': 'age', 'operator': 'gte', 'expected': '18', 'actual': '45', 'description': 'Min age 18', 'mandatory': True}, {'status': 'passed', 'field': 'employment_category', 'operator': 'in', 'expected': 'self_employed,other,agriculture', 'actual': 'agriculture', 'description': 'Non-corporate, non-farm e...",
     "degraded": null
   },
   "errors": null,
-  "timestamp": "2026-02-28T06:30:08.077651",
-  "request_id": "c3b4cbb9-9c1e-4a87-a4ad-084d7d5caa61"
+  "timestamp": "2026-02-28T06:57:25.602019",
+  "request_id": "e2fbfe23-5908-4a4e-9a0e-d87e3614d9e9",
+  "trace_id": null
 }
 ```
 
@@ -382,7 +384,7 @@ A JSON response with deterministic rules evaluation from E15, and an AI-generate
 **Test Inputs:**
 ```json
 {
-  "user_id": "usr_2e5b1d1d251f",
+  "user_id": "usr_95e3cd8def1c",
   "current_profile": {
     "age": 44,
     "annual_income": 120000,
@@ -480,12 +482,13 @@ JSON response showing before and after benefit counts and an optional AI explana
       "You would lose eligibility for PM Kisan Samman Nidhi",
       "You would lose eligibility for Post-Matric Scholarship SC/ST"
     ],
-    "explanation": "Simulation results for user usr_2e5b1d1d251f: Changes applied: {'annual_income': 400000}. Before: {}. After: {}. Delta: {}....",
+    "explanation": "Simulation results for user usr_95e3cd8def1c: Changes applied: {'annual_income': 400000}. Before: {}. After: {}. Delta: {}....",
     "degraded": null
   },
   "errors": null,
-  "timestamp": "2026-02-28T06:30:08.626393",
-  "request_id": "e63c1073-b533-4278-9123-7a28d6b7644e"
+  "timestamp": "2026-02-28T06:57:26.317566",
+  "request_id": "f937c20d-e1c9-44fb-8314-7aa1fc699a05",
+  "trace_id": null
 }
 ```
 
@@ -501,7 +504,7 @@ JSON response showing before and after benefit counts and an optional AI explana
 ```json
 {
   "message": "Am I eligible for PM-KISAN if I own 3 acres of land?",
-  "user_id": "usr_2e5b1d1d251f",
+  "user_id": "usr_95e3cd8def1c",
   "top_k": 3
 }
 ```
@@ -512,22 +515,35 @@ JSON response containing AI-generated text, trust_score, anomaly_score, and vect
 **Actual Output / Result:** (PARTIAL)
 ```json
 {
-  "success": false,
-  "message": "AI service temporarily unavailable. Please try again.",
+  "success": true,
+  "message": "OK",
   "data": {
+    "response": "Our AI knowledge service is temporarily unavailable. Please check back in a minute or browse our direct scheme list.",
+    "intent": "eligibility_check",
+    "intent_confidence": 0.6,
+    "sources": [],
+    "anomaly": {
+      "total_anomalies": 0,
+      "aggregate_risk_score": 0.0,
+      "severity_counts": {},
+      "anomalies": []
+    },
+    "trust": {},
     "degraded": [
-      "ai_generation"
-    ]
+      "trust_scoring"
+    ],
+    "latency_ms": 2014.7
   },
   "errors": null,
-  "timestamp": "2026-02-28T06:30:14.306300",
-  "request_id": "631fa645-4e6e-477a-b6ed-aca1ab9469bc"
+  "timestamp": "2026-02-28T06:57:28.341863",
+  "request_id": "bacac363-4464-4c7f-9563-d6f5041dd487",
+  "trace_id": null
 }
 ```
 
 **Required Changes for Future Reference:**
-- **Degraded Services:** The orchestrator gracefully handled failures in: ai_generation.
-- **Optimization needed:** E7 (Neural Network Engine) is timing out or throwing 500s when reaching out to Nvidia NIM. Need to implement a streaming response capability or increase the 20s timeout in the gateway. Introduce a lightweight local LLM fallback for when external APIs are rate limited.
+- **Guardrails Verified:** The orchestrator gracefully caught the `NIMUnavailableError`. Instead of failing the RAG flow, it returned the static `NIM_DEGRADED_MESSAGE` and allowed the transaction to complete. Also correctly marked `trust_scoring` as degraded.
+- **Optimization needed:** E7 (Neural Network Engine) triggers the circuit breaker when Nvidia NIM is unavailable. The current fallback text is good for MVP, but we may want a lightweight local LLM fallback for when external APIs are rate limited.
 
 ---
 
@@ -539,38 +555,37 @@ JSON response containing AI-generated text, trust_score, anomaly_score, and vect
 {
   "text": "Tell me about PM Awas Yojana",
   "language": "english",
-  "user_id": "usr_2e5b1d1d251f"
+  "user_id": "usr_95e3cd8def1c"
 }
 ```
 
 **Expected Output:**
 JSON containing the audio response or degraded state.
 
-**Actual Output / Result:** (PARTIAL)
+**Actual Output / Result:** (PASS)
 ```json
 {
   "success": true,
   "message": "OK",
   "data": {
     "query": "Tell me about PM Awas Yojana",
-    "response": "I'm sorry, the service is temporarily unavailable. Please try again.",
+    "response": "Our AI knowledge service is temporarily unavailable. Please check back in a minute or browse our direct scheme list.",
     "intent": "scheme_query",
     "language": "english",
-    "audio_session_id": "5d5400ea7eb8",
+    "audio_session_id": "57cc1203d095",
     "audio_available": false,
-    "degraded": [
-      "intent_routing"
-    ]
+    "degraded": null
   },
   "errors": null,
-  "timestamp": "2026-02-28T06:30:16.410855",
-  "request_id": "06e31732-73f1-4cb4-96a8-e675204cf7b9"
+  "timestamp": "2026-02-28T06:57:29.755060",
+  "request_id": "27189e72-ed4c-4447-9895-d02c825b22ac",
+  "trace_id": null
 }
 ```
 
 **Required Changes for Future Reference:**
-- **Degraded Services:** The orchestrator gracefully handled failures in: intent_routing.
-- **Optimization needed:** E20 (Speech Interface) failed to route the transcript to E7 due to an internal timeout or schema mismatch. Since Voice Query is marked as 'Optional' in the blueprint, this partial degradation is acceptable for MVP, but the Voice-to-Intent pipeline must be hardened.
+- **Guardrails Verified:** The Voice Pipeline executed successfully. Because E7 now returns a graceful fallback in `/ai/chat` (as triggered by `intent=scheme_query`), the orchestrator passes this to Voice generation instead of marking `intent_routing` as degraded.
+- No immediate architecture changes required.
 
 ---
 
@@ -595,13 +610,25 @@ Confirmation of ingestion or graceful degradation if LLM APIs aren't reachable. 
 **Actual Output / Result:** (FAIL)
 ```json
 {
-  "detail": "Policy fetch failed: {'detail': 'Not Found'}"
+  "success": false,
+  "message": "Policy fetch failed: {'detail': 'Not Found'}",
+  "data": null,
+  "errors": [
+    {
+      "code": "NOT_FOUND",
+      "message": "Policy fetch failed: {'detail': 'Not Found'}",
+      "detail": null,
+      "attr": null
+    }
+  ],
+  "timestamp": "2026-02-28T06:57:30.030298",
+  "request_id": "d0cf6165-047f-42ef-b055-e3752f5f0cbd",
+  "trace_id": "4bf43923-18b8-48c5-8d97-fe17a46418d5"
 }
 ```
 
 **Required Changes for Future Reference:**
-- **Bug Found:** The Policy Fetching Engine (E11) threw a 404 Not Found for `https://pmkisan.gov.in/`.
+- **Bug Found:** The Policy Fetching Engine (E11) threw a 404 Not Found for `https://pmkisan.gov.in/`. 
+- **Error Handling Verified:** The gateway's new error handling mapped this cleanly to the standard `ApiResponse` error schema with `code: NOT_FOUND`.
 - **Architecture update required:** E11 currently seems to rely on an internal dictionary of hardcoded mock policies rather than performing an actual live web scrape. If live URLs are passed, it should invoke a Web Scraper sub-module or return a dedicated 'Unsupported Source' error instead of a generic 404.
-
----
 

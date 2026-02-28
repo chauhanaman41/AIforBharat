@@ -1,0 +1,271 @@
+# AIforBharat: Minimal Guardrails — Implementation Plan & Status
+
+This plan outlines the surgical technical updates required to standardize error handling, implement request tracing, and protect the system from infrastructure failures.
+
+> **Implementation Status: ✅ ALL 4 GUARDRAILS IMPLEMENTED**
+
+---
+
+## 1️⃣ Trace IDs (Request ID Propagation) — ✅ IMPLEMENTED
+
+Currently, the `api-gateway` generates a `request_id`, but it is not consistently propagated to downstream engines.
+
+**Implementation Steps:**
+- **Standardization**: Use `X-Trace-ID` as the universal header name across all engines.
+- **Gateway Update**: Modify the `add_request_id` middleware in `api-gateway/main.py` to ensure every incoming request is assigned a UUID.
+- **Propagation**: Update the `orchestrator.py` and proxy logic in the gateway to forward the `X-Trace-ID` header to all internal engine calls (e.g., `neural-network-engine`, `vector-database`).
+- **Response**: Ensure the `X-Trace-ID` is returned in both the HTTP headers and the `ApiResponse` JSON body.
+
+### Changes Performed
+
+| File | Change |
+|---|---|
+| `api-gateway/main.py` | Renamed `add_request_id` middleware → `add_trace_id`. Reads `X-Trace-ID` header (or `X-Request-ID` for backward compat), generates UUID if absent, sets `request.state.trace_id`, returns both `X-Trace-ID` and `X-Request-ID` on response. |
+| `api-gateway/routes.py` | `proxy_request()` now forwards `X-Trace-ID` + `X-Request-ID` headers from `request.state.trace_id`. |
+| `api-gateway/orchestrator.py` | `call_engine()` helper forwards `X-Trace-ID` + `X-Request-ID` headers to all downstream engine calls. |
+| `shared/models.py` | Added `trace_id: Optional[str] = None` field to `ApiResponse` model. |
+
+### Testing Notes
+```bash
+# Verify trace ID propagation
+curl -H "X-Trace-ID: test-trace-123" http://localhost:8000/health
+# Response should include:
+#   Header: X-Trace-ID: test-trace-123
+#   Body: { "trace_id": "test-trace-123", ... }
+
+# Verify auto-generation when no trace ID sent
+curl http://localhost:8000/health
+# Response should include auto-generated UUID in X-Trace-ID header
+```
+
+---
+
+## 2️⃣ Basic Rate Limiting — ✅ IMPLEMENTED
+
+The system already has an in-memory token bucket, but it needs specific configuration for UI/Frontend testing.
+
+**Implementation Steps:**
+- **UI Testing Protection**: In `api-gateway/middleware.py`, add a specific limit for the development environment to prevent infinite loops (e.g., 10 requests/second from the same IP/User).
+- **Burst Configuration**: Implement a burst capacity of 5 requests to allow for legitimate rapid UI transitions while blocking sustained loops.
+- **Standardized Response**: Return a consistent `429 Too Many Requests` status with the `X-Trace-ID` attached.
+
+### Changes Performed
+
+| File | Change |
+|---|---|
+| `api-gateway/middleware.py` | `RateLimitMiddleware` rewritten with **two-layer** rate limiting: (1) **Per-second burst guard** — `_burst_buckets` dict tracks requests per IP per second, rejects at `RATE_LIMIT_BURST_PER_SECOND` (default 10/s), returns `ErrorCode.BURST_LIMIT` with message `"Possible infinite loop detected"`; (2) **Per-minute guard** — existing token bucket at `RATE_LIMIT_PER_MINUTE` (default 100/min), returns `ErrorCode.RATE_LIMIT`. Both 429 responses include `trace_id` and `X-Trace-ID` header. |
+| `shared/config.py` | Added `RATE_LIMIT_BURST_PER_SECOND: int = 10` and `RATE_LIMIT_BURST_CAPACITY: int = 5` settings (overridable via `.env`). |
+
+### Configuration
+```env
+# .env overrides (optional)
+RATE_LIMIT_BURST_PER_SECOND=10   # Max requests per second per IP
+RATE_LIMIT_BURST_CAPACITY=5      # Burst bucket capacity
+RATE_LIMIT_PER_MINUTE=100        # Max requests per minute per IP (existing)
+```
+
+### Testing Notes
+```bash
+# Test burst protection (rapid fire > 10 req/s should trigger 429)
+for i in $(seq 1 15); do curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8000/health; done
+# First ~10 should return 200, remaining should return 429
+
+# Verify 429 response structure
+# {
+#   "status": "error",
+#   "errors": [{ "code": "BURST_LIMIT", "message": "Possible infinite loop detected. ..." }],
+#   "trace_id": "uuid"
+# }
+```
+
+---
+
+## 3️⃣ Simple LLM Circuit Breaker — ✅ IMPLEMENTED
+
+Protect the system from hanging or crashing when NVIDIA NIM endpoints are unavailable or slow.
+
+**Implementation Steps:**
+- **Circuit State**: Create a `CircuitBreaker` utility in `shared/utils.py` with three states: `CLOSED`, `OPEN`, and `HALF_OPEN`.
+- **Thresholds**: 
+    - Open the circuit after **3 consecutive failures**.
+    - Stay open for **60 seconds** (cooldown period).
+- **NIM Integration**: Wrap the `nvidia_client` calls in `neural-network-engine/main.py`.
+- **Degraded Fallback**: When the circuit is open, return a pre-defined message: *"Our AI knowledge service is temporarily unavailable. Please check back in a minute or browse our direct scheme list."*
+
+### Changes Performed
+
+| File | Change |
+|---|---|
+| `shared/nvidia_client.py` | Added `LLMCircuitBreaker` class with `CLOSED`/`OPEN`/`HALF_OPEN` states. Thresholds: 3 consecutive failures → OPEN, 60s cooldown → HALF_OPEN (1 probe request). All 4 NIM methods (`chat_completion`, `generate_text`, `generate_embedding`, `generate_embeddings_batch`) wrapped with `allow_request()` / `record_success()` / `record_failure()` lifecycle. Exported `get_llm_circuit_breaker_status()` for monitoring. |
+| `shared/nvidia_client.py` | Added `NIMUnavailableError(Exception)` — raised when circuit is OPEN and request is rejected. |
+| `shared/nvidia_client.py` | Added `NIM_DEGRADED_MESSAGE` constant: `"Our AI knowledge service is temporarily unavailable. Please check back in a minute or browse our direct scheme list."` |
+| `shared/config.py` | Added `LLM_CB_FAILURE_THRESHOLD: int = 3` and `LLM_CB_COOLDOWN_SECONDS: int = 60` settings. |
+| `neural-network-engine/main.py` | All 6 AI endpoints now catch `NIMUnavailableError` before generic `Exception`. |
+
+**Endpoint-specific degraded behavior:**
+
+| Endpoint | Degraded Fallback |
+|---|---|
+| `/ai/chat` | Returns `NIM_DEGRADED_MESSAGE` as the chat response |
+| `/ai/rag` | Returns `NIM_DEGRADED_MESSAGE` as the answer |
+| `/ai/intent` | Returns keyword-based intent `{"intent": "scheme_query", "confidence": 0.3, "degraded": true}` |
+| `/ai/summarize` | Returns truncated original text (`text[:500] + "..."`) |
+| `/ai/translate` | Returns original text unchanged |
+| `/ai/embeddings` | Returns HTTP 503 with `NIM_DEGRADED_MESSAGE` |
+
+### Circuit Breaker State Machine
+```
+  CLOSED ──[3 failures]──► OPEN ──[60s cooldown]──► HALF_OPEN
+    ▲                                                    │
+    │                                                    │
+    └──────────[probe succeeds]──────────────────────────┘
+                                                         │
+                          OPEN ◄──[probe fails]──────────┘
+```
+
+### Configuration
+```env
+# .env overrides (optional)
+LLM_CB_FAILURE_THRESHOLD=3    # Consecutive failures before OPEN
+LLM_CB_COOLDOWN_SECONDS=60    # Seconds to wait before HALF_OPEN probe
+```
+
+### Testing Notes
+```bash
+# Monitor circuit breaker status
+curl http://localhost:8007/health
+# Check nvidia_client logs for circuit state transitions
+
+# To trigger: stop NVIDIA NIM (or use invalid API key), send 3+ requests
+# Circuit should open after 3 failures, return degraded messages for 60s
+# After 60s, one probe request is allowed through
+```
+
+---
+
+## 4️⃣ Graceful Error Responses — ✅ IMPLEMENTED
+
+Frontend debugging requires a predictable and machine-readable error structure.
+
+**Implementation Steps:**
+- **Model Update**: Update `shared/models.py` to include a structured `ErrorDetail` class:
+    ```json
+    {
+      "status": "error",
+      "code": "CODE_NAME",
+      "message": "Human readable message",
+      "request_id": "uuid-v4"
+    }
+    ```
+- **Standardized Codes**: Define a dictionary of common error codes:
+    - `VECTOR_TIMEOUT`: Retrieval service too slow.
+    - `NIM_FAILURE`: AI inference service down.
+    - `AUTH_EXPIRED`: JWT token invalid.
+    - `RATE_LIMIT`: Too many requests.
+- **Global Handler**: Update the `global_exception_handler` in `api-gateway/main.py` to map Python exceptions to these standardized JSON structures.
+
+### Changes Performed
+
+| File | Change |
+|---|---|
+| `shared/models.py` | Added `ErrorCode` class with **14 standardized codes**: `VECTOR_TIMEOUT`, `NIM_FAILURE`, `ENGINE_UNAVAILABLE`, `ENGINE_TIMEOUT`, `CIRCUIT_OPEN`, `AUTH_EXPIRED`, `AUTH_INVALID`, `AUTH_REQUIRED`, `RATE_LIMIT`, `BURST_LIMIT`, `VALIDATION_ERROR`, `NOT_FOUND`, `INTERNAL_ERROR`, `PARTIAL_FAILURE`. |
+| `shared/models.py` | Added `make_error(code, message, detail, attr)` factory function that returns a pre-built error `ApiResponse`. |
+| `api-gateway/main.py` | `global_exception_handler` updated with HTTP status → `ErrorCode` mapping: 401→`AUTH_REQUIRED`, 429→`RATE_LIMIT`, 404→`NOT_FOUND`, 503→`ENGINE_UNAVAILABLE`, 504→`ENGINE_TIMEOUT`, else→`INTERNAL_ERROR`. All error responses include `trace_id` and `X-Trace-ID` header. |
+| `api-gateway/main.py` | Added dedicated `http_exception_handler` for `HTTPException` that delegates to the structured global handler. |
+
+### Error Response Structure
+```json
+{
+  "status": "error",
+  "data": null,
+  "errors": [
+    {
+      "code": "NIM_FAILURE",
+      "message": "AI inference service is temporarily unavailable",
+      "detail": "Connection refused",
+      "attr": null
+    }
+  ],
+  "trace_id": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+### All Error Codes
+| Code | Description |
+|---|---|
+| `VECTOR_TIMEOUT` | Vector DB / retrieval service too slow |
+| `NIM_FAILURE` | NVIDIA NIM inference service down |
+| `ENGINE_UNAVAILABLE` | A downstream engine is unreachable (503) |
+| `ENGINE_TIMEOUT` | A downstream engine timed out (504) |
+| `CIRCUIT_OPEN` | LLM circuit breaker is open |
+| `AUTH_EXPIRED` | JWT token has expired |
+| `AUTH_INVALID` | JWT token is malformed |
+| `AUTH_REQUIRED` | No authentication provided (401) |
+| `RATE_LIMIT` | Per-minute rate limit exceeded |
+| `BURST_LIMIT` | Per-second burst limit exceeded |
+| `VALIDATION_ERROR` | Request body validation failed |
+| `NOT_FOUND` | Endpoint or resource not found (404) |
+| `INTERNAL_ERROR` | Unhandled server error (500) |
+| `PARTIAL_FAILURE` | Some sub-operations succeeded, some failed |
+
+### Testing Notes
+```bash
+# Test structured 404
+curl http://localhost:8000/nonexistent
+# Should return: { "status": "error", "errors": [{ "code": "NOT_FOUND", ... }], "trace_id": "..." }
+
+# Test auth error (invalid token)
+curl -H "Authorization: Bearer invalid" http://localhost:8000/api/e7/ai/chat -X POST -d '{}'
+# Should return: { "status": "error", "errors": [{ "code": "AUTH_REQUIRED", ... }] }
+
+# Test rate limit
+# Exceed 100 req/min or 10 req/s → 429 with ErrorCode.RATE_LIMIT or BURST_LIMIT
+```
+
+---
+
+## 🔗 Connection Roadmap
+
+| Feature | Primary Location | Secondary Impact | Status |
+|---|---|---|---|
+| **Trace ID** | `api-gateway/main.py` | `routes.py`, `orchestrator.py`, `shared/models.py` | ✅ Done |
+| **Rate Limit** | `api-gateway/middleware.py` | `shared/config.py` | ✅ Done |
+| **Circuit Breaker** | `shared/nvidia_client.py` | `neural-network-engine/main.py`, `shared/config.py` | ✅ Done |
+| **Error Structure**| `shared/models.py` | `api-gateway/main.py`, `api-gateway/middleware.py` | ✅ Done |
+
+---
+
+## 📁 Complete File Change Log
+
+| # | File | Guardrail(s) | Summary |
+|---|---|---|---|
+| 1 | `shared/models.py` | 1, 4 | `ErrorCode` class (14 codes), `make_error()` factory, `trace_id` field on `ApiResponse` |
+| 2 | `shared/config.py` | 2, 3 | 4 new settings: `RATE_LIMIT_BURST_PER_SECOND`, `RATE_LIMIT_BURST_CAPACITY`, `LLM_CB_FAILURE_THRESHOLD`, `LLM_CB_COOLDOWN_SECONDS` |
+| 3 | `shared/nvidia_client.py` | 3 | `LLMCircuitBreaker` class, `NIMUnavailableError`, `NIM_DEGRADED_MESSAGE`, all 4 NIM methods wrapped |
+| 4 | `api-gateway/main.py` | 1, 4 | `add_trace_id` middleware, structured `global_exception_handler` + `http_exception_handler` |
+| 5 | `api-gateway/middleware.py` | 2 | Two-layer rate limiting (per-second burst + per-minute), structured 429 responses |
+| 6 | `api-gateway/routes.py` | 1 | `proxy_request()` forwards `X-Trace-ID` header |
+| 7 | `api-gateway/orchestrator.py` | 1 | `call_engine()` forwards `X-Trace-ID` header |
+| 8 | `neural-network-engine/main.py` | 3 | All 6 AI endpoints catch `NIMUnavailableError` with degraded fallbacks |
+
+---
+
+## 🧪 Testing Phase Checklist
+
+| # | Test | Command / Action | Expected Result | Status |
+|---|---|---|---|---|
+| 1 | Trace ID auto-generation | `curl http://localhost:8000/health` | `X-Trace-ID` header in response + `trace_id` in body | ⬜ |
+| 2 | Trace ID forwarding | `curl -H "X-Trace-ID: my-trace" http://localhost:8000/health` | Same ID echoed back | ⬜ |
+| 3 | Backward compat (X-Request-ID) | `curl -H "X-Request-ID: old-id" http://localhost:8000/health` | Both `X-Trace-ID` and `X-Request-ID` in response | ⬜ |
+| 4 | Burst rate limit (10 req/s) | Rapid-fire 15+ requests in 1 second | First ~10 succeed, rest get 429 `BURST_LIMIT` | ⬜ |
+| 5 | Per-minute rate limit | Send 101+ requests in 1 minute | 429 `RATE_LIMIT` after 100 | ⬜ |
+| 6 | Circuit breaker OPEN | Kill NIM, send 3+ AI requests | 4th request returns `NIM_DEGRADED_MESSAGE` instantly | ⬜ |
+| 7 | Circuit breaker HALF_OPEN | Wait 60s after circuit opens | Next request probes NIM (succeeds → CLOSED, fails → OPEN) | ⬜ |
+| 8 | Degraded chat response | Circuit OPEN + POST `/ai/chat` | Returns degraded message, not error | ⬜ |
+| 9 | Degraded intent response | Circuit OPEN + POST `/ai/intent` | Returns `{"degraded": true, "intent": "scheme_query"}` | ⬜ |
+| 10 | Structured 404 | `curl http://localhost:8000/nonexistent` | `{"status": "error", "errors": [{"code": "NOT_FOUND"}]}` | ⬜ |
+| 11 | Structured 500 | Trigger unhandled exception | `{"status": "error", "errors": [{"code": "INTERNAL_ERROR"}]}` | ⬜ |
+| 12 | 429 with trace ID | Trigger rate limit | Response body includes `trace_id` + `X-Trace-ID` header | ⬜ |
+
+---
+*Plan generated for AIforBharat Workspace. Implementation completed.*

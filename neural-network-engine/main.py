@@ -26,7 +26,7 @@ from shared.config import settings
 from shared.database import Base, AsyncSessionLocal, init_db
 from shared.models import ApiResponse, HealthResponse, EventMessage, EventType
 from shared.event_bus import event_bus
-from shared.nvidia_client import nvidia_client
+from shared.nvidia_client import nvidia_client, NIMUnavailableError, NIM_DEGRADED_MESSAGE
 from shared.utils import generate_id
 from shared.cache import LocalCache
 
@@ -186,6 +186,9 @@ async def chat(data: ChatRequest):
             max_tokens=data.max_tokens,
             temperature=data.temperature,
         )
+    except NIMUnavailableError:
+        logger.warning("LLM circuit breaker OPEN — returning degraded chat response")
+        response = NIM_DEGRADED_MESSAGE
     except Exception as e:
         logger.error(f"NIM chat failed: {e}")
         response = "I apologize, but I'm having trouble connecting to my AI backend right now. Please try again in a moment, or I can help you with basic scheme information."
@@ -201,7 +204,7 @@ async def chat(data: ChatRequest):
         session.add(ConversationLog(
             id=generate_id(), user_id=data.user_id, session_id=session_id,
             role="assistant", content=response, latency_ms=latency_ms,
-            model_used=settings.NVIDIA_NIM_MODEL_CHAT,
+            model_used=settings.NIM_MODEL_8B,
         ))
         await session.commit()
 
@@ -235,6 +238,9 @@ async def rag_query(data: RAGRequest):
         response = await nvidia_client.generate_text(
             prompt, max_tokens=data.max_tokens, temperature=0.3,
         )
+    except NIMUnavailableError:
+        logger.warning("RAG: LLM circuit breaker open")
+        response = NIM_DEGRADED_MESSAGE
     except Exception as e:
         logger.error(f"RAG failed: {e}")
         response = "I couldn't process your query right now. The context suggests checking the relevant scheme documentation directly."
@@ -270,6 +276,11 @@ async def classify_intent(data: IntentRequest):
             result = json.loads(json_match.group())
         else:
             result = {"intent": "general_question", "entities": {}, "confidence": 0.5, "language": "en"}
+    except NIMUnavailableError:
+        logger.warning("Intent: LLM circuit breaker open")
+        result = {"intent": "scheme_query", "entities": {}, "confidence": 0.3, "language": "en", "degraded": True}
+        ai_cache.set(cache_key, result)
+        return ApiResponse(data=result, metadata={"degraded": True})
     except Exception as e:
         logger.warning(f"Intent classification failed: {e}")
         # Fallback: keyword-based classification
@@ -303,6 +314,9 @@ async def summarize(data: SummarizeRequest):
             SUMMARY_PROMPT.format(text=data.text[:3000]),
             max_tokens=500, temperature=0.3,
         )
+    except NIMUnavailableError:
+        logger.warning("Summarize: LLM circuit breaker open")
+        response = data.text[:500] + "..."
     except Exception as e:
         logger.warning(f"Summarization failed: {e}")
         response = data.text[:500] + "..."
@@ -323,6 +337,9 @@ async def translate(data: TranslateRequest):
             ),
             max_tokens=1000, temperature=0.2,
         )
+    except NIMUnavailableError:
+        logger.warning("Translate: LLM circuit breaker open")
+        response = data.text  # Fallback: return original
     except Exception as e:
         logger.warning(f"Translation failed: {e}")
         response = data.text  # Fallback: return original
@@ -345,6 +362,9 @@ async def generate_embeddings(data: EmbeddingRequest):
             "dimensions": len(embeddings[0]) if embeddings else 0,
             "count": len(embeddings),
         })
+    except NIMUnavailableError:
+        logger.warning("Embeddings: LLM circuit breaker open")
+        raise HTTPException(status_code=503, detail=NIM_DEGRADED_MESSAGE)
     except Exception as e:
         logger.error(f"Embedding generation failed: {e}")
         raise HTTPException(status_code=503, detail=f"Embedding service unavailable: {e}")

@@ -13,7 +13,7 @@ import time
 import uuid
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
@@ -22,7 +22,7 @@ import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from shared.config import settings
-from shared.models import ApiResponse, HealthResponse
+from shared.models import ApiResponse, HealthResponse, ErrorCode, make_error
 from shared.database import init_db
 
 from .routes import gateway_router
@@ -79,14 +79,24 @@ app.add_middleware(RateLimitMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
 
 
-# ── Request ID Middleware ─────────────────────────────────────────────────────
+# ── Trace ID Middleware ─────────────────────────────────────────────────────
 @app.middleware("http")
-async def add_request_id(request: Request, call_next):
-    """Attach a unique request ID to every request for tracing."""
-    request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
-    request.state.request_id = request_id
+async def add_trace_id(request: Request, call_next):
+    """
+    Attach a unique trace ID to every request for end-to-end tracing.
+    Uses X-Trace-ID as the universal header name across all engines.
+    Also supports legacy X-Request-ID header as fallback input.
+    """
+    trace_id = (
+        request.headers.get("X-Trace-ID")
+        or request.headers.get("X-Request-ID")
+        or str(uuid.uuid4())
+    )
+    request.state.request_id = trace_id   # backward compat
+    request.state.trace_id = trace_id
     response = await call_next(request)
-    response.headers["X-Request-ID"] = request_id
+    response.headers["X-Trace-ID"] = trace_id
+    response.headers["X-Request-ID"] = trace_id  # backward compat
     return response
 
 
@@ -152,16 +162,49 @@ async def root():
 # ── Global Exception Handler ─────────────────────────────────────────────────
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    """Catch-all exception handler to return consistent error format."""
-    logger.error(f"Unhandled exception: {exc}", exc_info=True)
+    """Catch-all exception handler returning structured error responses."""
+    trace_id = getattr(request.state, "trace_id", str(uuid.uuid4()))
+    logger.error(f"Unhandled exception [trace={trace_id}]: {exc}", exc_info=True)
+
+    # Map known exception types to structured error codes
+    if isinstance(exc, HTTPException):
+        status_code = exc.status_code
+        if status_code == 401:
+            error = make_error(ErrorCode.AUTH_REQUIRED, str(exc.detail))
+        elif status_code == 429:
+            error = make_error(ErrorCode.RATE_LIMIT, str(exc.detail))
+        elif status_code == 404:
+            error = make_error(ErrorCode.NOT_FOUND, str(exc.detail))
+        elif status_code == 503:
+            error = make_error(ErrorCode.ENGINE_UNAVAILABLE, str(exc.detail))
+        elif status_code == 504:
+            error = make_error(ErrorCode.ENGINE_TIMEOUT, str(exc.detail))
+        else:
+            error = make_error(ErrorCode.INTERNAL_ERROR, str(exc.detail))
+    else:
+        status_code = 500
+        error = make_error(
+            ErrorCode.INTERNAL_ERROR,
+            "Internal server error",
+            detail=str(exc) if settings.DEBUG else None,
+        )
+
     return JSONResponse(
-        status_code=500,
+        status_code=status_code,
         content=ApiResponse(
             success=False,
-            message="Internal server error",
-            errors=[{"detail": str(exc)}],
+            message=error.message,
+            errors=[error],
+            trace_id=trace_id,
         ).model_dump(mode="json"),
+        headers={"X-Trace-ID": trace_id},
     )
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Handle FastAPI HTTPExceptions with structured error format."""
+    return await global_exception_handler(request, exc)
 
 
 # ── Include all route groups ──────────────────────────────────────────────────

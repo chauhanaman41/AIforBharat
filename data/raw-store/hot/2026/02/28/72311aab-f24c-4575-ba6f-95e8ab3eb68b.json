@@ -1,0 +1,13 @@
+{
+  "event_id": "72311aab-f24c-4575-ba6f-95e8ab3eb68b",
+  "event_type": "RAW_DATA_STORED",
+  "source_engine": "raw_data_store",
+  "user_id": null,
+  "timestamp": "2026-02-28T06:57:26.590862",
+  "payload": {
+    "event_id": "ff885b57-7baf-4966-9bdb-19f727a7f235",
+    "hash": "82207ee9bee5d868123a4501fd370832126dd3afc3887249105a813c202967fb"
+  },
+  "hash": "17c376e6d0e4102bce48988741399f8b807529697194d5e9655fdcea5acae43b",
+  "prev_hash": "82207ee9bee5d868123a4501fd370832126dd3afc3887249105a813c202967fb"
+}

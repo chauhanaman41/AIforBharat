@@ -117,6 +117,12 @@ class Settings(BaseSettings):
     RATE_LIMIT_PER_USER_RPM: int = 60
     RATE_LIMIT_AI_RPM: int = 20
     RATE_LIMIT_PER_IP_RPM: int = 100
+    RATE_LIMIT_BURST_PER_SECOND: int = 10   # Max requests/sec from one IP (UI loop protection)
+    RATE_LIMIT_BURST_CAPACITY: int = 5      # Burst bucket size before throttle kicks in
+
+    # ── Circuit Breaker (LLM) ─────────────────────────────────────────────
+    LLM_CB_FAILURE_THRESHOLD: int = 3       # Consecutive failures before OPEN
+    LLM_CB_COOLDOWN_SECONDS: int = 60       # Seconds to stay OPEN before HALF_OPEN probe
 
     # ── CORS ──────────────────────────────────────────────────────────────
     CORS_ORIGINS: list[str] = [

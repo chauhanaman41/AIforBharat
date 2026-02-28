@@ -9,7 +9,7 @@
 
 ## 1️⃣ Orchestrator Final Architecture
 
-> **Update (Feb 28):** The Orchestrator composite routes have been fully validated using `test_orchestration.py`. Full reports are available in `orchestra-testing-1.md`. Additionally, the orchestrator integration points, request schemas, and inter-engine dependencies are now fully documented across the `API Gateway README` and all 21 downstream engine READMEs.
+> **Update (Feb 28 - Guardrails):** Rate limiting and Circuit Breakers (LLM) have been fully integrated into the API Gateway middleware. Downstream engines (like E7) now return graceful degrades instead of HTTP 500s when overwhelmed. These fallback flows ensure high availability and are verified via `test_orchestration.py`. Full reports are available in `orchestra-testing-1.md`. Additionally, the orchestrator integration points, request schemas, and inter-engine dependencies are now fully documented across the `API Gateway README` and all 21 downstream engine READMEs.
 
 ### Design Decision: Orchestrator Inside the API Gateway
 

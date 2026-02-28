@@ -148,7 +148,8 @@ async def call_engine(
     url = f"{base_url}{path}"
     headers = {
         "Content-Type": "application/json",
-        "X-Request-ID": request_id,
+        "X-Trace-ID": request_id,
+        "X-Request-ID": request_id,  # backward compat
     }
 
     try:
