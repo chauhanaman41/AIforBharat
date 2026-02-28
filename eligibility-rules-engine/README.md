@@ -73,3 +73,52 @@ Docs: http://localhost:8015/docs
 ## Gateway Route
 
 `/api/v1/eligibility/*` → proxied from API Gateway (JWT auth required)
+
+## Orchestrator Integration
+
+This engine participates in the following composite flows orchestrated by the API Gateway:
+
+| Flow | Route | Role | Step |
+|------|-------|------|------|
+| **User Onboarding** | `POST /api/v1/onboard` | Batch eligibility check for new user (parallel with E16) | Step 5 of 8 |
+| **Eligibility Check** | `POST /api/v1/check-eligibility` | Deterministic eligibility evaluation (critical first step) | Step 1 of 3 |
+| **Voice Query** | `POST /api/v1/voice-query` | Eligibility check when intent is `eligibility_check` | Conditional |
+
+### Flow Detail: User Onboarding
+
+```
+E1 (Register) → E2 (Identity) → E4 (Metadata) → E5 (Processed Meta)
+  → E15 (Eligibility) ∥ E16 (Deadlines) → E12 (Profile) → E3+E13 (Audit)
+```
+
+E15 runs in **parallel** with E16 during onboarding. It evaluates the new user against all 10 built-in scheme rules and returns eligible/partial/not-eligible counts.
+
+### Flow Detail: Eligibility Check with Explanation
+
+```
+→ E15 (Eligibility Check) → E7 (AI Explanation) → E3+E13 (Audit)
+```
+
+E15 is the **critical entry point** — if it fails, the entire flow aborts. The eligibility verdict is 100% deterministic (boolean logic, no LLM). E7 provides an optional human-readable explanation.
+
+## Inter-Engine Dependencies
+
+| Direction | Engine | Purpose |
+|-----------|--------|--------|
+| **Called by** | API Gateway (Orchestrator) | `/eligibility/check` during onboarding, check-eligibility, voice query |
+| **Called by** | API Gateway (Proxy) | All `/eligibility/*` routes for direct access |
+| **Fed by** | Metadata Engine (E4) | Normalized user profiles for accurate matching |
+| **Fed by** | Processed Metadata (E5) | Stored profiles for historical checks |
+| **Feeds** | Neural Network (E7) | Results text for AI explanation generation |
+| **Feeds** | JSON User Info Gen (E12) | `eligibility_summary` section in user profiles |
+| **Feeds** | Dashboard (E14) | Eligibility widget data |
+| **Publishes to** | Event Bus → E3, E13 | `ELIGIBILITY_CHECKED` |
+
+## Shared Module Dependencies
+
+- `shared/config.py` — `settings` (port)
+- `shared/database.py` — `Base`, `AsyncSessionLocal`, `init_db()`
+- `shared/models.py` — `ApiResponse`, `HealthResponse`, `EventMessage`, `EventType`, `EligibilityVerdict`
+- `shared/event_bus.py` — `event_bus`
+- `shared/utils.py` — `generate_id()`
+- `shared/cache.py` — `LocalCache`

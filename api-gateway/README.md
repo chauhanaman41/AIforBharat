@@ -56,3 +56,80 @@ Routes marked "auth required" validate the `Authorization: Bearer <token>` heade
 - `main.py` — FastAPI app, middleware stack, health/root endpoints, exception handler
 - `routes.py` — Router with proxy functions for all 16 route groups
 - `middleware.py` — `RateLimitMiddleware`, `RequestLoggingMiddleware`
+- `orchestrator.py` — Composite routes that chain multiple engines in sequence (the "conductor")
+
+## Orchestrator Layer
+
+The API Gateway hosts the **Orchestrator** — 6 composite routes that chain multiple engines into cohesive end-to-end pipelines. The orchestrator lives inside the gateway (no separate engine).
+
+### Architecture Decisions
+
+- **Hub-and-Spoke:** Only the API Gateway makes cross-engine HTTP calls via `httpx.AsyncClient`
+- **Circuit Breaker:** Per-engine failure tracking (5 failures → OPEN → 30s recovery → HALF_OPEN probe)
+- **Audit:** Every composite flow ends with a fire-and-forget POST to E3 (Raw Data Store) + E13 (Analytics)
+- **Graceful Degradation:** Non-critical steps return `degraded: [...]` instead of failing the whole flow
+- **Correlation IDs:** Every call carries `X-Request-ID` for end-to-end tracing
+
+### 6 Composite Routes
+
+| # | Route | Type | Pipeline | Auth |
+|---|-------|------|----------|------|
+| 1 | `POST /api/v1/query` | Agent Flow | E7(intent) → E6(search) → E7(RAG) → E8∥E19(anomaly+trust) → Audit | JWT |
+| 2 | `POST /api/v1/onboard` | Controller Flow | E1 → E2 → E4 → E5 → E15∥E16 → E12 → Audit | None |
+| 3 | `POST /api/v1/check-eligibility` | Controller Flow | E15 → E7(explain) → Audit | JWT |
+| 4 | `POST /api/v1/ingest-policy` | Controller Flow | E11 → E21 → E10 → E7(embed) → E6(upsert) → E4 → Audit | JWT |
+| 5 | `POST /api/v1/voice-query` | Agent Flow | E7(intent) → Route → E20(TTS) → Audit | None |
+| 6 | `POST /api/v1/simulate` | Controller Flow | E17 → E7(explain) → Audit | JWT |
+
+### Flow Types
+
+- **Controller Flow:** Deterministic sequential steps — no LLM decision-making in routing. Every step is hardcoded.
+- **Agent Flow:** Dynamic routing based on intent classification from Neural Network Engine (E7).
+
+### Request Schemas
+
+| Schema | Fields | Used By |
+|--------|--------|---------|
+| `QueryRequest` | `message`, `user_id`, `session_id?`, `top_k` | `/query` |
+| `OnboardRequest` | `phone`, `password`, `name`, `state?`, `district?`, `language_preference`, ... (14 optional profile fields) | `/onboard` |
+| `EligibilityRequest` | `user_id`, `profile`, `scheme_ids?`, `explain` | `/check-eligibility` |
+| `IngestPolicyRequest` | `source_url`, `source_type`, `tags?` | `/ingest-policy` |
+| `VoiceQueryRequest` | `text`, `language`, `user_id?` | `/voice-query` |
+| `SimulateRequest` | `user_id`, `current_profile`, `changes`, `explain` | `/simulate` |
+
+### Engine Participation Matrix
+
+| Engine | Query | Onboard | Eligibility | Ingest | Voice | Simulate |
+|--------|:-----:|:-------:|:-----------:|:------:|:-----:|:--------:|
+| E1 Login/Register | | **Step 1** | | | | |
+| E2 Identity | | Step 2 | | | | |
+| E3 Raw Data Store | Audit | Audit | Audit | Audit | Audit | Audit |
+| E4 Metadata | | Step 3 | | Step 6 | | |
+| E5 Processed Meta | | Step 4 | | | | |
+| E6 Vector DB | Step 2 | | | Step 5 | Cond. | |
+| E7 Neural Network | Steps 1,3 | | Step 2 | Step 4 | Steps 1-3 | Step 2 |
+| E8 Anomaly | Step 4∥ | | | | | |
+| E10 Chunks | | | | Step 3 | | |
+| E11 Policy Fetch | | | | **Step 1** | | |
+| E12 JSON User Info | | Step 7 | | | | |
+| E13 Analytics | Audit | Audit | Audit | Audit | Audit | Audit |
+| E15 Eligibility | | Step 5∥ | **Step 1** | | Cond. | |
+| E16 Deadline | | Step 6∥ | | | Cond. | |
+| E17 Simulation | | | | | | **Step 1** |
+| E19 Trust Scoring | Step 5∥ | | | | | |
+| E20 Speech | | | | | Step 4 | |
+| E21 Doc Understanding | | | | Step 2 | | |
+
+> **Bold** = critical (failure aborts flow). ∥ = parallel. Cond. = conditional on intent.
+
+### System Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/v1/circuit-breaker/status` | View circuit breaker states for all engines |
+| GET | `/api/v1/engines/health` | Probe health of all 21 engines concurrently |
+
+## Shared Module Dependencies
+
+- `shared/config.py` — `ENGINE_URLS` (all engine base URLs), `settings`
+- `shared/models.py` — `ApiResponse` (response envelope for all routes)

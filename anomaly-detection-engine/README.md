@@ -58,3 +58,37 @@ Aggregate risk score: `0.6 × max_severity + 0.4 × avg_severity`
 ## Gateway Route
 
 Not directly exposed via gateway. Called by Trust Scoring Engine (19) and JSON User Info Generator (12).
+
+## Orchestrator Integration
+
+This engine participates in the following composite flows orchestrated by the API Gateway:
+
+| Flow | Route | Role | Step |
+|------|-------|------|------|
+| **RAG Query** | `POST /api/v1/query` | Check AI response for anomalies (parallel with E19) | Step 4 of 6 |
+
+### Flow Detail: RAG Query
+
+```
+E7 (Intent) → E6 (Vector Search) → E7 (RAG Generate)
+  → E8 (Anomaly) ∥ E19 (Trust) → E3+E13 (Audit)
+```
+
+E8 runs in **parallel** with E19 (Trust Scoring). It analyzes the AI-generated response for inconsistencies. Failure is **non-critical** — the response is still returned but flagged as `degraded: ["anomaly_check"]`.
+
+## Inter-Engine Dependencies
+
+| Direction | Engine | Purpose |
+|-----------|--------|--------|
+| **Called by** | API Gateway (Orchestrator) | `/anomaly/check` during RAG queries (parallel) |
+| **Called by** | Trust Scoring (E19) | Profile anomaly assessment as scoring component |
+| **Called by** | JSON User Info Generator (E12) | Risk info for user profiles |
+| **Publishes to** | Event Bus → E3, E13 | `ANOMALY_DETECTED`, `ANOMALY_RESOLVED` |
+
+## Shared Module Dependencies
+
+- `shared/config.py` — `settings` (port)
+- `shared/database.py` — `Base`, `AsyncSessionLocal`, `init_db()`
+- `shared/models.py` — `ApiResponse`, `HealthResponse`, `EventMessage`, `EventType`
+- `shared/event_bus.py` — `event_bus`
+- `shared/utils.py` — `generate_id()`

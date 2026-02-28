@@ -68,3 +68,39 @@ Supports case-insensitive partial matching on `state` and `district`.
 ## Gateway Route
 
 Not directly exposed via gateway. Used internally by Dashboard and Analytics engines.
+
+## Orchestrator Integration
+
+This engine does **not participate** in any of the 6 composite orchestrator flows. It is a standalone **data synchronization** service that fetches and caches government datasets from external open-data portals.
+
+### Standalone Role
+
+E18 operates independently to keep government datasets up to date:
+
+| Data Source | Type | Purpose |
+|-------------|------|--------|
+| NFHS-5 District Data | Health & Social | District-level nutrition, health, demographic indicators |
+| Census 2011 | Demographic | Population, literacy, urbanization stats |
+| SDG India Index | Development | Sustainable Development Goal scores by state |
+| Poverty Headcount | Economic | Below Poverty Line ratios |
+| Scheme Beneficiaries | Welfare | Beneficiary counts per scheme |
+
+Datasets are synced on demand (`POST /gov-data/sync`) or cached from initial seed data. Content hash tracking detects changes.
+
+## Inter-Engine Dependencies
+
+| Direction | Engine | Purpose |
+|-----------|--------|--------|
+| **Read by** | Dashboard (E14) | Government data for contextual widgets |
+| **Read by** | Analytics Warehouse (E13) | Correlation with platform metrics |
+| **Read by** | Eligibility Rules (E15) | State-level poverty/development context |
+| **Publishes to** | Event Bus → E3, E13 | `GOV_DATA_SYNCED`, `DATASET_UPDATED` |
+
+## Shared Module Dependencies
+
+- `shared/config.py` — `settings` (data.gov.in API key, data directory, port)
+- `shared/database.py` — `Base`, `AsyncSessionLocal`, `init_db()`
+- `shared/models.py` — `ApiResponse`, `HealthResponse`, `EventMessage`, `EventType`
+- `shared/event_bus.py` — `event_bus`
+- `shared/utils.py` — `generate_id()`, `sha256_hash()`
+- `shared/cache.py` — `LocalCache`

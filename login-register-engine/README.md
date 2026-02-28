@@ -58,3 +58,36 @@ Docs: http://localhost:8001/docs
 ## Gateway Route
 
 `/api/v1/auth/*` → proxied from API Gateway (no auth required)
+
+## Orchestrator Integration
+
+This engine participates in the following composite flows orchestrated by the API Gateway:
+
+| Flow | Route | Role | Step |
+|------|-------|------|------|
+| **User Onboarding** | `POST /api/v1/onboard` | Register new user (critical first step) | Step 1 of 8 |
+
+### Flow Detail: User Onboarding
+
+```
+→ E1 (Register) → E2 (Identity) → E4 (Metadata) → E5 (Processed Meta)
+  → E15 ∥ E16 (Eligibility + Deadlines) → E12 (Profile) → E3+E13 (Audit)
+```
+
+E1 is the **critical entry point** — if registration fails, the entire onboarding flow aborts (HTTP 500). All subsequent steps degrade gracefully.
+
+## Inter-Engine Dependencies
+
+| Direction | Engine | Purpose |
+|-----------|--------|--------|
+| **Called by** | API Gateway (Orchestrator) | `/auth/register` during onboarding |
+| **Called by** | API Gateway (Proxy) | All `/auth/*` routes for direct access |
+| **Publishes to** | Event Bus → E3, E13 | `USER_REGISTERED`, `LOGIN_SUCCESS`, `LOGIN_FAILED`, `TOKEN_REFRESHED`, `LOGOUT` |
+
+## Shared Module Dependencies
+
+- `shared/config.py` — `settings` (JWT secret, algorithm, token TTLs, port)
+- `shared/database.py` — `Base`, `AsyncSessionLocal`, `init_db()`
+- `shared/models.py` — `ApiResponse`, `HealthResponse`, `EventMessage`, `EventType`
+- `shared/event_bus.py` — `event_bus`
+- `shared/utils.py` — `generate_id()`, `create_access_token()`

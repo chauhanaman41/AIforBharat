@@ -61,3 +61,40 @@ The dashboard home endpoint returns 8 configurable widgets:
 ## Gateway Route
 
 `/api/v1/dashboard/*` → proxied from API Gateway (JWT auth required)
+
+## Orchestrator Integration
+
+This engine does **not participate** in any of the 6 composite orchestrator flows. It is a standalone **Backend-for-Frontend (BFF)** layer that aggregates data from other engines for the dashboard UI.
+
+### Standalone Role
+
+The Dashboard BFF reads from multiple engines on demand when rendering dashboard views:
+
+| Data Source | Engine | Purpose |
+|-------------|--------|--------|
+| Eligibility summary | E15 | Widget: eligible scheme count |
+| Upcoming deadlines | E16 | Widget: deadline alerts |
+| Trust score | E19 | Widget: user trust level |
+| Profile completeness | E12 | Widget: profile completion % |
+| Scheme popularity | E13 | Widget: trending schemes |
+| Engine health | All engines | Operations: system status page |
+
+## Inter-Engine Dependencies
+
+| Direction | Engine | Purpose |
+|-----------|--------|--------|
+| **Called by** | API Gateway (Proxy) | All `/dashboard/*` routes |
+| **Reads from** | Eligibility Rules (E15) | Eligibility summary for homepage widget |
+| **Reads from** | Deadline Monitoring (E16) | Upcoming deadlines for alerts widget |
+| **Reads from** | Trust Scoring (E19) | Trust score for profile widget |
+| **Reads from** | JSON User Info Gen (E12) | Profile completeness metric |
+| **Reads from** | Analytics Warehouse (E13) | Scheme popularity, funnel data |
+| **Probes** | All engines | `/health` endpoint for system status |
+
+## Shared Module Dependencies
+
+- `shared/config.py` — `settings` (port, engine URLs)
+- `shared/database.py` — `Base`, `AsyncSessionLocal`, `init_db()`
+- `shared/models.py` — `ApiResponse`, `HealthResponse`
+- `shared/cache.py` — `LocalCache`
+- `shared/utils.py` — `generate_id()`

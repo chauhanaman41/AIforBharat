@@ -68,3 +68,41 @@ Compare a base profile against a modified profile to see:
 ## Gateway Route
 
 `/api/v1/simulate/*` → proxied from API Gateway (JWT auth required)
+
+## Orchestrator Integration
+
+This engine participates in the following composite flows orchestrated by the API Gateway:
+
+| Flow | Route | Role | Step |
+|------|-------|------|------|
+| **Simulation** | `POST /api/v1/simulate` | Run what-if simulation (critical first step) | Step 1 of 3 |
+
+### Flow Detail: Simulation with Explanation
+
+```
+→ E17 (What-If Simulation) → E7 (AI Explanation) → E3+E13 (Audit)
+```
+
+E17 is the **critical entry point** — if it fails, the entire flow aborts. The simulation is 100% deterministic (inline rules, no LLM). It compares `before` and `after` eligibility based on profile changes. E7 provides an optional human-readable explanation of the delta.
+
+### Supported Changes
+
+The orchestrator sends `current_profile` + `changes` dict. E17 applies changes and re-evaluates eligibility across 8 schemes with predefined benefit values.
+
+## Inter-Engine Dependencies
+
+| Direction | Engine | Purpose |
+|-----------|--------|--------|
+| **Called by** | API Gateway (Orchestrator) | `/simulate/what-if` during simulation flow |
+| **Called by** | API Gateway (Proxy) | All `/simulate/*` routes for direct access |
+| **Feeds** | Neural Network (E7) | Simulation results text for AI explanation generation |
+| **Publishes to** | Event Bus → E3, E13 | `SIMULATION_RUN` |
+
+## Shared Module Dependencies
+
+- `shared/config.py` — `settings` (port)
+- `shared/database.py` — `Base`, `AsyncSessionLocal`, `init_db()`
+- `shared/models.py` — `ApiResponse`, `HealthResponse`, `EventMessage`, `EventType`
+- `shared/event_bus.py` — `event_bus`
+- `shared/utils.py` — `generate_id()`
+- `shared/cache.py` — `LocalCache`

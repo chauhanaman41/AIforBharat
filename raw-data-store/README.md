@@ -55,3 +55,34 @@ Subscribes to **all events** (`*` wildcard) — every event published anywhere i
 ## Gateway Route
 
 Not directly exposed via API Gateway (internal engine). Other engines write to it via event bus subscription.
+
+## Orchestrator Integration
+
+This engine participates in **ALL 6** composite flows as the audit destination:
+
+| Flow | Route | Role | Step |
+|------|-------|------|------|
+| **RAG Query** | `POST /api/v1/query` | Audit log (fire-and-forget) | Final step |
+| **User Onboarding** | `POST /api/v1/onboard` | Audit log (fire-and-forget) | Step 8 of 8 |
+| **Eligibility Check** | `POST /api/v1/check-eligibility` | Audit log (fire-and-forget) | Final step |
+| **Policy Ingestion** | `POST /api/v1/ingest-policy` | Audit log (fire-and-forget) | Step 7 of 7 |
+| **Voice Query** | `POST /api/v1/voice-query` | Audit log (fire-and-forget) | Final step |
+| **Simulation** | `POST /api/v1/simulate` | Audit log (fire-and-forget) | Final step |
+
+The orchestrator's `audit_log()` helper POSTs to `/raw-data/events` as a background task (never blocks the response).
+
+## Inter-Engine Dependencies
+
+| Direction | Engine | Purpose |
+|-----------|--------|--------|
+| **Called by** | API Gateway (Orchestrator) | `/raw-data/events` — audit logs for all 6 composite flows |
+| **Subscribes from** | Event Bus (all events) | Auto-stores every event published by any engine |
+| **Read by** | Analytics Warehouse (E13) | Cross-referenced for platform-wide metrics |
+
+## Shared Module Dependencies
+
+- `shared/config.py` — `settings` (data directory paths, port)
+- `shared/database.py` — `Base`, `AsyncSessionLocal`, `init_db()`
+- `shared/models.py` — `ApiResponse`, `HealthResponse`, `EventMessage`, `EventType`
+- `shared/event_bus.py` — `event_bus` (subscribes to `*`)
+- `shared/utils.py` — `generate_id()`, `sha256_hash()`

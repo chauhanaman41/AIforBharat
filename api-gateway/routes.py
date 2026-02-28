@@ -211,6 +211,48 @@ async def profile_proxy(path: str, request: Request, user=Depends(require_auth))
     return await proxy_request(ENGINE_URLS["json_user_info"], f"/profile/{path}", request)
 
 
+# ── Raw Data Store Routes (Engine 3) ──────────────────────────────────────────
+@gateway_router.api_route("/raw-data/{path:path}", methods=["GET", "POST"], tags=["Raw Data"])
+async def raw_data_proxy(path: str, request: Request, user=Depends(require_auth)):
+    """Proxy raw data requests to Raw Data Store (port 8003)."""
+    return await proxy_request(ENGINE_URLS["raw_data_store"], f"/raw-data/{path}", request)
+
+
+# ── Processed Metadata Routes (Engine 5) ──────────────────────────────────────
+@gateway_router.api_route("/processed-metadata/{path:path}", methods=["GET", "POST", "PUT", "DELETE"], tags=["Processed Metadata"])
+async def processed_metadata_proxy(path: str, request: Request, user=Depends(require_auth)):
+    """Proxy processed metadata requests to Processed Metadata Store (port 8005)."""
+    return await proxy_request(ENGINE_URLS["processed_metadata"], f"/processed-metadata/{path}", request)
+
+
+# ── Vector Database Routes (Engine 6) ─────────────────────────────────────────
+@gateway_router.api_route("/vectors/{path:path}", methods=["GET", "POST", "DELETE"], tags=["Vectors"])
+async def vectors_proxy(path: str, request: Request, user=Depends(require_auth)):
+    """Proxy vector requests to Vector Database (port 8006)."""
+    return await proxy_request(ENGINE_URLS["vector_database"], f"/vectors/{path}", request)
+
+
+# ── Anomaly Detection Routes (Engine 8) ───────────────────────────────────────
+@gateway_router.api_route("/anomaly/{path:path}", methods=["GET", "POST", "PUT"], tags=["Anomaly"])
+async def anomaly_proxy(path: str, request: Request, user=Depends(require_auth)):
+    """Proxy anomaly requests to Anomaly Detection Engine (port 8008)."""
+    return await proxy_request(ENGINE_URLS["anomaly_detection"], f"/anomaly/{path}", request)
+
+
+# ── Chunks Engine Routes (Engine 10) ──────────────────────────────────────────
+@gateway_router.api_route("/chunks/{path:path}", methods=["GET", "POST"], tags=["Chunks"])
+async def chunks_proxy(path: str, request: Request, user=Depends(require_auth)):
+    """Proxy chunk requests to Chunks Engine (port 8010)."""
+    return await proxy_request(ENGINE_URLS["chunks"], f"/chunks/{path}", request)
+
+
+# ── Gov Data Sync Routes (Engine 18) ─────────────────────────────────────────
+@gateway_router.api_route("/gov-data/{path:path}", methods=["GET", "POST"], tags=["Gov Data"])
+async def gov_data_proxy(path: str, request: Request, user=Depends(require_auth)):
+    """Proxy gov data requests to Gov Data Sync Engine (port 8018)."""
+    return await proxy_request(ENGINE_URLS["gov_data_sync"], f"/gov-data/{path}", request)
+
+
 # ── Event Bus Debug (development only) ────────────────────────────────────────
 @gateway_router.get("/debug/events", tags=["Debug"])
 async def debug_events(user=Depends(require_auth)):

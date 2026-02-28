@@ -66,3 +66,35 @@ Step 4: Scheme Application → 200 users  (60% drop-off)
 ## Gateway Route
 
 `/api/v1/analytics/*` → proxied from API Gateway (JWT auth required)
+
+## Orchestrator Integration
+
+This engine participates in **ALL 6** composite flows as the analytics destination:
+
+| Flow | Route | Role | Step |
+|------|-------|------|------|
+| **RAG Query** | `POST /api/v1/query` | Analytics event (fire-and-forget) | Final step |
+| **User Onboarding** | `POST /api/v1/onboard` | Analytics event (fire-and-forget) | Step 8 of 8 |
+| **Eligibility Check** | `POST /api/v1/check-eligibility` | Analytics event (fire-and-forget) | Final step |
+| **Policy Ingestion** | `POST /api/v1/ingest-policy` | Analytics event (fire-and-forget) | Step 7 of 7 |
+| **Voice Query** | `POST /api/v1/voice-query` | Analytics event (fire-and-forget) | Final step |
+| **Simulation** | `POST /api/v1/simulate` | Analytics event (fire-and-forget) | Final step |
+
+The orchestrator's `audit_log()` helper POSTs to `/analytics/event` as a background task alongside E3 (Raw Data Store). Failures are logged but never block the response.
+
+## Inter-Engine Dependencies
+
+| Direction | Engine | Purpose |
+|-----------|--------|--------|
+| **Called by** | API Gateway (Orchestrator) | `/analytics/event` — analytics for all 6 composite flows |
+| **Called by** | API Gateway (Proxy) | All `/analytics/*` routes for direct dashboard access |
+| **Subscribes from** | Event Bus (all events) | Auto-tracks event counters, scheme popularity, engine metrics |
+| **Feeds** | Dashboard Interface (E14) | Aggregated metrics, funnel data, scheme popularity |
+
+## Shared Module Dependencies
+
+- `shared/config.py` — `settings` (port)
+- `shared/database.py` — `Base`, `AsyncSessionLocal`, `init_db()`
+- `shared/models.py` — `ApiResponse`, `HealthResponse`, `EventMessage`, `EventType`
+- `shared/event_bus.py` — `event_bus` (subscribes to `*`)
+- `shared/utils.py` — `generate_id()`

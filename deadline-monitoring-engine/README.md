@@ -68,3 +68,39 @@ Score range: **0.0 – 1.0**
 ## Gateway Route
 
 `/api/v1/deadlines/*` → proxied from API Gateway (JWT auth required)
+
+## Orchestrator Integration
+
+This engine participates in the following composite flows orchestrated by the API Gateway:
+
+| Flow | Route | Role | Step |
+|------|-------|------|------|
+| **User Onboarding** | `POST /api/v1/onboard` | Check upcoming deadlines for new user (parallel with E15) | Step 6 of 8 |
+| **Voice Query** | `POST /api/v1/voice-query` | Deadline check when intent is `deadline` | Conditional |
+
+### Flow Detail: User Onboarding
+
+```
+E1 (Register) → E2 (Identity) → E4 (Metadata) → E5 (Processed Meta)
+  → E15 (Eligibility) ∥ E16 (Deadlines) → E12 (Profile) → E3+E13 (Audit)
+```
+
+E16 runs in **parallel** with E15 during onboarding. It evaluates all active deadlines against the user's state/profile and returns urgency-scored alerts. Failure is **non-critical** — onboarding completes without deadline info.
+
+## Inter-Engine Dependencies
+
+| Direction | Engine | Purpose |
+|-----------|--------|--------|
+| **Called by** | API Gateway (Orchestrator) | `/deadlines/check` during onboarding and voice queries |
+| **Called by** | API Gateway (Proxy) | All `/deadlines/*` routes for direct access |
+| **Feeds** | JSON User Info Gen (E12) | `deadline_info` section in user profiles |
+| **Feeds** | Dashboard (E14) | Upcoming deadlines widget |
+| **Publishes to** | Event Bus → E3, E13 | `DEADLINE_CREATED`, `DEADLINE_ESCALATED` |
+
+## Shared Module Dependencies
+
+- `shared/config.py` — `settings` (port)
+- `shared/database.py` — `Base`, `AsyncSessionLocal`, `init_db()`
+- `shared/models.py` — `ApiResponse`, `HealthResponse`, `EventMessage`, `EventType`, `DeadlinePriority`
+- `shared/event_bus.py` — `event_bus`
+- `shared/utils.py` — `generate_id()`, `days_until()`

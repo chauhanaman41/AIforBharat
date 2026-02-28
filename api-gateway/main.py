@@ -26,6 +26,7 @@ from shared.models import ApiResponse, HealthResponse
 from shared.database import init_db
 
 from .routes import gateway_router
+from .orchestrator import orchestrator_router
 from .middleware import RateLimitMiddleware, RequestLoggingMiddleware
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
@@ -113,13 +114,21 @@ async def root():
             "engines": 21,
             "docs": "/docs",
             "health": "/health",
-            "routes": {
+            "composite_routes": {
+                "query": "POST /api/v1/query — Full RAG pipeline",
+                "onboard": "POST /api/v1/onboard — User onboarding pipeline",
+                "check_eligibility": "POST /api/v1/check-eligibility — Eligibility + AI explanation",
+                "ingest_policy": "POST /api/v1/ingest-policy — Policy ingestion pipeline",
+                "voice_query": "POST /api/v1/voice-query — Voice query pipeline",
+                "simulate": "POST /api/v1/simulate — What-if simulation + explanation",
+            },
+            "proxy_routes": {
                 "auth": "/api/v1/auth/*",
                 "identity": "/api/v1/identity/*",
                 "metadata": "/api/v1/metadata/*",
                 "eligibility": "/api/v1/eligibility/*",
                 "schemes": "/api/v1/schemes/*",
-                "simulate": "/api/v1/simulate/*",
+                "simulate_direct": "/api/v1/simulate/*",
                 "deadlines": "/api/v1/deadlines/*",
                 "ai": "/api/v1/ai/*",
                 "dashboard": "/api/v1/dashboard/*",
@@ -129,6 +138,12 @@ async def root():
                 "trust": "/api/v1/trust/*",
                 "profile": "/api/v1/profile/*",
                 "policies": "/api/v1/policies/*",
+                "raw_data": "/api/v1/raw-data/*",
+                "processed_metadata": "/api/v1/processed-metadata/*",
+                "vectors": "/api/v1/vectors/*",
+                "anomaly": "/api/v1/anomaly/*",
+                "chunks": "/api/v1/chunks/*",
+                "gov_data": "/api/v1/gov-data/*",
             },
         },
     )
@@ -150,7 +165,8 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 # ── Include all route groups ──────────────────────────────────────────────────
-app.include_router(gateway_router, prefix="/api/v1")
+app.include_router(orchestrator_router)  # composite routes at /api/v1/*
+app.include_router(gateway_router, prefix="/api/v1")  # direct proxy routes
 
 
 if __name__ == "__main__":

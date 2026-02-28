@@ -61,3 +61,53 @@ On re-fetch, computes SHA-256 hash of content. If hash differs from stored versi
 ## Gateway Route
 
 `/api/v1/schemes/*` and `/api/v1/policies/*` → proxied from API Gateway (no auth required)
+
+## Orchestrator Integration
+
+This engine participates in the following composite flows orchestrated by the API Gateway:
+
+| Flow | Route | Role | Step |
+|------|-------|------|------|
+| **Policy Ingestion** | `POST /api/v1/ingest-policy` | Fetch and store policy document (critical first step) | Step 1 of 7 |
+
+### Flow Detail: Policy Ingestion
+
+```
+→ E11 (Fetch) → E21 (Parse) → E10 (Chunk) → E7 (Embed) → E6 (Vector Upsert)
+  → E4 (Tag Metadata) → E3+E13 (Audit)
+```
+
+E11 is the **critical entry point** for the ingestion pipeline. The orchestrator calls `POST /policies/fetch` with the policy content. E11 performs SHA-256 change detection — if the document is unchanged, it short-circuits with `change_type: "unchanged"`. If it fails, the entire pipeline aborts.
+
+### Important: Orchestrator Endpoint Mapping
+
+The orchestrator calls `POST /policies/fetch` (not `/schemes/fetch`). The request payload must match the `FetchRequest` schema:
+
+```json
+{
+  "source_id": "string (required)",
+  "url": "string (optional)",
+  "document_type": "scheme",
+  "content": "string (optional — the document text)",
+  "metadata": { "title": "...", "policy_id": "..." }
+}
+```
+
+## Inter-Engine Dependencies
+
+| Direction | Engine | Purpose |
+|-----------|--------|--------|
+| **Called by** | API Gateway (Orchestrator) | `/policies/fetch` during policy ingestion |
+| **Called by** | API Gateway (Proxy) | All `/policies/*` and `/schemes/*` routes for direct access |
+| **Feeds** | Doc Understanding (E21) | Raw document text for structured parsing |
+| **Feeds** | Chunks Engine (E10) | Raw text for chunking |
+| **Publishes to** | Event Bus → E3, E13 | `DOCUMENT_FETCHED`, `DOCUMENT_UPDATED` |
+
+## Shared Module Dependencies
+
+- `shared/config.py` — `settings` (data directory, crawl settings, port)
+- `shared/database.py` — `Base`, `AsyncSessionLocal`, `init_db()`
+- `shared/models.py` — `ApiResponse`, `HealthResponse`, `EventMessage`, `EventType`
+- `shared/event_bus.py` — `event_bus`
+- `shared/utils.py` — `generate_id()`, `sha256_hash()`
+- `shared/cache.py` — `LocalCache`

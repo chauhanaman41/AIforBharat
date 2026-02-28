@@ -52,3 +52,37 @@ Docs: http://localhost:8002/docs
 ## Gateway Route
 
 `/api/v1/identity/*` → proxied from API Gateway (JWT auth required)
+
+## Orchestrator Integration
+
+This engine participates in the following composite flows orchestrated by the API Gateway:
+
+| Flow | Route | Role | Step |
+|------|-------|------|------|
+| **User Onboarding** | `POST /api/v1/onboard` | Create encrypted identity vault | Step 2 of 8 |
+
+### Flow Detail: User Onboarding
+
+```
+E1 (Register) → E2 (Identity) → E4 (Metadata) → E5 (Processed Meta)
+  → E15 ∥ E16 (Eligibility + Deadlines) → E12 (Profile) → E3+E13 (Audit)
+```
+
+E2 creates the encrypted PII vault for the newly registered user. Failure here is **non-critical** — the flow continues with degraded identity support.
+
+## Inter-Engine Dependencies
+
+| Direction | Engine | Purpose |
+|-----------|--------|--------|
+| **Called by** | API Gateway (Orchestrator) | `/identity/create` during onboarding |
+| **Called by** | API Gateway (Proxy) | All `/identity/*` routes for direct access |
+| **Called by** | JSON User Info Generator (E12) | Profile assembly — reads identity data |
+| **Publishes to** | Event Bus → E3, E13 | `IDENTITY_CREATED`, `IDENTITY_VERIFIED`, `IDENTITY_DELETED`, `ROLE_UPDATED`, `DATA_EXPORTED` |
+
+## Shared Module Dependencies
+
+- `shared/config.py` — `settings` (AES encryption key, port)
+- `shared/database.py` — `Base`, `AsyncSessionLocal`, `init_db()`
+- `shared/models.py` — `ApiResponse`, `HealthResponse`, `EventMessage`, `EventType`
+- `shared/event_bus.py` — `event_bus`
+- `shared/utils.py` — `generate_id()`

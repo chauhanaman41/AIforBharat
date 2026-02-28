@@ -90,7 +90,7 @@ class Settings(BaseSettings):
     TRITON_AUTH_TOKEN: str = Field(default_factory=lambda: secrets.token_hex(32))
 
     # ── JWT Configuration ─────────────────────────────────────────────────
-    JWT_SECRET_KEY: str = Field(default_factory=lambda: secrets.token_hex(32))
+    JWT_SECRET_KEY: str = Field(default="AI_FOR_BHARAT_LOCAL_DEV_SECRET_KEY_12345!")
     JWT_ALGORITHM: str = "HS256"  # HS256 for local; RS256 for production
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7

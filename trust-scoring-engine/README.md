@@ -64,3 +64,53 @@ Internally checks data from:
 ## Gateway Route
 
 `/api/v1/trust/*` → proxied from API Gateway (JWT auth required)
+
+## Orchestrator Integration
+
+This engine participates in the following composite flows orchestrated by the API Gateway:
+
+| Flow | Route | Role | Step |
+|------|-------|------|------|
+| **RAG Query** | `POST /api/v1/query` | Compute trust score for AI response (parallel with E8) | Step 5 of 6 |
+
+### Flow Detail: RAG Query
+
+```
+E7 (Intent) → E6 (Vector Search) → E7 (RAG Generate)
+  → E8 (Anomaly) ∥ E19 (Trust) → E3+E13 (Audit)
+```
+
+E19 runs in **parallel** with E8 (Anomaly Detection). It evaluates the trust level of the AI response based on data sources, model confidence, and user history. Failure is **non-critical** — the response is returned but flagged as `degraded: ["trust_scoring"]`.
+
+### Trust Score Components
+
+| Component | Weight | Source |
+|-----------|--------|--------|
+| Data completeness | 30% | Profile field coverage |
+| Anomaly check | 25% | E8 anomaly score (inverted) |
+| Consistency | 20% | Behavioral consistency patterns |
+| Behavior | 15% | Login/usage patterns |
+| Verification | 10% | DigiLocker (stubbed at 0%) |
+
+> **Note:** Maximum achievable trust score is ~90% without DigiLocker integration.
+
+## Inter-Engine Dependencies
+
+| Direction | Engine | Purpose |
+|-----------|--------|--------|
+| **Called by** | API Gateway (Orchestrator) | `/trust/score` during RAG queries (parallel) |
+| **Called by** | API Gateway (Proxy) | All `/trust/*` routes for direct access |
+| **Reads from** | Anomaly Detection (E8) | Anomaly score as scoring component |
+| **Reads from** | Metadata Engine (E4) | Field completeness for data_completeness component |
+| **Feeds** | JSON User Info Gen (E12) | `trust_info` section in user profiles |
+| **Feeds** | Dashboard (E14) | Trust score widget |
+| **Publishes to** | Event Bus → E3, E13 | `TRUST_COMPUTED` |
+
+## Shared Module Dependencies
+
+- `shared/config.py` — `settings` (port)
+- `shared/database.py` — `Base`, `AsyncSessionLocal`, `init_db()`
+- `shared/models.py` — `ApiResponse`, `HealthResponse`, `EventMessage`, `EventType`, `TrustLevel`
+- `shared/event_bus.py` — `event_bus`
+- `shared/utils.py` — `generate_id()`
+- `shared/cache.py` — `LocalCache`

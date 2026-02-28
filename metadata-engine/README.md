@@ -50,3 +50,48 @@ From raw user input, computes:
 ## Gateway Route
 
 `/api/v1/metadata/*` → proxied from API Gateway (JWT auth required)
+
+## Orchestrator Integration
+
+This engine participates in the following composite flows orchestrated by the API Gateway:
+
+| Flow | Route | Role | Step |
+|------|-------|------|------|
+| **User Onboarding** | `POST /api/v1/onboard` | Normalize raw user profile into structured metadata | Step 3 of 8 |
+| **Policy Ingestion** | `POST /api/v1/ingest-policy` | Tag ingested policy with metadata | Step 6 of 7 |
+
+### Flow Detail: User Onboarding
+
+```
+E1 (Register) → E2 (Identity) → E4 (Metadata) → E5 (Processed Meta)
+  → E15 ∥ E16 (Eligibility + Deadlines) → E12 (Profile) → E3+E13 (Audit)
+```
+
+E4 normalizes raw inputs (state names, income, DOB) into clean structured fields with derived attributes (age_group, income_bracket, life_stage, etc.). Failure is **non-critical** — eligibility checks will use raw profile data.
+
+### Flow Detail: Policy Ingestion
+
+```
+E11 (Fetch) → E21 (Parse) → E10 (Chunk) → E7 (Embed) → E6 (Vector Upsert)
+  → E4 (Tag Metadata) → E3+E13 (Audit)
+```
+
+E4 tags the ingested policy document with structured metadata (scheme_type, state, ministry). This step is **fire-and-forget** — failure doesn't block ingestion.
+
+## Inter-Engine Dependencies
+
+| Direction | Engine | Purpose |
+|-----------|--------|--------|
+| **Called by** | API Gateway (Orchestrator) | `/metadata/process` during onboarding and policy ingestion |
+| **Called by** | API Gateway (Proxy) | All `/metadata/*` routes for direct access |
+| **Feeds into** | Processed Metadata (E5) | Normalized profiles stored for later retrieval |
+| **Feeds into** | Eligibility Rules (E15) | Clean profiles enable accurate rule matching |
+| **Publishes to** | Event Bus → E3, E13 | `METADATA_PROCESSED`, `METADATA_VALIDATED` |
+
+## Shared Module Dependencies
+
+- `shared/config.py` — `settings` (port)
+- `shared/models.py` — `ApiResponse`, `HealthResponse`, `EventMessage`, `EventType`
+- `shared/event_bus.py` — `event_bus`
+- `shared/utils.py` — `generate_id()`, `INDIAN_STATES`
+- `shared/cache.py` — `LocalCache`

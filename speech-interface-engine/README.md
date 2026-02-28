@@ -75,3 +75,47 @@ Error responses are bilingual (Hindi + English fallback).
 ## Gateway Route
 
 `/api/v1/voice/*` → proxied from API Gateway (JWT auth required)
+
+## Orchestrator Integration
+
+This engine participates in the following composite flows orchestrated by the API Gateway:
+
+| Flow | Route | Role | Step |
+|------|-------|------|------|
+| **Voice Query** | `POST /api/v1/voice-query` | Text-to-Speech synthesis of response | Step 4 of 5 |
+
+### Flow Detail: Voice Query
+
+```
+E7 (Intent) → Route by Intent → [E15/E6→E7/E16/E7-chat]
+  → E7 (Translate, optional) → E20 (TTS) → E3+E13 (Audit)
+```
+
+E20 receives the final text response and synthesizes speech audio for the client. The TTS step is **non-critical** — if it fails, the text response is still returned. The `audio_available` flag indicates whether speech synthesis succeeded.
+
+### Current Limitations
+
+- **STT (Speech-to-Text):** Stubbed — requires NVIDIA Riva ASR integration
+- **TTS (Text-to-Speech):** Stubbed — requires NVIDIA Riva TTS integration
+- **Voice Query via `/speech/query`:** Fully functional through NIM — uses text-based intent classification
+- **Language Detection:** Working — uses Unicode script range analysis
+
+## Inter-Engine Dependencies
+
+| Direction | Engine | Purpose |
+|-----------|--------|--------|
+| **Called by** | API Gateway (Orchestrator) | `/speech/tts` during voice query flow |
+| **Called by** | API Gateway (Proxy) | All `/voice/*` routes for direct access |
+| **Depends on** | Neural Network (E7) | AI response generation for voice queries |
+| **Depends on** | NVIDIA Riva (future) | ASR/TTS models for real speech I/O |
+| **Publishes to** | Event Bus → E3, E13 | `VOICE_QUERY_PROCESSED` |
+
+## Shared Module Dependencies
+
+- `shared/config.py` — `settings` (Riva API key, port)
+- `shared/database.py` — `Base`, `AsyncSessionLocal`, `init_db()`
+- `shared/models.py` — `ApiResponse`, `HealthResponse`, `EventMessage`, `EventType`
+- `shared/event_bus.py` — `event_bus`
+- `shared/nvidia_client.py` — `nvidia_client` (for voice query AI processing)
+- `shared/utils.py` — `generate_id()`
+- `shared/cache.py` — `LocalCache`

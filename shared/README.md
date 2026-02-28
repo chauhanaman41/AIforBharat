@@ -178,3 +178,60 @@ vectors = await nvidia_client.generate_embeddings_batch(["text1", "text2"])
 - `utcnow()` → current UTC datetime
 - `days_until(target_date)` → days remaining
 - `@timer` — decorator for execution time logging
+
+---
+
+## Orchestrator Context
+
+The shared module is imported by **all 21 engines** and the **API Gateway orchestrator**. It provides the foundation for:
+
+### Cross-Engine Communication
+
+| Module | Orchestrator Usage |
+|--------|-------------------|
+| `config.py` | `ENGINE_URLS` dict — maps engine keys to `http://localhost:{port}` for all call_engine() calls |
+| `models.py` | `ApiResponse` wrapper — orchestrator unwraps `data` field from engine responses |
+| `event_bus.py` | Audit logging — orchestrator publishes events consumed by E3 (Raw Data Store) and E13 (Analytics) |
+| `nvidia_client.py` | Used by E7 (Neural Network), E6 (Vector DB), E20 (Speech), E21 (Doc Understanding) for NIM API calls |
+
+### Engine Port Map
+
+| Port | Engine | Key in `ENGINE_URLS` |
+|------|--------|---------------------|
+| 8000 | API Gateway | `api_gateway` |
+| 8001 | Login/Register | `login_register` |
+| 8002 | Identity | `identity` |
+| 8003 | Raw Data Store | `raw_data_store` |
+| 8004 | Metadata | `metadata` |
+| 8005 | Processed Metadata | `processed_metadata` |
+| 8006 | Vector Database | `vector_database` |
+| 8007 | Neural Network | `neural_network` |
+| 8008 | Anomaly Detection | `anomaly_detection` |
+| 8010 | Chunks Engine | `chunks` |
+| 8011 | Policy Fetching | `policy_fetching` |
+| 8012 | JSON User Info | `json_user_info` |
+| 8013 | Analytics Warehouse | `analytics_warehouse` |
+| 8014 | Dashboard BFF | `dashboard_bff` |
+| 8015 | Eligibility Rules | `eligibility_rules` |
+| 8016 | Deadline Monitoring | `deadline_monitoring` |
+| 8017 | Simulation | `simulation` |
+| 8018 | Gov Data Sync | `gov_data_sync` |
+| 8019 | Trust Scoring | `trust_scoring` |
+| 8020 | Speech Interface | `speech_interface` |
+| 8021 | Doc Understanding | `doc_understanding` |
+
+> **Note:** Port 8009 is intentionally unused.
+
+### Configuration Override Order
+
+1. Environment variables (highest priority)
+2. `.env` file in project root
+3. Default values in `Settings` class (lowest priority)
+
+### JWT Configuration
+
+- Algorithm: HS256 (local dev) / RS256 (production)
+- Secret: loaded from `JWT_SECRET_KEY` environment variable or `.env` file
+- Access token: 30-minute expiry
+- Refresh token: 7-day expiry
+- All engines share the same secret via `settings.JWT_SECRET_KEY`

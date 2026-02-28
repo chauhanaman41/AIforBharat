@@ -51,3 +51,38 @@ Risk assessments: `risk_type`, `score`, `details`
 ## Gateway Route
 
 Not directly exposed via gateway. Used internally by Metadata Engine (4), Eligibility Rules (15), and JSON User Info Generator (12).
+
+## Orchestrator Integration
+
+This engine participates in the following composite flows orchestrated by the API Gateway:
+
+| Flow | Route | Role | Step |
+|------|-------|------|------|
+| **User Onboarding** | `POST /api/v1/onboard` | Persist processed user metadata | Step 4 of 8 |
+
+### Flow Detail: User Onboarding
+
+```
+E1 (Register) → E2 (Identity) → E4 (Metadata) → E5 (Processed Meta)
+  → E15 ∥ E16 (Eligibility + Deadlines) → E12 (Profile) → E3+E13 (Audit)
+```
+
+E5 receives normalized metadata from E4 and persists it for rapid retrieval by eligibility checks (E15) and profile generation (E12). Failure is **non-critical** — downstream engines will use in-memory data from E4.
+
+## Inter-Engine Dependencies
+
+| Direction | Engine | Purpose |
+|-----------|--------|--------|
+| **Called by** | API Gateway (Orchestrator) | `/processed-metadata/store` during onboarding |
+| **Fed by** | Metadata Engine (E4) | Receives normalized + derived attributes |
+| **Read by** | Eligibility Rules (E15) | Retrieved during eligibility checks |
+| **Read by** | JSON User Info Generator (E12) | Profile assembly reads stored metadata |
+| **Read by** | Trust Scoring (E19) | Data completeness assessment |
+
+## Shared Module Dependencies
+
+- `shared/config.py` — `settings` (AES encryption key, port)
+- `shared/database.py` — `Base`, `AsyncSessionLocal`, `init_db()`
+- `shared/models.py` — `ApiResponse`, `HealthResponse`, `EventMessage`, `EventType`
+- `shared/event_bus.py` — `event_bus`
+- `shared/utils.py` — `generate_id()`
