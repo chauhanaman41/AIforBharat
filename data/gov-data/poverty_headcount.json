@@ -1,0 +1,44 @@
+[
+  {
+    "state": "Bihar",
+    "headcount_ratio": 33.7,
+    "rural": 34.1,
+    "urban": 31.2,
+    "year": "2011-12"
+  },
+  {
+    "state": "Uttar Pradesh",
+    "headcount_ratio": 29.4,
+    "rural": 30.4,
+    "urban": 26.1,
+    "year": "2011-12"
+  },
+  {
+    "state": "Madhya Pradesh",
+    "headcount_ratio": 31.6,
+    "rural": 35.7,
+    "urban": 21.0,
+    "year": "2011-12"
+  },
+  {
+    "state": "Maharashtra",
+    "headcount_ratio": 17.4,
+    "rural": 24.2,
+    "urban": 9.1,
+    "year": "2011-12"
+  },
+  {
+    "state": "Kerala",
+    "headcount_ratio": 7.1,
+    "rural": 9.1,
+    "urban": 4.0,
+    "year": "2011-12"
+  },
+  {
+    "state": "Tamil Nadu",
+    "headcount_ratio": 11.3,
+    "rural": 15.8,
+    "urban": 6.5,
+    "year": "2011-12"
+  }
+]

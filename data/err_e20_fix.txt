@@ -1,0 +1,30 @@
+2026-02-28 10:25:55,518 [cache] INFO: Cache initialized: namespace=speech, ttl=1800s, dir=D:\AIForBharat\AIforBharat\data\cache\speech
+INFO:     Started server process [23524]
+INFO:     Waiting for application startup.
+2026-02-28 10:25:55,536 [speech_interface] INFO: \U0001f680 Speech Interface Engine starting...
+2026-02-28 10:25:55,543 [sqlalchemy.engine.Engine] INFO: BEGIN (implicit)
+2026-02-28 10:25:55,546 [sqlalchemy.engine.Engine] INFO: PRAGMA main.table_info("voice_sessions")
+2026-02-28 10:25:55,549 [sqlalchemy.engine.Engine] INFO: [raw sql] ()
+2026-02-28 10:25:55,553 [sqlalchemy.engine.Engine] INFO: PRAGMA temp.table_info("voice_sessions")
+2026-02-28 10:25:55,556 [sqlalchemy.engine.Engine] INFO: [raw sql] ()
+2026-02-28 10:25:55,560 [sqlalchemy.engine.Engine] INFO: 
+CREATE TABLE voice_sessions (
+	id VARCHAR NOT NULL, 
+	user_id VARCHAR, 
+	language VARCHAR, 
+	audio_path TEXT, 
+	transcript TEXT, 
+	response_text TEXT, 
+	response_audio_path TEXT, 
+	duration_seconds FLOAT, 
+	created_at DATETIME, 
+	PRIMARY KEY (id)
+)
+
+
+2026-02-28 10:25:55,561 [sqlalchemy.engine.Engine] INFO: [no key 0.00171s] ()
+2026-02-28 10:25:55,568 [sqlalchemy.engine.Engine] INFO: CREATE INDEX ix_voice_sessions_user_id ON voice_sessions (user_id)
+2026-02-28 10:25:55,568 [sqlalchemy.engine.Engine] INFO: [no key 0.00049s] ()
+2026-02-28 10:25:55,575 [sqlalchemy.engine.Engine] INFO: COMMIT
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:18020 (Press CTRL+C to quit)

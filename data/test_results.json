@@ -1,0 +1,832 @@
+[
+  {
+    "engine": "Engine 1 - Login & Register",
+    "port": 8001,
+    "module": "login-register-engine",
+    "tests": [
+      {
+        "endpoint": "Health Check",
+        "method": "GET",
+        "url": "http://localhost:8001/health",
+        "status": 200,
+        "response": {
+          "engine": "login_register",
+          "status": "healthy",
+          "version": "1.0.0",
+          "uptime_seconds": 5.174374103546143,
+          "timestamp": "2026-02-28T04:39:26.798347",
+          "dependencies": {}
+        }
+      },
+      {
+        "endpoint": "Register User",
+        "method": "POST",
+        "url": "http://localhost:8001/auth/register",
+        "status": "ERROR",
+        "response": "timed out"
+      },
+      {
+        "endpoint": "Login",
+        "method": "POST",
+        "url": "http://localhost:8001/auth/login",
+        "status": "ERROR",
+        "response": "timed out"
+      }
+    ]
+  },
+  {
+    "engine": "Engine 2 - Identity Engine",
+    "port": 8002,
+    "module": "identity-engine",
+    "tests": [
+      {
+        "endpoint": "Health Check",
+        "method": "GET",
+        "url": "http://localhost:8002/health",
+        "status": 200,
+        "response": {
+          "engine": "identity_engine",
+          "status": "healthy",
+          "version": "1.0.0",
+          "uptime_seconds": 4.958832502365112,
+          "timestamp": "2026-02-28T04:40:08.044601",
+          "dependencies": {}
+        }
+      },
+      {
+        "endpoint": "Create Identity",
+        "method": "POST",
+        "url": "http://localhost:8002/identity/create",
+        "status": "ERROR",
+        "response": "timed out"
+      }
+    ]
+  },
+  {
+    "engine": "Engine 3 - Raw Data Store",
+    "port": 8003,
+    "module": "raw-data-store",
+    "tests": [
+      {
+        "endpoint": "Health Check",
+        "method": "GET",
+        "url": "http://localhost:8003/health",
+        "status": 200,
+        "response": {
+          "engine": "raw_data_store",
+          "status": "healthy",
+          "version": "1.0.0",
+          "uptime_seconds": 5.322409629821777,
+          "timestamp": "2026-02-28T04:40:32.179147",
+          "dependencies": {}
+        }
+      },
+      {
+        "endpoint": "Store Event",
+        "method": "POST",
+        "url": "http://localhost:8003/raw-data/events",
+        "status": 422,
+        "response": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "source_engine"
+              ],
+              "msg": "Field required",
+              "input": {
+                "event_type": "TEST_EVENT",
+                "source": "test_script",
+                "user_id": "usr_test001",
+                "data": {
+                  "action": "testing",
+                  "engine": "raw_data_store"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "endpoint": "List Events",
+        "method": "GET",
+        "url": "http://localhost:8003/raw-data/events",
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "OK",
+          "data": {
+            "events": [],
+            "count": 0
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T04:40:36.317277",
+          "request_id": "8ab6e760-bf6b-4a9a-ab5b-6ecea50af1c9"
+        }
+      }
+    ]
+  },
+  {
+    "engine": "Engine 4 - Metadata Engine",
+    "port": 8004,
+    "module": "metadata-engine",
+    "tests": [
+      {
+        "endpoint": "Health Check",
+        "method": "GET",
+        "url": "http://localhost:8004/health",
+        "status": 200,
+        "response": {
+          "engine": "metadata_engine",
+          "status": "healthy",
+          "version": "1.0.0",
+          "uptime_seconds": 5.028639554977417,
+          "timestamp": "2026-02-28T04:40:43.423037",
+          "dependencies": {}
+        }
+      },
+      {
+        "endpoint": "Process Metadata",
+        "method": "POST",
+        "url": "http://localhost:8004/metadata/process",
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "Metadata processed",
+          "data": {
+            "user_id": "usr_test001",
+            "gender": "male",
+            "state": "Bihar",
+            "district": "Patna",
+            "annual_income": 180000.0,
+            "occupation": "farmer",
+            "marital_status": "married",
+            "land_holding_acres": 3.5,
+            "language_preference": "en",
+            "derived_attributes": {
+              "income_bracket": "below_2.5L",
+              "tax_bracket": "nil",
+              "is_bpl": false,
+              "employment_category": "agriculture",
+              "farmer_category": "small"
+            },
+            "metadata_version": "1.0",
+            "processed_at": "2026-02-28T04:40:45.482846"
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T04:40:45.484997",
+          "request_id": "4f463b12-17db-4b9d-8c08-0cd6670c8f0d"
+        }
+      }
+    ]
+  },
+  {
+    "engine": "Engine 5 - Processed Metadata Store",
+    "port": 8005,
+    "module": "processed-user-metadata-store",
+    "tests": [
+      {
+        "endpoint": "Health Check",
+        "method": "GET",
+        "url": "http://localhost:8005/health",
+        "status": "ERROR",
+        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+      },
+      {
+        "endpoint": "Store Metadata",
+        "method": "POST",
+        "url": "http://localhost:8005/processed-metadata/store",
+        "status": "ERROR",
+        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+      }
+    ]
+  },
+  {
+    "engine": "Engine 6 - Vector Database",
+    "port": 8006,
+    "module": "vector-database",
+    "tests": [
+      {
+        "endpoint": "Health Check",
+        "method": "GET",
+        "url": "http://localhost:8006/health",
+        "status": "ERROR",
+        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+      },
+      {
+        "endpoint": "Vector Stats",
+        "method": "GET",
+        "url": "http://localhost:8006/vectors/stats",
+        "status": "ERROR",
+        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+      },
+      {
+        "endpoint": "Upsert Vector",
+        "method": "POST",
+        "url": "http://localhost:8006/vectors/upsert",
+        "status": "ERROR",
+        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+      }
+    ]
+  },
+  {
+    "engine": "Engine 7 - Neural Network",
+    "port": 8007,
+    "module": "neural-network-engine",
+    "tests": [
+      {
+        "endpoint": "Health Check",
+        "method": "GET",
+        "url": "http://localhost:8007/health",
+        "status": 200,
+        "response": {
+          "engine": "neural_network_engine",
+          "status": "healthy",
+          "version": "1.0.0",
+          "uptime_seconds": 4.361668109893799,
+          "timestamp": "2026-02-28T04:41:23.076377",
+          "dependencies": {}
+        }
+      },
+      {
+        "endpoint": "Intent Classification",
+        "method": "POST",
+        "url": "http://localhost:8007/ai/intent",
+        "status": 422,
+        "response": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "message"
+              ],
+              "msg": "Field required",
+              "input": {
+                "text": "Tell me about PM-KISAN scheme",
+                "language": "english"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "engine": "Engine 8 - Anomaly Detection",
+    "port": 8008,
+    "module": "anomaly-detection-engine",
+    "tests": [
+      {
+        "endpoint": "Health Check",
+        "method": "GET",
+        "url": "http://localhost:8008/health",
+        "status": 200,
+        "response": {
+          "engine": "anomaly_detection_engine",
+          "status": "healthy",
+          "version": "1.0.0",
+          "uptime_seconds": 5.176739692687988,
+          "timestamp": "2026-02-28T04:41:32.255329",
+          "dependencies": {}
+        }
+      },
+      {
+        "endpoint": "Anomaly Check",
+        "method": "POST",
+        "url": "http://localhost:8008/anomaly/check",
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "OK",
+          "data": {
+            "total_anomalies": 0,
+            "aggregate_risk_score": 0.0,
+            "severity_counts": {},
+            "anomalies": []
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T04:41:34.312394",
+          "request_id": "8225b57b-dcf9-4fe3-aa29-e96a23b1ea1b"
+        }
+      },
+      {
+        "endpoint": "Anomaly Stats",
+        "method": "GET",
+        "url": "http://localhost:8008/anomaly/stats",
+        "status": "ERROR",
+        "response": "timed out"
+      }
+    ]
+  },
+  {
+    "engine": "Engine 9 - API Gateway",
+    "port": 8000,
+    "module": "api-gateway",
+    "tests": [
+      {
+        "endpoint": "Health Check",
+        "method": "GET",
+        "url": "http://localhost:8000/health",
+        "status": 200,
+        "response": {
+          "engine": "api_gateway",
+          "status": "healthy",
+          "version": "1.0.0",
+          "uptime_seconds": 5.004429340362549,
+          "timestamp": "2026-02-28T04:41:53.471859",
+          "dependencies": {}
+        }
+      },
+      {
+        "endpoint": "Service Directory",
+        "method": "GET",
+        "url": "http://localhost:8000/",
+        "status": 200,
+        "response": {
+          "success": true,
+          "message": "AIforBharat API Gateway",
+          "data": {
+            "version": "1.0.0",
+            "environment": "local",
+            "engines": 21,
+            "docs": "/docs",
+            "health": "/health",
+            "routes": {
+              "auth": "/api/v1/auth/*",
+              "identity": "/api/v1/identity/*",
+              "metadata": "/api/v1/metadata/*",
+              "eligibility": "/api/v1/eligibility/*",
+              "schemes": "/api/v1/schemes/*",
+              "simulate": "/api/v1/simulate/*",
+              "deadlines": "/api/v1/deadlines/*",
+              "ai": "/api/v1/ai/*",
+              "dashboard": "/api/v1/dashboard/*",
+              "documents": "/api/v1/documents/*",
+              "voice": "/api/v1/voice/*",
+              "analytics": "/api/v1/analytics/*",
+              "trust": "/api/v1/trust/*",
+              "profile": "/api/v1/profile/*",
+              "policies": "/api/v1/policies/*"
+            }
+          },
+          "errors": null,
+          "timestamp": "2026-02-28T04:41:55.540422",
+          "request_id": "23428a99-da75-4dd4-b718-155d48f321f8"
+        }
+      }
+    ]
+  },
+  {
+    "engine": "Engine 10 - Chunks Engine",
+    "port": 8010,
+    "module": "chunks-engine",
+    "tests": [
+      {
+        "endpoint": "Health Check",
+        "method": "GET",
+        "url": "http://localhost:8010/health",
+        "status": 200,
+        "response": {
+          "engine": "chunks_engine",
+          "status": "healthy",
+          "version": "1.0.0",
+          "uptime_seconds": 5.075438022613525,
+          "timestamp": "2026-02-28T04:42:02.623033",
+          "dependencies": {}
+        }
+      },
+      {
+        "endpoint": "Chunk Stats",
+        "method": "GET",
+        "url": "http://localhost:8010/chunks/stats",
+        "status": "ERROR",
+        "response": "timed out"
+      },
+      {
+        "endpoint": "Create Chunks",
+        "method": "POST",
+        "url": "http://localhost:8010/chunks/create",
+        "status": "ERROR",
+        "response": "timed out"
+      }
+    ]
+  },
+  {
+    "engine": "Engine 11 - Policy Fetching",
+    "port": 8011,
+    "module": "policy-fetching-engine",
+    "tests": [
+      {
+        "endpoint": "Health Check",
+        "method": "GET",
+        "url": "http://localhost:8011/health",
+        "status": "ERROR",
+        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+      },
+      {
+        "endpoint": "List Policies",
+        "method": "GET",
+        "url": "http://localhost:8011/policies/list",
+        "status": "ERROR",
+        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+      },
+      {
+        "endpoint": "List Sources",
+        "method": "GET",
+        "url": "http://localhost:8011/policies/sources/list",
+        "status": "ERROR",
+        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+      }
+    ]
+  },
+  {
+    "engine": "Engine 12 - JSON User Info Generator",
+    "port": 8012,
+    "module": "json-user-info-generator",
+    "tests": [
+      {
+        "endpoint": "Health Check",
+        "method": "GET",
+        "url": "http://localhost:8012/health",
+        "status": 200,
+        "response": {
+          "engine": "json_user_info_generator",
+          "status": "healthy",
+          "version": "1.0.0",
+          "uptime_seconds": 5.08498740196228,
+          "timestamp": "2026-02-28T04:42:56.188470",
+          "dependencies": {}
+        }
+      },
+      {
+        "endpoint": "Generate Profile",
+        "method": "POST",
+        "url": "http://localhost:8012/profile/generate",
+        "status": "ERROR",
+        "response": "timed out"
+      }
+    ]
+  },
+  {
+    "engine": "Engine 13 - Analytics Warehouse",
+    "port": 8013,
+    "module": "analytics-warehouse",
+    "tests": [
+      {
+        "endpoint": "Health Check",
+        "method": "GET",
+        "url": "http://localhost:8013/health",
+        "status": "ERROR",
+        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+      },
+      {
+        "endpoint": "Dashboard Summary",
+        "method": "GET",
+        "url": "http://localhost:8013/analytics/dashboard",
+        "status": "ERROR",
+        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+      },
+      {
+        "endpoint": "Record Event",
+        "method": "POST",
+        "url": "http://localhost:8013/analytics/events",
+        "status": "ERROR",
+        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+      }
+    ]
+  },
+  {
+    "engine": "Engine 14 - Dashboard Interface",
+    "port": 8014,
+    "module": "dashboard-interface",
+    "tests": [
+      {
+        "endpoint": "Health Check",
+        "method": "GET",
+        "url": "http://localhost:8014/health",
+        "status": 200,
+        "response": {
+          "engine": "dashboard_interface",
+          "status": "healthy",
+          "version": "1.0.0",
+          "uptime_seconds": 5.0821661949157715,
+          "timestamp": "2026-02-28T04:43:37.655407",
+          "dependencies": {}
+        }
+      },
+      {
+        "endpoint": "Engines Status",
+        "method": "GET",
+        "url": "http://localhost:8014/dashboard/engines/status",
+        "status": "ERROR",
+        "response": "timed out"
+      },
+      {
+        "endpoint": "Schemes Listing",
+        "method": "GET",
+        "url": "http://localhost:8014/dashboard/schemes",
+        "status": "ERROR",
+        "response": "timed out"
+      },
+      {
+        "endpoint": "Search",
+        "method": "GET",
+        "url": "http://localhost:8014/dashboard/search?q=kisan",
+        "status": "ERROR",
+        "response": "timed out"
+      }
+    ]
+  },
+  {
+    "engine": "Engine 15 - Eligibility Rules",
+    "port": 8015,
+    "module": "eligibility-rules-engine",
+    "tests": [
+      {
+        "endpoint": "Health Check",
+        "method": "GET",
+        "url": "http://localhost:8015/health",
+        "status": "ERROR",
+        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+      },
+      {
+        "endpoint": "List Schemes",
+        "method": "GET",
+        "url": "http://localhost:8015/eligibility/schemes",
+        "status": "ERROR",
+        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+      },
+      {
+        "endpoint": "Check Eligibility",
+        "method": "POST",
+        "url": "http://localhost:8015/eligibility/check",
+        "status": "ERROR",
+        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+      }
+    ]
+  },
+  {
+    "engine": "Engine 16 - Deadline Monitoring",
+    "port": 8016,
+    "module": "deadline-monitoring-engine",
+    "tests": [
+      {
+        "endpoint": "Health Check",
+        "method": "GET",
+        "url": "http://localhost:8016/health",
+        "status": "ERROR",
+        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+      },
+      {
+        "endpoint": "List Deadlines",
+        "method": "GET",
+        "url": "http://localhost:8016/deadlines/list",
+        "status": "ERROR",
+        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+      },
+      {
+        "endpoint": "Check Deadlines",
+        "method": "POST",
+        "url": "http://localhost:8016/deadlines/check",
+        "status": "ERROR",
+        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+      }
+    ]
+  },
+  {
+    "engine": "Engine 17 - Simulation Engine",
+    "port": 8017,
+    "module": "simulation-engine",
+    "tests": [
+      {
+        "endpoint": "Health Check",
+        "method": "GET",
+        "url": "http://localhost:8017/health",
+        "status": 200,
+        "response": {
+          "engine": "simulation_engine",
+          "status": "healthy",
+          "version": "1.0.0",
+          "uptime_seconds": 5.102473735809326,
+          "timestamp": "2026-02-28T04:44:55.560340",
+          "dependencies": {}
+        }
+      },
+      {
+        "endpoint": "What-If Simulation",
+        "method": "POST",
+        "url": "http://localhost:8017/simulate/what-if",
+        "status": 422,
+        "response": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "current_profile"
+              ],
+              "msg": "Field required",
+              "input": {
+                "user_id": "usr_test001",
+                "base_profile": {
+                  "age": 28,
+                  "annual_income": 400000,
+                  "occupation": "salaried",
+                  "gender": "male",
+                  "state": "Delhi"
+                },
+                "modified_profile": {
+                  "age": 28,
+                  "annual_income": 180000,
+                  "occupation": "farmer",
+                  "gender": "male",
+                  "state": "Bihar",
+                  "land_holding_acres": 3
+                }
+              }
+            },
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "changes"
+              ],
+              "msg": "Field required",
+              "input": {
+                "user_id": "usr_test001",
+                "base_profile": {
+                  "age": 28,
+                  "annual_income": 400000,
+                  "occupation": "salaried",
+                  "gender": "male",
+                  "state": "Delhi"
+                },
+                "modified_profile": {
+                  "age": 28,
+                  "annual_income": 180000,
+                  "occupation": "farmer",
+                  "gender": "male",
+                  "state": "Bihar",
+                  "land_holding_acres": 3
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "endpoint": "Life Event Simulation",
+        "method": "POST",
+        "url": "http://localhost:8017/simulate/life-event",
+        "status": 422,
+        "response": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "current_profile"
+              ],
+              "msg": "Field required",
+              "input": {
+                "user_id": "usr_test001",
+                "base_profile": {
+                  "age": 28,
+                  "annual_income": 400000,
+                  "occupation": "salaried",
+                  "gender": "male",
+                  "state": "Delhi"
+                },
+                "life_event": "job_loss"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "engine": "Engine 18 - Gov Data Sync",
+    "port": 8018,
+    "module": "government-data-sync-engine",
+    "tests": [
+      {
+        "endpoint": "Health Check",
+        "method": "GET",
+        "url": "http://localhost:8018/health",
+        "status": "ERROR",
+        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+      },
+      {
+        "endpoint": "List Datasets",
+        "method": "GET",
+        "url": "http://localhost:8018/gov-data/datasets",
+        "status": "ERROR",
+        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+      }
+    ]
+  },
+  {
+    "engine": "Engine 19 - Trust Scoring",
+    "port": 8019,
+    "module": "trust-scoring-engine",
+    "tests": [
+      {
+        "endpoint": "Health Check",
+        "method": "GET",
+        "url": "http://localhost:8019/health",
+        "status": 200,
+        "response": {
+          "engine": "trust_scoring_engine",
+          "status": "healthy",
+          "version": "1.0.0",
+          "uptime_seconds": 5.199695348739624,
+          "timestamp": "2026-02-28T04:45:19.976336",
+          "dependencies": {}
+        }
+      },
+      {
+        "endpoint": "Compute Trust Score",
+        "method": "POST",
+        "url": "http://localhost:8019/trust/compute",
+        "status": "ERROR",
+        "response": "timed out"
+      }
+    ]
+  },
+  {
+    "engine": "Engine 20 - Speech Interface",
+    "port": 8020,
+    "module": "speech-interface-engine",
+    "tests": [
+      {
+        "endpoint": "Health Check",
+        "method": "GET",
+        "url": "http://localhost:8020/health",
+        "status": "ERROR",
+        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+      },
+      {
+        "endpoint": "List Languages",
+        "method": "GET",
+        "url": "http://localhost:8020/speech/languages",
+        "status": "ERROR",
+        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+      },
+      {
+        "endpoint": "Detect Language",
+        "method": "POST",
+        "url": "http://localhost:8020/speech/detect-language",
+        "status": "ERROR",
+        "response": "[WinError 10061] No connection could be made because the target machine actively refused it"
+      }
+    ]
+  },
+  {
+    "engine": "Engine 21 - Document Understanding",
+    "port": 8021,
+    "module": "document-understanding-engine",
+    "tests": [
+      {
+        "endpoint": "Health Check",
+        "method": "GET",
+        "url": "http://localhost:8021/health",
+        "status": 200,
+        "response": {
+          "engine": "document_understanding_engine",
+          "status": "healthy",
+          "version": "1.0.0",
+          "uptime_seconds": 4.093827724456787,
+          "timestamp": "2026-02-28T04:46:01.436729",
+          "dependencies": {}
+        }
+      },
+      {
+        "endpoint": "Parse Document",
+        "method": "POST",
+        "url": "http://localhost:8021/documents/parse",
+        "status": 422,
+        "response": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "text"
+              ],
+              "msg": "Field required",
+              "input": {
+                "policy_id": "pol_test001",
+                "content": "PM-KISAN: Eligibility criteria include being a farmer with land holding up to 5 acres and annual income below Rs. 6,00,000. Benefits include Rs. 6000 per year. Deadline for application is March 31, 2025.",
+                "title": "PM-KISAN Overview",
+                "source": "test"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+]

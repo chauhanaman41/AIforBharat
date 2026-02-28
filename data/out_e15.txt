@@ -1,0 +1,154 @@
+2026-02-28 10:23:42,003 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-28 10:23:42,006 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("eligibility_rules")
+2026-02-28 10:23:42,009 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-28 10:23:42,015 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("eligibility_results")
+2026-02-28 10:23:42,018 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-28 10:23:42,021 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("eligibility_results")
+2026-02-28 10:23:42,023 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-28 10:23:42,026 INFO sqlalchemy.engine.Engine 
+CREATE TABLE eligibility_results (
+	id VARCHAR NOT NULL, 
+	user_id VARCHAR NOT NULL, 
+	scheme_id VARCHAR NOT NULL, 
+	scheme_name VARCHAR, 
+	verdict VARCHAR, 
+	confidence FLOAT, 
+	matched_rules TEXT, 
+	unmet_rules TEXT, 
+	missing_fields TEXT, 
+	explanation TEXT, 
+	evaluated_at DATETIME, 
+	PRIMARY KEY (id)
+)
+
+
+2026-02-28 10:23:42,027 INFO sqlalchemy.engine.Engine [no key 0.00082s] ()
+2026-02-28 10:23:42,035 INFO sqlalchemy.engine.Engine CREATE INDEX ix_eligibility_results_scheme_id ON eligibility_results (scheme_id)
+2026-02-28 10:23:42,035 INFO sqlalchemy.engine.Engine [no key 0.00067s] ()
+2026-02-28 10:23:42,043 INFO sqlalchemy.engine.Engine CREATE INDEX ix_eligibility_results_user_id ON eligibility_results (user_id)
+2026-02-28 10:23:42,043 INFO sqlalchemy.engine.Engine [no key 0.00066s] ()
+2026-02-28 10:23:42,050 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-28 10:23:42,055 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-28 10:23:42,059 INFO sqlalchemy.engine.Engine SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,060 INFO sqlalchemy.engine.Engine [generated in 0.00071s] ('PM-KISAN-2024', 'occupation', 'contains')
+2026-02-28 10:23:42,064 INFO sqlalchemy.engine.Engine INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,064 INFO sqlalchemy.engine.Engine [generated in 0.00074s] ('aa807591fde5', 'PM-KISAN-2024', 'PM Kisan Samman Nidhi', 'occupation', 'occupation', 'contains', 'farmer,agriculture,kisan', 1, 0, 'Must be a farmer', '2026-02-28 04:53:42.064517')
+2026-02-28 10:23:42,067 INFO sqlalchemy.engine.Engine SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,068 INFO sqlalchemy.engine.Engine [cached since 0.008595s ago] ('PM-KISAN-2024', 'annual_income', 'lte')
+2026-02-28 10:23:42,070 INFO sqlalchemy.engine.Engine INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,260 INFO sqlalchemy.engine.Engine SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,261 INFO sqlalchemy.engine.Engine [cached since 0.2012s ago] ('PM-KISAN-2024', 'land_holding_acres', 'gt')
+2026-02-28 10:23:42,263 INFO sqlalchemy.engine.Engine INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,263 INFO sqlalchemy.engine.Engine [cached since 0.1999s ago] ('1d72bdb6c901', 'PM-KISAN-2024', 'PM Kisan Samman Nidhi', 'land', 'land_holding_acres', 'gt', '0', 0, 0, 'Should have landholding', '2026-02-28 04:53:42.263735')
+2026-02-28 10:23:42,265 INFO sqlalchemy.engine.Engine SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,266 INFO sqlalchemy.engine.Engine [cached since 0.2067s ago] ('AYUSHMAN-BHARAT-2024', 'is_bpl', 'eq')
+2026-02-28 10:23:42,268 INFO sqlalchemy.engine.Engine INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,270 INFO sqlalchemy.engine.Engine [cached since 0.2056s ago] ('454452b971f7', 'AYUSHMAN-BHARAT-2024', 'Ayushman Bharat PM-JAY', 'category', 'is_bpl', 'eq', 'true', 1, 0, 'Must be BPL or SECC-listed', '2026-02-28 04:53:42.268745')
+2026-02-28 10:23:42,271 INFO sqlalchemy.engine.Engine SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,272 INFO sqlalchemy.engine.Engine [cached since 0.2125s ago] ('AYUSHMAN-BHARAT-2024', 'annual_income', 'lte')
+2026-02-28 10:23:42,275 INFO sqlalchemy.engine.Engine INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,282 INFO sqlalchemy.engine.Engine SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,283 INFO sqlalchemy.engine.Engine [cached since 0.2239s ago] ('PM-AWAS-YOJANA-2024', 'annual_income', 'lte')
+2026-02-28 10:23:42,286 INFO sqlalchemy.engine.Engine INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,294 INFO sqlalchemy.engine.Engine SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,295 INFO sqlalchemy.engine.Engine [cached since 0.2352s ago] ('PM-AWAS-YOJANA-2024', 'category', 'in')
+2026-02-28 10:23:42,296 INFO sqlalchemy.engine.Engine INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,297 INFO sqlalchemy.engine.Engine [cached since 0.2334s ago] ('1ab999824619', 'PM-AWAS-YOJANA-2024', 'PM Awas Yojana', 'category', 'category', 'in', 'EWS,LIG,MIG,SC,ST,OBC,General', 0, 0, '', '2026-02-28 04:53:42.296597')
+2026-02-28 10:23:42,298 INFO sqlalchemy.engine.Engine SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,299 INFO sqlalchemy.engine.Engine [cached since 0.2396s ago] ('PM-UJJWALA-2024', 'gender', 'eq')
+2026-02-28 10:23:42,301 INFO sqlalchemy.engine.Engine INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,301 INFO sqlalchemy.engine.Engine [cached since 0.2376s ago] ('8071dc6529e6', 'PM-UJJWALA-2024', 'PM Ujjwala Yojana', 'gender', 'gender', 'eq', 'female', 1, 0, 'Applicant must be female', '2026-02-28 04:53:42.300629')
+2026-02-28 10:23:42,303 INFO sqlalchemy.engine.Engine SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,303 INFO sqlalchemy.engine.Engine [cached since 0.2437s ago] ('PM-UJJWALA-2024', 'is_bpl', 'eq')
+2026-02-28 10:23:42,304 INFO sqlalchemy.engine.Engine INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,305 INFO sqlalchemy.engine.Engine [cached since 0.2415s ago] ('bcd0a38e2cf9', 'PM-UJJWALA-2024', 'PM Ujjwala Yojana', 'category', 'is_bpl', 'eq', 'true', 1, 0, 'Must be BPL household', '2026-02-28 04:53:42.304628')
+2026-02-28 10:23:42,306 INFO sqlalchemy.engine.Engine SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,307 INFO sqlalchemy.engine.Engine [cached since 0.2472s ago] ('MUDRA-YOJANA-2024', 'age', 'gte')
+2026-02-28 10:23:42,307 INFO sqlalchemy.engine.Engine INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,309 INFO sqlalchemy.engine.Engine [cached since 0.2447s ago] ('b57c72550578', 'MUDRA-YOJANA-2024', 'PM MUDRA Yojana', 'age', 'age', 'gte', '18', 1, 0, 'Min age 18', '2026-02-28 04:53:42.307629')
+2026-02-28 10:23:42,310 INFO sqlalchemy.engine.Engine SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,310 INFO sqlalchemy.engine.Engine [cached since 0.2504s ago] ('MUDRA-YOJANA-2024', 'employment_category', 'in')
+2026-02-28 10:23:42,311 INFO sqlalchemy.engine.Engine INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,312 INFO sqlalchemy.engine.Engine [cached since 0.2481s ago] ('61eff6c6fa34', 'MUDRA-YOJANA-2024', 'PM MUDRA Yojana', 'occupation', 'employment_category', 'in', 'self_employed,other,agriculture', 0, 0, 'Non-corporate, non-farm enterprise', '2026-02-28 04:53:42.311173')
+2026-02-28 10:23:42,313 INFO sqlalchemy.engine.Engine SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,314 INFO sqlalchemy.engine.Engine [cached since 0.2541s ago] ('PMSBY-2024', 'age', 'gte')
+2026-02-28 10:23:42,315 INFO sqlalchemy.engine.Engine INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,316 INFO sqlalchemy.engine.Engine [cached since 0.2518s ago] ('770c4791df78', 'PMSBY-2024', 'PM Suraksha Bima Yojana', 'age', 'age', 'gte', '18', 1, 0, 'Min age 18', '2026-02-28 04:53:42.315344')
+2026-02-28 10:23:42,317 INFO sqlalchemy.engine.Engine SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,317 INFO sqlalchemy.engine.Engine [cached since 0.2575s ago] ('PMSBY-2024', 'age', 'lte')
+2026-02-28 10:23:42,318 INFO sqlalchemy.engine.Engine INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,319 INFO sqlalchemy.engine.Engine [cached since 0.2551s ago] ('b46f5ffc3c49', 'PMSBY-2024', 'PM Suraksha Bima Yojana', 'age', 'age', 'lte', '70', 1, 0, 'Max age 70', '2026-02-28 04:53:42.318343')
+2026-02-28 10:23:42,320 INFO sqlalchemy.engine.Engine SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,321 INFO sqlalchemy.engine.Engine [cached since 0.2611s ago] ('PMJJBY-2024', 'age', 'gte')
+2026-02-28 10:23:42,322 INFO sqlalchemy.engine.Engine INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,322 INFO sqlalchemy.engine.Engine [cached since 0.2591s ago] ('c6d1c78e6b95', 'PMJJBY-2024', 'PM Jeevan Jyoti Bima Yojana', 'age', 'age', 'gte', '18', 1, 0, 'Min age 18', '2026-02-28 04:53:42.322851')
+2026-02-28 10:23:42,324 INFO sqlalchemy.engine.Engine SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,325 INFO sqlalchemy.engine.Engine [cached since 0.265s ago] ('PMJJBY-2024', 'age', 'lte')
+2026-02-28 10:23:42,326 INFO sqlalchemy.engine.Engine INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,326 INFO sqlalchemy.engine.Engine [cached since 0.2626s ago] ('1febe7320922', 'PMJJBY-2024', 'PM Jeevan Jyoti Bima Yojana', 'age', 'age', 'lte', '50', 1, 0, 'Max age 50', '2026-02-28 04:53:42.326371')
+2026-02-28 10:23:42,327 INFO sqlalchemy.engine.Engine SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,328 INFO sqlalchemy.engine.Engine [cached since 0.2683s ago] ('SUKANYA-SAMRIDDHI-2024', 'gender', 'eq')
+2026-02-28 10:23:42,329 INFO sqlalchemy.engine.Engine INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,331 INFO sqlalchemy.engine.Engine [cached since 0.2667s ago] ('8cbc786bc189', 'SUKANYA-SAMRIDDHI-2024', 'Sukanya Samriddhi Yojana', 'gender', 'gender', 'eq', 'female', 1, 0, 'For girl child', '2026-02-28 04:53:42.329372')
+2026-02-28 10:23:42,332 INFO sqlalchemy.engine.Engine SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,333 INFO sqlalchemy.engine.Engine [cached since 0.2729s ago] ('SUKANYA-SAMRIDDHI-2024', 'age', 'lte')
+2026-02-28 10:23:42,334 INFO sqlalchemy.engine.Engine INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,334 INFO sqlalchemy.engine.Engine [cached since 0.2708s ago] ('aad0a43b26cc', 'SUKANYA-SAMRIDDHI-2024', 'Sukanya Samriddhi Yojana', 'age', 'age', 'lte', '10', 1, 0, 'Girl must be below 10 years', '2026-02-28 04:53:42.334712')
+2026-02-28 10:23:42,335 INFO sqlalchemy.engine.Engine SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,336 INFO sqlalchemy.engine.Engine [cached since 0.2766s ago] ('NATIONAL-PENSION-2024', 'age', 'gte')
+2026-02-28 10:23:42,337 INFO sqlalchemy.engine.Engine INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,338 INFO sqlalchemy.engine.Engine [cached since 0.2745s ago] ('e090c7054484', 'NATIONAL-PENSION-2024', 'National Pension System', 'age', 'age', 'gte', '18', 1, 0, 'Min age 18', '2026-02-28 04:53:42.337720')
+2026-02-28 10:23:42,339 INFO sqlalchemy.engine.Engine SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,340 INFO sqlalchemy.engine.Engine [cached since 0.2803s ago] ('NATIONAL-PENSION-2024', 'age', 'lte')
+2026-02-28 10:23:42,341 INFO sqlalchemy.engine.Engine INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,342 INFO sqlalchemy.engine.Engine [cached since 0.2789s ago] ('d6a161f5e67b', 'NATIONAL-PENSION-2024', 'National Pension System', 'age', 'age', 'lte', '70', 1, 0, 'Max age 70', '2026-02-28 04:53:42.341984')
+2026-02-28 10:23:42,344 INFO sqlalchemy.engine.Engine SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,345 INFO sqlalchemy.engine.Engine [cached since 0.2846s ago] ('SCHOLARSHIP-SC-ST-2024', 'category', 'in')
+2026-02-28 10:23:42,346 INFO sqlalchemy.engine.Engine INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,346 INFO sqlalchemy.engine.Engine [cached since 0.2821s ago] ('b4414a64edca', 'SCHOLARSHIP-SC-ST-2024', 'Post-Matric Scholarship SC/ST', 'category', 'category', 'in', 'SC,ST', 1, 0, 'Must be SC or ST', '2026-02-28 04:53:42.346111')
+2026-02-28 10:23:42,347 INFO sqlalchemy.engine.Engine SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,347 INFO sqlalchemy.engine.Engine [cached since 0.2881s ago] ('SCHOLARSHIP-SC-ST-2024', 'annual_income', 'lte')
+2026-02-28 10:23:42,350 INFO sqlalchemy.engine.Engine INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,365 INFO sqlalchemy.engine.Engine COMMIT

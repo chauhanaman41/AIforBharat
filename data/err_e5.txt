@@ -1,0 +1,16 @@
+2026-02-28 10:19:29,342 [cache] INFO: Cache initialized: namespace=processed_meta, ttl=1800s, dir=D:\AIForBharat\AIforBharat\data\cache\processed_meta
+INFO:     Started server process [24164]
+INFO:     Waiting for application startup.
+2026-02-28 10:19:29,362 [processed_metadata_store] INFO: \U0001f680 Processed User Metadata Store starting...
+2026-02-28 10:19:29,369 [sqlalchemy.engine.Engine] INFO: BEGIN (implicit)
+2026-02-28 10:19:29,373 [sqlalchemy.engine.Engine] INFO: PRAGMA main.table_info("user_metadata")
+2026-02-28 10:19:29,377 [sqlalchemy.engine.Engine] INFO: [raw sql] ()
+2026-02-28 10:19:29,383 [sqlalchemy.engine.Engine] INFO: PRAGMA main.table_info("user_derived_attributes")
+2026-02-28 10:19:29,386 [sqlalchemy.engine.Engine] INFO: [raw sql] ()
+2026-02-28 10:19:29,388 [sqlalchemy.engine.Engine] INFO: PRAGMA main.table_info("user_eligibility_cache")
+2026-02-28 10:19:29,391 [sqlalchemy.engine.Engine] INFO: [raw sql] ()
+2026-02-28 10:19:29,393 [sqlalchemy.engine.Engine] INFO: PRAGMA main.table_info("user_risk_scores")
+2026-02-28 10:19:29,395 [sqlalchemy.engine.Engine] INFO: [raw sql] ()
+2026-02-28 10:19:29,396 [sqlalchemy.engine.Engine] INFO: COMMIT
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8005 (Press CTRL+C to quit)

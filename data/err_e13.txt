@@ -1,0 +1,56 @@
+INFO:     Started server process [14292]
+INFO:     Waiting for application startup.
+2026-02-28 10:23:23,424 [analytics_warehouse] INFO: \U0001f680 Analytics Warehouse starting...
+2026-02-28 10:23:23,427 [sqlalchemy.engine.Engine] INFO: BEGIN (implicit)
+2026-02-28 10:23:23,431 [sqlalchemy.engine.Engine] INFO: PRAGMA main.table_info("analytics_events")
+2026-02-28 10:23:23,433 [sqlalchemy.engine.Engine] INFO: [raw sql] ()
+2026-02-28 10:23:23,437 [sqlalchemy.engine.Engine] INFO: PRAGMA main.table_info("metric_snapshots")
+2026-02-28 10:23:23,440 [sqlalchemy.engine.Engine] INFO: [raw sql] ()
+2026-02-28 10:23:23,442 [sqlalchemy.engine.Engine] INFO: PRAGMA temp.table_info("metric_snapshots")
+2026-02-28 10:23:23,447 [sqlalchemy.engine.Engine] INFO: [raw sql] ()
+2026-02-28 10:23:23,449 [sqlalchemy.engine.Engine] INFO: PRAGMA main.table_info("funnel_steps")
+2026-02-28 10:23:23,451 [sqlalchemy.engine.Engine] INFO: [raw sql] ()
+2026-02-28 10:23:23,452 [sqlalchemy.engine.Engine] INFO: PRAGMA temp.table_info("funnel_steps")
+2026-02-28 10:23:23,452 [sqlalchemy.engine.Engine] INFO: [raw sql] ()
+2026-02-28 10:23:23,453 [sqlalchemy.engine.Engine] INFO: 
+CREATE TABLE metric_snapshots (
+	id VARCHAR NOT NULL, 
+	metric_name VARCHAR NOT NULL, 
+	metric_value FLOAT NOT NULL, 
+	dimension VARCHAR, 
+	dimension_value VARCHAR, 
+	period VARCHAR, 
+	snapshot_date DATETIME, 
+	PRIMARY KEY (id)
+)
+
+
+2026-02-28 10:23:23,454 [sqlalchemy.engine.Engine] INFO: [no key 0.00030s] ()
+2026-02-28 10:23:23,460 [sqlalchemy.engine.Engine] INFO: CREATE INDEX ix_metric_snapshots_metric_name ON metric_snapshots (metric_name)
+2026-02-28 10:23:23,460 [sqlalchemy.engine.Engine] INFO: [no key 0.00038s] ()
+2026-02-28 10:23:23,466 [sqlalchemy.engine.Engine] INFO: CREATE INDEX ix_metric_snapshots_dimension ON metric_snapshots (dimension)
+2026-02-28 10:23:23,466 [sqlalchemy.engine.Engine] INFO: [no key 0.00057s] ()
+2026-02-28 10:23:23,473 [sqlalchemy.engine.Engine] INFO: CREATE INDEX ix_metric_snapshots_dimension_value ON metric_snapshots (dimension_value)
+2026-02-28 10:23:23,473 [sqlalchemy.engine.Engine] INFO: [no key 0.00045s] ()
+2026-02-28 10:23:23,480 [sqlalchemy.engine.Engine] INFO: 
+CREATE TABLE funnel_steps (
+	id VARCHAR NOT NULL, 
+	funnel_name VARCHAR NOT NULL, 
+	step_name VARCHAR NOT NULL, 
+	step_order INTEGER NOT NULL, 
+	user_id VARCHAR, 
+	completed_at DATETIME, 
+	PRIMARY KEY (id)
+)
+
+
+2026-02-28 10:23:23,480 [sqlalchemy.engine.Engine] INFO: [no key 0.00058s] ()
+2026-02-28 10:23:23,486 [sqlalchemy.engine.Engine] INFO: CREATE INDEX ix_funnel_steps_user_id ON funnel_steps (user_id)
+2026-02-28 10:23:23,486 [sqlalchemy.engine.Engine] INFO: [no key 0.00046s] ()
+2026-02-28 10:23:23,493 [sqlalchemy.engine.Engine] INFO: CREATE INDEX ix_funnel_steps_funnel_name ON funnel_steps (funnel_name)
+2026-02-28 10:23:23,494 [sqlalchemy.engine.Engine] INFO: [no key 0.00055s] ()
+2026-02-28 10:23:23,499 [sqlalchemy.engine.Engine] INFO: COMMIT
+2026-02-28 10:23:23,501 [event_bus] INFO: Subscribed handler _on_event to '*'
+2026-02-28 10:23:23,501 [analytics_warehouse] INFO: Subscribed to all events for analytics
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:18013 (Press CTRL+C to quit)

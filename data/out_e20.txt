@@ -1,0 +1,24 @@
+2026-02-28 10:25:55,543 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-28 10:25:55,546 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("voice_sessions")
+2026-02-28 10:25:55,549 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-28 10:25:55,553 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("voice_sessions")
+2026-02-28 10:25:55,556 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-28 10:25:55,560 INFO sqlalchemy.engine.Engine 
+CREATE TABLE voice_sessions (
+	id VARCHAR NOT NULL, 
+	user_id VARCHAR, 
+	language VARCHAR, 
+	audio_path TEXT, 
+	transcript TEXT, 
+	response_text TEXT, 
+	response_audio_path TEXT, 
+	duration_seconds FLOAT, 
+	created_at DATETIME, 
+	PRIMARY KEY (id)
+)
+
+
+2026-02-28 10:25:55,561 INFO sqlalchemy.engine.Engine [no key 0.00171s] ()
+2026-02-28 10:25:55,568 INFO sqlalchemy.engine.Engine CREATE INDEX ix_voice_sessions_user_id ON voice_sessions (user_id)
+2026-02-28 10:25:55,568 INFO sqlalchemy.engine.Engine [no key 0.00049s] ()
+2026-02-28 10:25:55,575 INFO sqlalchemy.engine.Engine COMMIT

@@ -1,0 +1,92 @@
+2026-02-28 10:25:37,502 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-28 10:25:37,506 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("synced_datasets")
+2026-02-28 10:25:37,509 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-28 10:25:37,513 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("synced_datasets")
+2026-02-28 10:25:37,516 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-28 10:25:37,518 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("gov_data_records")
+2026-02-28 10:25:37,520 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-28 10:25:37,523 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("gov_data_records")
+2026-02-28 10:25:37,524 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-28 10:25:37,526 INFO sqlalchemy.engine.Engine 
+CREATE TABLE synced_datasets (
+	id VARCHAR NOT NULL, 
+	dataset_id VARCHAR NOT NULL, 
+	name VARCHAR NOT NULL, 
+	source VARCHAR, 
+	source_url TEXT, 
+	description TEXT, 
+	category VARCHAR, 
+	data_format VARCHAR, 
+	record_count INTEGER, 
+	local_path TEXT, 
+	content_hash VARCHAR, 
+	last_synced DATETIME, 
+	sync_status VARCHAR, 
+	is_cached BOOLEAN, 
+	created_at DATETIME, 
+	PRIMARY KEY (id)
+)
+
+
+2026-02-28 10:25:37,526 INFO sqlalchemy.engine.Engine [no key 0.00039s] ()
+2026-02-28 10:25:37,532 INFO sqlalchemy.engine.Engine CREATE UNIQUE INDEX ix_synced_datasets_dataset_id ON synced_datasets (dataset_id)
+2026-02-28 10:25:37,532 INFO sqlalchemy.engine.Engine [no key 0.00043s] ()
+2026-02-28 10:25:37,539 INFO sqlalchemy.engine.Engine 
+CREATE TABLE gov_data_records (
+	id VARCHAR NOT NULL, 
+	dataset_id VARCHAR NOT NULL, 
+	record_data TEXT, 
+	state VARCHAR, 
+	district VARCHAR, 
+	year VARCHAR, 
+	created_at DATETIME, 
+	PRIMARY KEY (id)
+)
+
+
+2026-02-28 10:25:37,539 INFO sqlalchemy.engine.Engine [no key 0.00044s] ()
+2026-02-28 10:25:37,546 INFO sqlalchemy.engine.Engine CREATE INDEX ix_gov_data_records_district ON gov_data_records (district)
+2026-02-28 10:25:37,546 INFO sqlalchemy.engine.Engine [no key 0.00043s] ()
+2026-02-28 10:25:37,557 INFO sqlalchemy.engine.Engine CREATE INDEX ix_gov_data_records_state ON gov_data_records (state)
+2026-02-28 10:25:37,558 INFO sqlalchemy.engine.Engine [no key 0.00046s] ()
+2026-02-28 10:25:37,564 INFO sqlalchemy.engine.Engine CREATE INDEX ix_gov_data_records_dataset_id ON gov_data_records (dataset_id)
+2026-02-28 10:25:37,564 INFO sqlalchemy.engine.Engine [no key 0.00044s] ()
+2026-02-28 10:25:37,570 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-28 10:25:37,574 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-28 10:25:37,577 INFO sqlalchemy.engine.Engine SELECT synced_datasets.id, synced_datasets.dataset_id, synced_datasets.name, synced_datasets.source, synced_datasets.source_url, synced_datasets.description, synced_datasets.category, synced_datasets.data_format, synced_datasets.record_count, synced_datasets.local_path, synced_datasets.content_hash, synced_datasets.last_synced, synced_datasets.sync_status, synced_datasets.is_cached, synced_datasets.created_at 
+FROM synced_datasets 
+WHERE synced_datasets.dataset_id = ?
+2026-02-28 10:25:37,577 INFO sqlalchemy.engine.Engine [generated in 0.00056s] ('nfhs5_district',)
+2026-02-28 10:25:37,581 INFO sqlalchemy.engine.Engine INSERT INTO gov_data_records (id, dataset_id, record_data, state, district, year, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:25:37,582 INFO sqlalchemy.engine.Engine [generated in 0.00056s] [('dbcd39fbc3a4', 'nfhs5_district', '{"state": "Uttar Pradesh", "district": "Lucknow", "indicator": "Under-5 Mortality Rate", "value": "32.8", "year": "2019-21"}', 'Uttar Pradesh', 'Lucknow', '2019-21', '2026-02-28 04:55:37.581177'), ('161587b9f267', 'nfhs5_district', '{"state": "Bihar", "district": "Patna", "indicator": "Under-5 Mortality Rate", "value": "41.1", "year": "2019-21"}', 'Bihar', 'Patna', '2019-21', '2026-02-28 04:55:37.581177'), ('8e18b69ce169', 'nfhs5_district', '{"state": "Maharashtra", "district": "Mumbai", "indicator": "Under-5 Mortality Rate", "value": "18.4", "year": "2019-21"}', 'Maharashtra', 'Mumbai', '2019-21', '2026-02-28 04:55:37.581177'), ('4b977c26fc12', 'nfhs5_district', '{"state": "Tamil Nadu", "district": "Chennai", "indicator": "Under-5 Mortality Rate", "value": "15.2", "year": "2019-21"}', 'Tamil Nadu', 'Chennai', '2019-21', '2026-02-28 04:55:37.581177'), ('673f6479f345', 'nfhs5_district', '{"state": "Kerala", "district": "Thiruvananthapuram", "indicator": "Under-5 Mortality Rate", "value": "7.1", "year": "2019-21"}', 'Kerala', 'Thiruvananthapuram', '2019-21', '2026-02-28 04:55:37.581177')]
+2026-02-28 10:25:37,583 INFO sqlalchemy.engine.Engine INSERT INTO synced_datasets (id, dataset_id, name, source, source_url, description, category, data_format, record_count, local_path, content_hash, last_synced, sync_status, is_cached, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:25:37,585 INFO sqlalchemy.engine.Engine [generated in 0.00092s] ('354338d63b25', 'nfhs5_district', 'NFHS-5 District Factsheet Data', 'data.gov.in', 'https://api.data.gov.in/resource/nfhs5district', 'National Family Health Survey 5 district-level indicators', 'nfhs', 'json', 5, 'D:\\AIForBharat\\AIforBharat\\data\\gov-data\\nfhs5_district.json', 'dfd9a1843427979f5e6aadec4e93ca12a2296c7d7a3d3b7583a52c32103d269b', '2026-02-28 04:55:37.580169', 'synced', 1, '2026-02-28 04:55:37.583955')
+2026-02-28 10:25:37,586 INFO sqlalchemy.engine.Engine SELECT synced_datasets.id, synced_datasets.dataset_id, synced_datasets.name, synced_datasets.source, synced_datasets.source_url, synced_datasets.description, synced_datasets.category, synced_datasets.data_format, synced_datasets.record_count, synced_datasets.local_path, synced_datasets.content_hash, synced_datasets.last_synced, synced_datasets.sync_status, synced_datasets.is_cached, synced_datasets.created_at 
+FROM synced_datasets 
+WHERE synced_datasets.dataset_id = ?
+2026-02-28 10:25:37,587 INFO sqlalchemy.engine.Engine [cached since 0.009867s ago] ('census_2011_population',)
+2026-02-28 10:25:37,588 INFO sqlalchemy.engine.Engine INSERT INTO synced_datasets (id, dataset_id, name, source, source_url, description, category, data_format, record_count, local_path, content_hash, last_synced, sync_status, is_cached, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:25:37,589 INFO sqlalchemy.engine.Engine [cached since 0.004519s ago] ('1bbc9ea74020', 'census_2011_population', 'Census 2011 Population Data', 'data.gov.in', None, 'Population data from Census 2011 by state and district', 'census', 'json', 0, 'D:\\AIForBharat\\AIforBharat\\data\\gov-data\\census_2011_population.json', '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945', '2026-02-28 04:55:37.588423', 'synced', 1, '2026-02-28 04:55:37.588423')
+2026-02-28 10:25:37,590 INFO sqlalchemy.engine.Engine SELECT synced_datasets.id, synced_datasets.dataset_id, synced_datasets.name, synced_datasets.source, synced_datasets.source_url, synced_datasets.description, synced_datasets.category, synced_datasets.data_format, synced_datasets.record_count, synced_datasets.local_path, synced_datasets.content_hash, synced_datasets.last_synced, synced_datasets.sync_status, synced_datasets.is_cached, synced_datasets.created_at 
+FROM synced_datasets 
+WHERE synced_datasets.dataset_id = ?
+2026-02-28 10:25:37,590 INFO sqlalchemy.engine.Engine [cached since 0.01321s ago] ('sdg_india_index',)
+2026-02-28 10:25:37,591 INFO sqlalchemy.engine.Engine INSERT INTO synced_datasets (id, dataset_id, name, source, source_url, description, category, data_format, record_count, local_path, content_hash, last_synced, sync_status, is_cached, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:25:37,592 INFO sqlalchemy.engine.Engine [cached since 0.008242s ago] ('906f2cd8f1d1', 'sdg_india_index', 'SDG India Index', 'data.gov.in', None, 'Sustainable Development Goals India Index state-wise scores', 'sdg', 'json', 0, 'D:\\AIForBharat\\AIforBharat\\data\\gov-data\\sdg_india_index.json', '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945', '2026-02-28 04:55:37.591425', 'synced', 1, '2026-02-28 04:55:37.591425')
+2026-02-28 10:25:37,593 INFO sqlalchemy.engine.Engine SELECT synced_datasets.id, synced_datasets.dataset_id, synced_datasets.name, synced_datasets.source, synced_datasets.source_url, synced_datasets.description, synced_datasets.category, synced_datasets.data_format, synced_datasets.record_count, synced_datasets.local_path, synced_datasets.content_hash, synced_datasets.last_synced, synced_datasets.sync_status, synced_datasets.is_cached, synced_datasets.created_at 
+FROM synced_datasets 
+WHERE synced_datasets.dataset_id = ?
+2026-02-28 10:25:37,593 INFO sqlalchemy.engine.Engine [cached since 0.01675s ago] ('poverty_headcount',)
+2026-02-28 10:25:37,595 INFO sqlalchemy.engine.Engine INSERT INTO gov_data_records (id, dataset_id, record_data, state, district, year, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:25:37,595 INFO sqlalchemy.engine.Engine [cached since 0.01504s ago] [('9c7d182a597a', 'poverty_headcount', '{"state": "Bihar", "headcount_ratio": 33.7, "rural": 34.1, "urban": 31.2, "year": "2011-12"}', 'Bihar', None, '2011-12', '2026-02-28 04:55:37.595939'), ('0b0c1003b2e1', 'poverty_headcount', '{"state": "Uttar Pradesh", "headcount_ratio": 29.4, "rural": 30.4, "urban": 26.1, "year": "2011-12"}', 'Uttar Pradesh', None, '2011-12', '2026-02-28 04:55:37.595939'), ('fc386672e7bc', 'poverty_headcount', '{"state": "Madhya Pradesh", "headcount_ratio": 31.6, "rural": 35.7, "urban": 21.0, "year": "2011-12"}', 'Madhya Pradesh', None, '2011-12', '2026-02-28 04:55:37.595939'), ('3f40cd640b36', 'poverty_headcount', '{"state": "Maharashtra", "headcount_ratio": 17.4, "rural": 24.2, "urban": 9.1, "year": "2011-12"}', 'Maharashtra', None, '2011-12', '2026-02-28 04:55:37.595939'), ('e74f7806f566', 'poverty_headcount', '{"state": "Kerala", "headcount_ratio": 7.1, "rural": 9.1, "urban": 4.0, "year": "2011-12"}', 'Kerala', None, '2011-12', '2026-02-28 04:55:37.595939'), ('9fe7db728712', 'poverty_headcount', '{"state": "Tamil Nadu", "headcount_ratio": 11.3, "rural": 15.8, "urban": 6.5, "year": "2011-12"}', 'Tamil Nadu', None, '2011-12', '2026-02-28 04:55:37.595939')]
+2026-02-28 10:25:37,597 INFO sqlalchemy.engine.Engine INSERT INTO synced_datasets (id, dataset_id, name, source, source_url, description, category, data_format, record_count, local_path, content_hash, last_synced, sync_status, is_cached, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:25:37,598 INFO sqlalchemy.engine.Engine [cached since 0.01312s ago] ('6cf314c2d2cf', 'poverty_headcount', 'Poverty Headcount Ratio', 'data.gov.in', None, 'State-wise poverty headcount ratios (Tendulkar methodology)', 'economic', 'json', 6, 'D:\\AIForBharat\\AIforBharat\\data\\gov-data\\poverty_headcount.json', '8c06131554ef0f0e708e3fcd01457caa722d11f58e6f789c9262823f3553c6b2', '2026-02-28 04:55:37.594936', 'synced', 1, '2026-02-28 04:55:37.597445')
+2026-02-28 10:25:37,599 INFO sqlalchemy.engine.Engine SELECT synced_datasets.id, synced_datasets.dataset_id, synced_datasets.name, synced_datasets.source, synced_datasets.source_url, synced_datasets.description, synced_datasets.category, synced_datasets.data_format, synced_datasets.record_count, synced_datasets.local_path, synced_datasets.content_hash, synced_datasets.last_synced, synced_datasets.sync_status, synced_datasets.is_cached, synced_datasets.created_at 
+FROM synced_datasets 
+WHERE synced_datasets.dataset_id = ?
+2026-02-28 10:25:37,600 INFO sqlalchemy.engine.Engine [cached since 0.02278s ago] ('scheme_beneficiaries',)
+2026-02-28 10:25:37,601 INFO sqlalchemy.engine.Engine INSERT INTO gov_data_records (id, dataset_id, record_data, state, district, year, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:25:37,602 INFO sqlalchemy.engine.Engine [cached since 0.02114s ago] [('b8ca9dd923a9', 'scheme_beneficiaries', '{"scheme": "PM-KISAN", "state": "Uttar Pradesh", "beneficiaries": 26000000, "year": "2024"}', 'Uttar Pradesh', None, '2024', '2026-02-28 04:55:37.601247'), ('4eeda5efa276', 'scheme_beneficiaries', '{"scheme": "PM-KISAN", "state": "Bihar", "beneficiaries": 8000000, "year": "2024"}', 'Bihar', None, '2024', '2026-02-28 04:55:37.601247'), ('ea7f14ff47b1', 'scheme_beneficiaries', '{"scheme": "PMJAY", "state": "Maharashtra", "beneficiaries": 15000000, "year": "2024"}', 'Maharashtra', None, '2024', '2026-02-28 04:55:37.601247'), ('c4e05768a88d', 'scheme_beneficiaries', '{"scheme": "PMAY", "state": "Uttar Pradesh", "beneficiaries": 4200000, "year": "2024"}', 'Uttar Pradesh', None, '2024', '2026-02-28 04:55:37.601247'), ('bb40a5e7cfa4', 'scheme_beneficiaries', '{"scheme": "PM Ujjwala", "state": "Bihar", "beneficiaries": 5500000, "year": "2024"}', 'Bihar', None, '2024', '2026-02-28 04:55:37.601247')]
+2026-02-28 10:25:37,603 INFO sqlalchemy.engine.Engine INSERT INTO synced_datasets (id, dataset_id, name, source, source_url, description, category, data_format, record_count, local_path, content_hash, last_synced, sync_status, is_cached, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:25:37,603 INFO sqlalchemy.engine.Engine [cached since 0.01885s ago] ('90e5039fd117', 'scheme_beneficiaries', 'Scheme Beneficiary Statistics', 'local', None, 'Beneficiary counts by scheme and state', 'schemes', 'json', 5, 'D:\\AIForBharat\\AIforBharat\\data\\gov-data\\scheme_beneficiaries.json', '1d6f88b0f4e34ca0ba6f0e45e15f86d3fb292b523d7e5adbe01866108c608120', '2026-02-28 04:55:37.601247', 'synced', 1, '2026-02-28 04:55:37.602664')
+2026-02-28 10:25:37,604 INFO sqlalchemy.engine.Engine COMMIT

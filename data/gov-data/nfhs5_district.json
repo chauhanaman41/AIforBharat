@@ -1,0 +1,37 @@
+[
+  {
+    "state": "Uttar Pradesh",
+    "district": "Lucknow",
+    "indicator": "Under-5 Mortality Rate",
+    "value": "32.8",
+    "year": "2019-21"
+  },
+  {
+    "state": "Bihar",
+    "district": "Patna",
+    "indicator": "Under-5 Mortality Rate",
+    "value": "41.1",
+    "year": "2019-21"
+  },
+  {
+    "state": "Maharashtra",
+    "district": "Mumbai",
+    "indicator": "Under-5 Mortality Rate",
+    "value": "18.4",
+    "year": "2019-21"
+  },
+  {
+    "state": "Tamil Nadu",
+    "district": "Chennai",
+    "indicator": "Under-5 Mortality Rate",
+    "value": "15.2",
+    "year": "2019-21"
+  },
+  {
+    "state": "Kerala",
+    "district": "Thiruvananthapuram",
+    "indicator": "Under-5 Mortality Rate",
+    "value": "7.1",
+    "year": "2019-21"
+  }
+]

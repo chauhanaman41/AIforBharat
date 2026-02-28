@@ -1,0 +1,9 @@
+2026-02-28 10:23:11,709 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-28 10:23:11,713 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("vector_records")
+2026-02-28 10:23:11,717 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-28 10:23:11,721 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-28 10:23:11,727 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-28 10:23:11,732 INFO sqlalchemy.engine.Engine SELECT vector_records.id, vector_records.chunk_id, vector_records.document_id, vector_records.policy_id, vector_records.content, vector_records.embedding_blob, vector_records.embedding_dim, vector_records.namespace, vector_records.metadata_json, vector_records.created_at 
+FROM vector_records
+2026-02-28 10:23:11,733 INFO sqlalchemy.engine.Engine [generated in 0.00214s] ()
+2026-02-28 10:23:11,736 INFO sqlalchemy.engine.Engine ROLLBACK

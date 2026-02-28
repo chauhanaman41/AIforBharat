@@ -1,0 +1,32 @@
+[
+  {
+    "scheme": "PM-KISAN",
+    "state": "Uttar Pradesh",
+    "beneficiaries": 26000000,
+    "year": "2024"
+  },
+  {
+    "scheme": "PM-KISAN",
+    "state": "Bihar",
+    "beneficiaries": 8000000,
+    "year": "2024"
+  },
+  {
+    "scheme": "PMJAY",
+    "state": "Maharashtra",
+    "beneficiaries": 15000000,
+    "year": "2024"
+  },
+  {
+    "scheme": "PMAY",
+    "state": "Uttar Pradesh",
+    "beneficiaries": 4200000,
+    "year": "2024"
+  },
+  {
+    "scheme": "PM Ujjwala",
+    "state": "Bihar",
+    "beneficiaries": 5500000,
+    "year": "2024"
+  }
+]

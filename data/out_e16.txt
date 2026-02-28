@@ -1,0 +1,60 @@
+2026-02-28 10:24:04,945 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-28 10:24:04,949 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("scheme_deadlines")
+2026-02-28 10:24:04,952 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-28 10:24:04,957 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("user_deadline_alerts")
+2026-02-28 10:24:04,960 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-28 10:24:04,963 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("user_deadline_alerts")
+2026-02-28 10:24:04,966 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-28 10:24:04,969 INFO sqlalchemy.engine.Engine 
+CREATE TABLE user_deadline_alerts (
+	id VARCHAR NOT NULL, 
+	user_id VARCHAR NOT NULL, 
+	deadline_id VARCHAR NOT NULL, 
+	scheme_id VARCHAR, 
+	scheme_name VARCHAR, 
+	alert_status VARCHAR, 
+	days_remaining INTEGER, 
+	urgency_score FLOAT, 
+	logged_at DATETIME, 
+	PRIMARY KEY (id)
+)
+
+
+2026-02-28 10:24:04,971 INFO sqlalchemy.engine.Engine [no key 0.00095s] ()
+2026-02-28 10:24:04,978 INFO sqlalchemy.engine.Engine CREATE INDEX ix_user_deadline_alerts_deadline_id ON user_deadline_alerts (deadline_id)
+2026-02-28 10:24:04,980 INFO sqlalchemy.engine.Engine [no key 0.00074s] ()
+2026-02-28 10:24:04,986 INFO sqlalchemy.engine.Engine CREATE INDEX ix_user_deadline_alerts_user_id ON user_deadline_alerts (user_id)
+2026-02-28 10:24:04,988 INFO sqlalchemy.engine.Engine [no key 0.00076s] ()
+2026-02-28 10:24:04,996 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-28 10:24:05,002 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-28 10:24:05,009 INFO sqlalchemy.engine.Engine SELECT scheme_deadlines.id, scheme_deadlines.scheme_id, scheme_deadlines.scheme_name, scheme_deadlines.deadline_type, scheme_deadlines.deadline_date, scheme_deadlines.opens_at, scheme_deadlines.description, scheme_deadlines.ministry, scheme_deadlines.states_applicable, scheme_deadlines.is_recurring, scheme_deadlines.recurrence_pattern, scheme_deadlines.priority, scheme_deadlines.source_url, scheme_deadlines.is_active, scheme_deadlines.created_at, scheme_deadlines.updated_at 
+FROM scheme_deadlines 
+WHERE scheme_deadlines.scheme_id = ? AND scheme_deadlines.deadline_type = ?
+2026-02-28 10:24:05,010 INFO sqlalchemy.engine.Engine [generated in 0.00085s] ('PM-KISAN-2024', 'renewal')
+2026-02-28 10:24:05,016 INFO sqlalchemy.engine.Engine INSERT INTO scheme_deadlines (id, scheme_id, scheme_name, deadline_type, deadline_date, opens_at, description, ministry, states_applicable, is_recurring, recurrence_pattern, priority, source_url, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:24:05,017 INFO sqlalchemy.engine.Engine [generated in 0.00099s] ('bf5d10b3307e', 'PM-KISAN-2024', 'PM Kisan Samman Nidhi', 'renewal', '2025-03-31 00:00:00.000000', None, 'eKYC renewal deadline for PM-KISAN installment', 'Agriculture', None, 1, 'quarterly', 'high', None, 1, '2026-02-28 04:54:05.016404', '2026-02-28 04:54:05.016404')
+2026-02-28 10:24:05,020 INFO sqlalchemy.engine.Engine SELECT scheme_deadlines.id, scheme_deadlines.scheme_id, scheme_deadlines.scheme_name, scheme_deadlines.deadline_type, scheme_deadlines.deadline_date, scheme_deadlines.opens_at, scheme_deadlines.description, scheme_deadlines.ministry, scheme_deadlines.states_applicable, scheme_deadlines.is_recurring, scheme_deadlines.recurrence_pattern, scheme_deadlines.priority, scheme_deadlines.source_url, scheme_deadlines.is_active, scheme_deadlines.created_at, scheme_deadlines.updated_at 
+FROM scheme_deadlines 
+WHERE scheme_deadlines.scheme_id = ? AND scheme_deadlines.deadline_type = ?
+2026-02-28 10:24:05,020 INFO sqlalchemy.engine.Engine [cached since 0.01205s ago] ('AYUSHMAN-BHARAT-2024', 'enrollment')
+2026-02-28 10:24:05,022 INFO sqlalchemy.engine.Engine INSERT INTO scheme_deadlines (id, scheme_id, scheme_name, deadline_type, deadline_date, opens_at, description, ministry, states_applicable, is_recurring, recurrence_pattern, priority, source_url, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:24:05,024 INFO sqlalchemy.engine.Engine [cached since 0.008206s ago] ('0477e6e87d5c', 'AYUSHMAN-BHARAT-2024', 'Ayushman Bharat PM-JAY', 'enrollment', '2025-12-31 00:00:00.000000', None, 'Open enrollment for Ayushman Bharat health insurance', 'Health and Family Welfare', None, 1, 'yearly', 'medium', None, 1, '2026-02-28 04:54:05.022990', '2026-02-28 04:54:05.022990')
+2026-02-28 10:24:05,026 INFO sqlalchemy.engine.Engine SELECT scheme_deadlines.id, scheme_deadlines.scheme_id, scheme_deadlines.scheme_name, scheme_deadlines.deadline_type, scheme_deadlines.deadline_date, scheme_deadlines.opens_at, scheme_deadlines.description, scheme_deadlines.ministry, scheme_deadlines.states_applicable, scheme_deadlines.is_recurring, scheme_deadlines.recurrence_pattern, scheme_deadlines.priority, scheme_deadlines.source_url, scheme_deadlines.is_active, scheme_deadlines.created_at, scheme_deadlines.updated_at 
+FROM scheme_deadlines 
+WHERE scheme_deadlines.scheme_id = ? AND scheme_deadlines.deadline_type = ?
+2026-02-28 10:24:05,027 INFO sqlalchemy.engine.Engine [cached since 0.01847s ago] ('PM-AWAS-YOJANA-2024', 'application')
+2026-02-28 10:24:05,030 INFO sqlalchemy.engine.Engine INSERT INTO scheme_deadlines (id, scheme_id, scheme_name, deadline_type, deadline_date, opens_at, description, ministry, states_applicable, is_recurring, recurrence_pattern, priority, source_url, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:24:05,030 INFO sqlalchemy.engine.Engine [cached since 0.01462s ago] ('96d7fa6fe129', 'PM-AWAS-YOJANA-2024', 'PM Awas Yojana Urban', 'application', '2025-06-30 00:00:00.000000', None, 'PMAY-U Phase IV application deadline', 'Housing and Urban Affairs', None, 0, None, 'high', None, 1, '2026-02-28 04:54:05.030495', '2026-02-28 04:54:05.030495')
+2026-02-28 10:24:05,032 INFO sqlalchemy.engine.Engine SELECT scheme_deadlines.id, scheme_deadlines.scheme_id, scheme_deadlines.scheme_name, scheme_deadlines.deadline_type, scheme_deadlines.deadline_date, scheme_deadlines.opens_at, scheme_deadlines.description, scheme_deadlines.ministry, scheme_deadlines.states_applicable, scheme_deadlines.is_recurring, scheme_deadlines.recurrence_pattern, scheme_deadlines.priority, scheme_deadlines.source_url, scheme_deadlines.is_active, scheme_deadlines.created_at, scheme_deadlines.updated_at 
+FROM scheme_deadlines 
+WHERE scheme_deadlines.scheme_id = ? AND scheme_deadlines.deadline_type = ?
+2026-02-28 10:24:05,033 INFO sqlalchemy.engine.Engine [cached since 0.02475s ago] ('SCHOLARSHIP-SC-ST-2024', 'application')
+2026-02-28 10:24:05,035 INFO sqlalchemy.engine.Engine INSERT INTO scheme_deadlines (id, scheme_id, scheme_name, deadline_type, deadline_date, opens_at, description, ministry, states_applicable, is_recurring, recurrence_pattern, priority, source_url, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:24:05,037 INFO sqlalchemy.engine.Engine [cached since 0.02053s ago] ('6d3e92a7077d', 'SCHOLARSHIP-SC-ST-2024', 'Post-Matric Scholarship SC/ST', 'application', '2025-10-31 00:00:00.000000', None, 'Fresh/renewal applications for FY 2025-26', 'Social Justice', None, 1, 'yearly', 'high', None, 1, '2026-02-28 04:54:05.035986', '2026-02-28 04:54:05.035986')
+2026-02-28 10:24:05,038 INFO sqlalchemy.engine.Engine SELECT scheme_deadlines.id, scheme_deadlines.scheme_id, scheme_deadlines.scheme_name, scheme_deadlines.deadline_type, scheme_deadlines.deadline_date, scheme_deadlines.opens_at, scheme_deadlines.description, scheme_deadlines.ministry, scheme_deadlines.states_applicable, scheme_deadlines.is_recurring, scheme_deadlines.recurrence_pattern, scheme_deadlines.priority, scheme_deadlines.source_url, scheme_deadlines.is_active, scheme_deadlines.created_at, scheme_deadlines.updated_at 
+FROM scheme_deadlines 
+WHERE scheme_deadlines.scheme_id = ? AND scheme_deadlines.deadline_type = ?
+2026-02-28 10:24:05,040 INFO sqlalchemy.engine.Engine [cached since 0.03081s ago] ('PMSBY-2024', 'renewal')
+2026-02-28 10:24:05,042 INFO sqlalchemy.engine.Engine INSERT INTO scheme_deadlines (id, scheme_id, scheme_name, deadline_type, deadline_date, opens_at, description, ministry, states_applicable, is_recurring, recurrence_pattern, priority, source_url, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:24:05,043 INFO sqlalchemy.engine.Engine [cached since 0.02632s ago] ('5231b0f6818f', 'PMSBY-2024', 'PM Suraksha Bima Yojana', 'renewal', '2025-05-31 00:00:00.000000', None, 'Annual renewal auto-debit consent', 'Finance', None, 1, 'yearly', 'medium', None, 1, '2026-02-28 04:54:05.042071', '2026-02-28 04:54:05.042071')
+2026-02-28 10:24:05,044 INFO sqlalchemy.engine.Engine COMMIT

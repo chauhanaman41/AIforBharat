@@ -1,0 +1,357 @@
+2026-02-28 10:23:41,980 [cache] INFO: Cache initialized: namespace=eligibility, ttl=1800s, dir=D:\AIForBharat\AIforBharat\data\cache\eligibility
+INFO:     Started server process [28608]
+INFO:     Waiting for application startup.
+2026-02-28 10:23:41,995 [eligibility_rules_engine] INFO: \U0001f680 Eligibility Rules Engine starting...
+2026-02-28 10:23:42,003 [sqlalchemy.engine.Engine] INFO: BEGIN (implicit)
+2026-02-28 10:23:42,006 [sqlalchemy.engine.Engine] INFO: PRAGMA main.table_info("eligibility_rules")
+2026-02-28 10:23:42,009 [sqlalchemy.engine.Engine] INFO: [raw sql] ()
+2026-02-28 10:23:42,015 [sqlalchemy.engine.Engine] INFO: PRAGMA main.table_info("eligibility_results")
+2026-02-28 10:23:42,018 [sqlalchemy.engine.Engine] INFO: [raw sql] ()
+2026-02-28 10:23:42,021 [sqlalchemy.engine.Engine] INFO: PRAGMA temp.table_info("eligibility_results")
+2026-02-28 10:23:42,023 [sqlalchemy.engine.Engine] INFO: [raw sql] ()
+2026-02-28 10:23:42,026 [sqlalchemy.engine.Engine] INFO: 
+CREATE TABLE eligibility_results (
+	id VARCHAR NOT NULL, 
+	user_id VARCHAR NOT NULL, 
+	scheme_id VARCHAR NOT NULL, 
+	scheme_name VARCHAR, 
+	verdict VARCHAR, 
+	confidence FLOAT, 
+	matched_rules TEXT, 
+	unmet_rules TEXT, 
+	missing_fields TEXT, 
+	explanation TEXT, 
+	evaluated_at DATETIME, 
+	PRIMARY KEY (id)
+)
+
+
+2026-02-28 10:23:42,027 [sqlalchemy.engine.Engine] INFO: [no key 0.00082s] ()
+2026-02-28 10:23:42,035 [sqlalchemy.engine.Engine] INFO: CREATE INDEX ix_eligibility_results_scheme_id ON eligibility_results (scheme_id)
+2026-02-28 10:23:42,035 [sqlalchemy.engine.Engine] INFO: [no key 0.00067s] ()
+2026-02-28 10:23:42,043 [sqlalchemy.engine.Engine] INFO: CREATE INDEX ix_eligibility_results_user_id ON eligibility_results (user_id)
+2026-02-28 10:23:42,043 [sqlalchemy.engine.Engine] INFO: [no key 0.00066s] ()
+2026-02-28 10:23:42,050 [sqlalchemy.engine.Engine] INFO: COMMIT
+2026-02-28 10:23:42,055 [sqlalchemy.engine.Engine] INFO: BEGIN (implicit)
+2026-02-28 10:23:42,059 [sqlalchemy.engine.Engine] INFO: SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,060 [sqlalchemy.engine.Engine] INFO: [generated in 0.00071s] ('PM-KISAN-2024', 'occupation', 'contains')
+2026-02-28 10:23:42,064 [sqlalchemy.engine.Engine] INFO: INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,064 [sqlalchemy.engine.Engine] INFO: [generated in 0.00074s] ('aa807591fde5', 'PM-KISAN-2024', 'PM Kisan Samman Nidhi', 'occupation', 'occupation', 'contains', 'farmer,agriculture,kisan', 1, 0, 'Must be a farmer', '2026-02-28 04:53:42.064517')
+2026-02-28 10:23:42,067 [sqlalchemy.engine.Engine] INFO: SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,068 [sqlalchemy.engine.Engine] INFO: [cached since 0.008595s ago] ('PM-KISAN-2024', 'annual_income', 'lte')
+2026-02-28 10:23:42,070 [sqlalchemy.engine.Engine] INFO: INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\logging\__init__.py", line 1113, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2264' in position 200: character maps to <undefined>
+Call stack:
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\session.py", line 2308, in execute
+    return self._execute_internal(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\session.py", line 2169, in _execute_internal
+    ) = compile_state_cls.orm_pre_session_exec(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\context.py", line 551, in orm_pre_session_exec
+    session._autoflush()
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\session.py", line 3010, in _autoflush
+    self.flush()
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\session.py", line 4312, in flush
+    self._flush(objects)
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\session.py", line 4408, in _flush
+    flush_context.execute()
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\unitofwork.py", line 466, in execute
+    rec.execute(self)
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\persistence.py", line 1044, in _emit_insert_statements
+    result = connection.execute(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\base.py", line 1416, in execute
+    return meth(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\sql\elements.py", line 517, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\base.py", line 1639, in _execute_clauseelement
+    ret = self._execute_context(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\base.py", line 1906, in _exec_single_context
+    self._log_info(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\base.py", line 193, in _log_info
+    self.engine.logger.info(message, *arg, **kw)
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\log.py", line 159, in info
+    self.log(logging.INFO, msg, *args, **kwargs)
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\log.py", line 210, in log
+    self.logger._log(level, msg, args, **kwargs)
+Message: '[%s] %r'
+Arguments: ('cached since 0.007343s ago', ('8ae7f1ad0489', 'PM-KISAN-2024', 'PM Kisan Samman Nidhi', 'income', 'annual_income', 'lte', '200000', 1, 0, 'Income \u2264 \u20b92,00,000', '2026-02-28 04:53:42.070584'))
+2026-02-28 10:23:42,071 [sqlalchemy.engine.Engine] INFO: [cached since 0.007343s ago] ('8ae7f1ad0489', 'PM-KISAN-2024', 'PM Kisan Samman Nidhi', 'income', 'annual_income', 'lte', '200000', 1, 0, 'Income \u2264 \u20b92,00,000', '2026-02-28 04:53:42.070584')
+2026-02-28 10:23:42,260 [sqlalchemy.engine.Engine] INFO: SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,261 [sqlalchemy.engine.Engine] INFO: [cached since 0.2012s ago] ('PM-KISAN-2024', 'land_holding_acres', 'gt')
+2026-02-28 10:23:42,263 [sqlalchemy.engine.Engine] INFO: INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,263 [sqlalchemy.engine.Engine] INFO: [cached since 0.1999s ago] ('1d72bdb6c901', 'PM-KISAN-2024', 'PM Kisan Samman Nidhi', 'land', 'land_holding_acres', 'gt', '0', 0, 0, 'Should have landholding', '2026-02-28 04:53:42.263735')
+2026-02-28 10:23:42,265 [sqlalchemy.engine.Engine] INFO: SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,266 [sqlalchemy.engine.Engine] INFO: [cached since 0.2067s ago] ('AYUSHMAN-BHARAT-2024', 'is_bpl', 'eq')
+2026-02-28 10:23:42,268 [sqlalchemy.engine.Engine] INFO: INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,270 [sqlalchemy.engine.Engine] INFO: [cached since 0.2056s ago] ('454452b971f7', 'AYUSHMAN-BHARAT-2024', 'Ayushman Bharat PM-JAY', 'category', 'is_bpl', 'eq', 'true', 1, 0, 'Must be BPL or SECC-listed', '2026-02-28 04:53:42.268745')
+2026-02-28 10:23:42,271 [sqlalchemy.engine.Engine] INFO: SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,272 [sqlalchemy.engine.Engine] INFO: [cached since 0.2125s ago] ('AYUSHMAN-BHARAT-2024', 'annual_income', 'lte')
+2026-02-28 10:23:42,275 [sqlalchemy.engine.Engine] INFO: INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\logging\__init__.py", line 1113, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2264' in position 206: character maps to <undefined>
+Call stack:
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\session.py", line 2308, in execute
+    return self._execute_internal(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\session.py", line 2169, in _execute_internal
+    ) = compile_state_cls.orm_pre_session_exec(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\context.py", line 551, in orm_pre_session_exec
+    session._autoflush()
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\session.py", line 3010, in _autoflush
+    self.flush()
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\session.py", line 4312, in flush
+    self._flush(objects)
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\session.py", line 4408, in _flush
+    flush_context.execute()
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\unitofwork.py", line 466, in execute
+    rec.execute(self)
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\persistence.py", line 1044, in _emit_insert_statements
+    result = connection.execute(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\base.py", line 1416, in execute
+    return meth(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\sql\elements.py", line 517, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\base.py", line 1639, in _execute_clauseelement
+    ret = self._execute_context(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\base.py", line 1906, in _exec_single_context
+    self._log_info(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\base.py", line 193, in _log_info
+    self.engine.logger.info(message, *arg, **kw)
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\log.py", line 159, in info
+    self.log(logging.INFO, msg, *args, **kwargs)
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\log.py", line 210, in log
+    self.logger._log(level, msg, args, **kwargs)
+Message: '[%s] %r'
+Arguments: ('cached since 0.2115s ago', ('dec3fc1a6b37', 'AYUSHMAN-BHARAT-2024', 'Ayushman Bharat PM-JAY', 'income', 'annual_income', 'lte', '500000', 0, 0, 'Income \u2264 \u20b95,00,000', '2026-02-28 04:53:42.274947'))
+2026-02-28 10:23:42,275 [sqlalchemy.engine.Engine] INFO: [cached since 0.2115s ago] ('dec3fc1a6b37', 'AYUSHMAN-BHARAT-2024', 'Ayushman Bharat PM-JAY', 'income', 'annual_income', 'lte', '500000', 0, 0, 'Income \u2264 \u20b95,00,000', '2026-02-28 04:53:42.274947')
+2026-02-28 10:23:42,282 [sqlalchemy.engine.Engine] INFO: SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,283 [sqlalchemy.engine.Engine] INFO: [cached since 0.2239s ago] ('PM-AWAS-YOJANA-2024', 'annual_income', 'lte')
+2026-02-28 10:23:42,286 [sqlalchemy.engine.Engine] INFO: INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\logging\__init__.py", line 1113, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2264' in position 198: character maps to <undefined>
+Call stack:
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\session.py", line 2308, in execute
+    return self._execute_internal(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\session.py", line 2169, in _execute_internal
+    ) = compile_state_cls.orm_pre_session_exec(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\context.py", line 551, in orm_pre_session_exec
+    session._autoflush()
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\session.py", line 3010, in _autoflush
+    self.flush()
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\session.py", line 4312, in flush
+    self._flush(objects)
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\session.py", line 4408, in _flush
+    flush_context.execute()
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\unitofwork.py", line 466, in execute
+    rec.execute(self)
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\persistence.py", line 1044, in _emit_insert_statements
+    result = connection.execute(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\base.py", line 1416, in execute
+    return meth(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\sql\elements.py", line 517, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\base.py", line 1639, in _execute_clauseelement
+    ret = self._execute_context(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\base.py", line 1906, in _exec_single_context
+    self._log_info(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\base.py", line 193, in _log_info
+    self.engine.logger.info(message, *arg, **kw)
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\log.py", line 159, in info
+    self.log(logging.INFO, msg, *args, **kwargs)
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\log.py", line 210, in log
+    self.logger._log(level, msg, args, **kwargs)
+Message: '[%s] %r'
+Arguments: ('cached since 0.2227s ago', ('8d69226274bc', 'PM-AWAS-YOJANA-2024', 'PM Awas Yojana', 'income', 'annual_income', 'lte', '1800000', 1, 0, 'Income \u2264 \u20b918,00,000 (MIG-II)', '2026-02-28 04:53:42.286172'))
+2026-02-28 10:23:42,287 [sqlalchemy.engine.Engine] INFO: [cached since 0.2227s ago] ('8d69226274bc', 'PM-AWAS-YOJANA-2024', 'PM Awas Yojana', 'income', 'annual_income', 'lte', '1800000', 1, 0, 'Income \u2264 \u20b918,00,000 (MIG-II)', '2026-02-28 04:53:42.286172')
+2026-02-28 10:23:42,294 [sqlalchemy.engine.Engine] INFO: SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,295 [sqlalchemy.engine.Engine] INFO: [cached since 0.2352s ago] ('PM-AWAS-YOJANA-2024', 'category', 'in')
+2026-02-28 10:23:42,296 [sqlalchemy.engine.Engine] INFO: INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,297 [sqlalchemy.engine.Engine] INFO: [cached since 0.2334s ago] ('1ab999824619', 'PM-AWAS-YOJANA-2024', 'PM Awas Yojana', 'category', 'category', 'in', 'EWS,LIG,MIG,SC,ST,OBC,General', 0, 0, '', '2026-02-28 04:53:42.296597')
+2026-02-28 10:23:42,298 [sqlalchemy.engine.Engine] INFO: SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,299 [sqlalchemy.engine.Engine] INFO: [cached since 0.2396s ago] ('PM-UJJWALA-2024', 'gender', 'eq')
+2026-02-28 10:23:42,301 [sqlalchemy.engine.Engine] INFO: INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,301 [sqlalchemy.engine.Engine] INFO: [cached since 0.2376s ago] ('8071dc6529e6', 'PM-UJJWALA-2024', 'PM Ujjwala Yojana', 'gender', 'gender', 'eq', 'female', 1, 0, 'Applicant must be female', '2026-02-28 04:53:42.300629')
+2026-02-28 10:23:42,303 [sqlalchemy.engine.Engine] INFO: SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,303 [sqlalchemy.engine.Engine] INFO: [cached since 0.2437s ago] ('PM-UJJWALA-2024', 'is_bpl', 'eq')
+2026-02-28 10:23:42,304 [sqlalchemy.engine.Engine] INFO: INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,305 [sqlalchemy.engine.Engine] INFO: [cached since 0.2415s ago] ('bcd0a38e2cf9', 'PM-UJJWALA-2024', 'PM Ujjwala Yojana', 'category', 'is_bpl', 'eq', 'true', 1, 0, 'Must be BPL household', '2026-02-28 04:53:42.304628')
+2026-02-28 10:23:42,306 [sqlalchemy.engine.Engine] INFO: SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,307 [sqlalchemy.engine.Engine] INFO: [cached since 0.2472s ago] ('MUDRA-YOJANA-2024', 'age', 'gte')
+2026-02-28 10:23:42,307 [sqlalchemy.engine.Engine] INFO: INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,309 [sqlalchemy.engine.Engine] INFO: [cached since 0.2447s ago] ('b57c72550578', 'MUDRA-YOJANA-2024', 'PM MUDRA Yojana', 'age', 'age', 'gte', '18', 1, 0, 'Min age 18', '2026-02-28 04:53:42.307629')
+2026-02-28 10:23:42,310 [sqlalchemy.engine.Engine] INFO: SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,310 [sqlalchemy.engine.Engine] INFO: [cached since 0.2504s ago] ('MUDRA-YOJANA-2024', 'employment_category', 'in')
+2026-02-28 10:23:42,311 [sqlalchemy.engine.Engine] INFO: INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,312 [sqlalchemy.engine.Engine] INFO: [cached since 0.2481s ago] ('61eff6c6fa34', 'MUDRA-YOJANA-2024', 'PM MUDRA Yojana', 'occupation', 'employment_category', 'in', 'self_employed,other,agriculture', 0, 0, 'Non-corporate, non-farm enterprise', '2026-02-28 04:53:42.311173')
+2026-02-28 10:23:42,313 [sqlalchemy.engine.Engine] INFO: SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,314 [sqlalchemy.engine.Engine] INFO: [cached since 0.2541s ago] ('PMSBY-2024', 'age', 'gte')
+2026-02-28 10:23:42,315 [sqlalchemy.engine.Engine] INFO: INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,316 [sqlalchemy.engine.Engine] INFO: [cached since 0.2518s ago] ('770c4791df78', 'PMSBY-2024', 'PM Suraksha Bima Yojana', 'age', 'age', 'gte', '18', 1, 0, 'Min age 18', '2026-02-28 04:53:42.315344')
+2026-02-28 10:23:42,317 [sqlalchemy.engine.Engine] INFO: SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,317 [sqlalchemy.engine.Engine] INFO: [cached since 0.2575s ago] ('PMSBY-2024', 'age', 'lte')
+2026-02-28 10:23:42,318 [sqlalchemy.engine.Engine] INFO: INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,319 [sqlalchemy.engine.Engine] INFO: [cached since 0.2551s ago] ('b46f5ffc3c49', 'PMSBY-2024', 'PM Suraksha Bima Yojana', 'age', 'age', 'lte', '70', 1, 0, 'Max age 70', '2026-02-28 04:53:42.318343')
+2026-02-28 10:23:42,320 [sqlalchemy.engine.Engine] INFO: SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,321 [sqlalchemy.engine.Engine] INFO: [cached since 0.2611s ago] ('PMJJBY-2024', 'age', 'gte')
+2026-02-28 10:23:42,322 [sqlalchemy.engine.Engine] INFO: INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,322 [sqlalchemy.engine.Engine] INFO: [cached since 0.2591s ago] ('c6d1c78e6b95', 'PMJJBY-2024', 'PM Jeevan Jyoti Bima Yojana', 'age', 'age', 'gte', '18', 1, 0, 'Min age 18', '2026-02-28 04:53:42.322851')
+2026-02-28 10:23:42,324 [sqlalchemy.engine.Engine] INFO: SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,325 [sqlalchemy.engine.Engine] INFO: [cached since 0.265s ago] ('PMJJBY-2024', 'age', 'lte')
+2026-02-28 10:23:42,326 [sqlalchemy.engine.Engine] INFO: INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,326 [sqlalchemy.engine.Engine] INFO: [cached since 0.2626s ago] ('1febe7320922', 'PMJJBY-2024', 'PM Jeevan Jyoti Bima Yojana', 'age', 'age', 'lte', '50', 1, 0, 'Max age 50', '2026-02-28 04:53:42.326371')
+2026-02-28 10:23:42,327 [sqlalchemy.engine.Engine] INFO: SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,328 [sqlalchemy.engine.Engine] INFO: [cached since 0.2683s ago] ('SUKANYA-SAMRIDDHI-2024', 'gender', 'eq')
+2026-02-28 10:23:42,329 [sqlalchemy.engine.Engine] INFO: INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,331 [sqlalchemy.engine.Engine] INFO: [cached since 0.2667s ago] ('8cbc786bc189', 'SUKANYA-SAMRIDDHI-2024', 'Sukanya Samriddhi Yojana', 'gender', 'gender', 'eq', 'female', 1, 0, 'For girl child', '2026-02-28 04:53:42.329372')
+2026-02-28 10:23:42,332 [sqlalchemy.engine.Engine] INFO: SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,333 [sqlalchemy.engine.Engine] INFO: [cached since 0.2729s ago] ('SUKANYA-SAMRIDDHI-2024', 'age', 'lte')
+2026-02-28 10:23:42,334 [sqlalchemy.engine.Engine] INFO: INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,334 [sqlalchemy.engine.Engine] INFO: [cached since 0.2708s ago] ('aad0a43b26cc', 'SUKANYA-SAMRIDDHI-2024', 'Sukanya Samriddhi Yojana', 'age', 'age', 'lte', '10', 1, 0, 'Girl must be below 10 years', '2026-02-28 04:53:42.334712')
+2026-02-28 10:23:42,335 [sqlalchemy.engine.Engine] INFO: SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,336 [sqlalchemy.engine.Engine] INFO: [cached since 0.2766s ago] ('NATIONAL-PENSION-2024', 'age', 'gte')
+2026-02-28 10:23:42,337 [sqlalchemy.engine.Engine] INFO: INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,338 [sqlalchemy.engine.Engine] INFO: [cached since 0.2745s ago] ('e090c7054484', 'NATIONAL-PENSION-2024', 'National Pension System', 'age', 'age', 'gte', '18', 1, 0, 'Min age 18', '2026-02-28 04:53:42.337720')
+2026-02-28 10:23:42,339 [sqlalchemy.engine.Engine] INFO: SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,340 [sqlalchemy.engine.Engine] INFO: [cached since 0.2803s ago] ('NATIONAL-PENSION-2024', 'age', 'lte')
+2026-02-28 10:23:42,341 [sqlalchemy.engine.Engine] INFO: INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,342 [sqlalchemy.engine.Engine] INFO: [cached since 0.2789s ago] ('d6a161f5e67b', 'NATIONAL-PENSION-2024', 'National Pension System', 'age', 'age', 'lte', '70', 1, 0, 'Max age 70', '2026-02-28 04:53:42.341984')
+2026-02-28 10:23:42,344 [sqlalchemy.engine.Engine] INFO: SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,345 [sqlalchemy.engine.Engine] INFO: [cached since 0.2846s ago] ('SCHOLARSHIP-SC-ST-2024', 'category', 'in')
+2026-02-28 10:23:42,346 [sqlalchemy.engine.Engine] INFO: INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-28 10:23:42,346 [sqlalchemy.engine.Engine] INFO: [cached since 0.2821s ago] ('b4414a64edca', 'SCHOLARSHIP-SC-ST-2024', 'Post-Matric Scholarship SC/ST', 'category', 'category', 'in', 'SC,ST', 1, 0, 'Must be SC or ST', '2026-02-28 04:53:42.346111')
+2026-02-28 10:23:42,347 [sqlalchemy.engine.Engine] INFO: SELECT eligibility_rules.id, eligibility_rules.scheme_id, eligibility_rules.scheme_name, eligibility_rules.rule_type, eligibility_rules.field, eligibility_rules.operator, eligibility_rules.value, eligibility_rules.is_mandatory, eligibility_rules.priority, eligibility_rules.description, eligibility_rules.created_at 
+FROM eligibility_rules 
+WHERE eligibility_rules.scheme_id = ? AND eligibility_rules.field = ? AND eligibility_rules.operator = ?
+2026-02-28 10:23:42,347 [sqlalchemy.engine.Engine] INFO: [cached since 0.2881s ago] ('SCHOLARSHIP-SC-ST-2024', 'annual_income', 'lte')
+2026-02-28 10:23:42,350 [sqlalchemy.engine.Engine] INFO: INSERT INTO eligibility_rules (id, scheme_id, scheme_name, rule_type, field, operator, value, is_mandatory, priority, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\logging\__init__.py", line 1113, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2264' in position 222: character maps to <undefined>
+Call stack:
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\session.py", line 1969, in commit
+    trans.commit(_to_root=True)
+  File "<string>", line 2, in commit
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\state_changes.py", line 139, in _go
+    ret_value = fn(self, *arg, **kw)
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\session.py", line 1256, in commit
+    self._prepare_impl()
+  File "<string>", line 2, in _prepare_impl
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\state_changes.py", line 139, in _go
+    ret_value = fn(self, *arg, **kw)
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\session.py", line 1231, in _prepare_impl
+    self.session.flush()
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\session.py", line 4312, in flush
+    self._flush(objects)
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\session.py", line 4408, in _flush
+    flush_context.execute()
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\unitofwork.py", line 466, in execute
+    rec.execute(self)
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\persistence.py", line 1044, in _emit_insert_statements
+    result = connection.execute(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\base.py", line 1416, in execute
+    return meth(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\sql\elements.py", line 517, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\base.py", line 1639, in _execute_clauseelement
+    ret = self._execute_context(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\base.py", line 1906, in _exec_single_context
+    self._log_info(
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\base.py", line 193, in _log_info
+    self.engine.logger.info(message, *arg, **kw)
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\log.py", line 159, in info
+    self.log(logging.INFO, msg, *args, **kwargs)
+  File "C:\Users\Amandeep\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\log.py", line 210, in log
+    self.logger._log(level, msg, args, **kwargs)
+Message: '[%s] %r'
+Arguments: ('cached since 0.2861s ago', ('7eb38c48b9f5', 'SCHOLARSHIP-SC-ST-2024', 'Post-Matric Scholarship SC/ST', 'income', 'annual_income', 'lte', '250000', 1, 0, 'Family income \u2264 \u20b92,50,000', '2026-02-28 04:53:42.349222'))
+2026-02-28 10:23:42,350 [sqlalchemy.engine.Engine] INFO: [cached since 0.2861s ago] ('7eb38c48b9f5', 'SCHOLARSHIP-SC-ST-2024', 'Post-Matric Scholarship SC/ST', 'income', 'annual_income', 'lte', '250000', 1, 0, 'Family income \u2264 \u20b92,50,000', '2026-02-28 04:53:42.349222')
+2026-02-28 10:23:42,365 [sqlalchemy.engine.Engine] INFO: COMMIT
+2026-02-28 10:23:42,372 [eligibility_rules_engine] INFO: Seeded built-in eligibility rules
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:18015 (Press CTRL+C to quit)

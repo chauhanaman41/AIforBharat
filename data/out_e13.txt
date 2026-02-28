@@ -1,0 +1,49 @@
+2026-02-28 10:23:23,427 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-28 10:23:23,431 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("analytics_events")
+2026-02-28 10:23:23,433 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-28 10:23:23,437 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("metric_snapshots")
+2026-02-28 10:23:23,440 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-28 10:23:23,442 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("metric_snapshots")
+2026-02-28 10:23:23,447 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-28 10:23:23,449 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("funnel_steps")
+2026-02-28 10:23:23,451 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-28 10:23:23,452 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("funnel_steps")
+2026-02-28 10:23:23,452 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-28 10:23:23,453 INFO sqlalchemy.engine.Engine 
+CREATE TABLE metric_snapshots (
+	id VARCHAR NOT NULL, 
+	metric_name VARCHAR NOT NULL, 
+	metric_value FLOAT NOT NULL, 
+	dimension VARCHAR, 
+	dimension_value VARCHAR, 
+	period VARCHAR, 
+	snapshot_date DATETIME, 
+	PRIMARY KEY (id)
+)
+
+
+2026-02-28 10:23:23,454 INFO sqlalchemy.engine.Engine [no key 0.00030s] ()
+2026-02-28 10:23:23,460 INFO sqlalchemy.engine.Engine CREATE INDEX ix_metric_snapshots_metric_name ON metric_snapshots (metric_name)
+2026-02-28 10:23:23,460 INFO sqlalchemy.engine.Engine [no key 0.00038s] ()
+2026-02-28 10:23:23,466 INFO sqlalchemy.engine.Engine CREATE INDEX ix_metric_snapshots_dimension ON metric_snapshots (dimension)
+2026-02-28 10:23:23,466 INFO sqlalchemy.engine.Engine [no key 0.00057s] ()
+2026-02-28 10:23:23,473 INFO sqlalchemy.engine.Engine CREATE INDEX ix_metric_snapshots_dimension_value ON metric_snapshots (dimension_value)
+2026-02-28 10:23:23,473 INFO sqlalchemy.engine.Engine [no key 0.00045s] ()
+2026-02-28 10:23:23,480 INFO sqlalchemy.engine.Engine 
+CREATE TABLE funnel_steps (
+	id VARCHAR NOT NULL, 
+	funnel_name VARCHAR NOT NULL, 
+	step_name VARCHAR NOT NULL, 
+	step_order INTEGER NOT NULL, 
+	user_id VARCHAR, 
+	completed_at DATETIME, 
+	PRIMARY KEY (id)
+)
+
+
+2026-02-28 10:23:23,480 INFO sqlalchemy.engine.Engine [no key 0.00058s] ()
+2026-02-28 10:23:23,486 INFO sqlalchemy.engine.Engine CREATE INDEX ix_funnel_steps_user_id ON funnel_steps (user_id)
+2026-02-28 10:23:23,486 INFO sqlalchemy.engine.Engine [no key 0.00046s] ()
+2026-02-28 10:23:23,493 INFO sqlalchemy.engine.Engine CREATE INDEX ix_funnel_steps_funnel_name ON funnel_steps (funnel_name)
+2026-02-28 10:23:23,494 INFO sqlalchemy.engine.Engine [no key 0.00055s] ()
+2026-02-28 10:23:23,499 INFO sqlalchemy.engine.Engine COMMIT

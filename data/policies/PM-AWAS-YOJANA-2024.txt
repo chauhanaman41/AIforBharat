@@ -1,0 +1,5 @@
+Housing for All scheme providing assistance for construction/purchase of houses.
+Urban: Credit-linked subsidy (CLSS) for EWS/LIG/MIG categories. Subsidy up to Rs 2.67 lakh.
+Gramin: Financial assistance of Rs 1.20 lakh (plain) and Rs 1.30 lakh (hilly/difficult areas).
+Eligibility: No pucca house in family name, EWS/LIG/MIG income criteria.
+Category: Housing, EWS, LIG, BPL.
