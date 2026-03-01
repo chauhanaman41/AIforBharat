@@ -95,8 +95,13 @@ const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   phone: z
     .string()
-    .length(10, "Phone number must be exactly 10 digits")
-    .regex(/^\d{10}$/, "Enter a valid 10-digit Indian mobile number"),
+    .min(1, "Phone number is required")
+    .transform((v) => v.replace(/[\s\-+]/g, "").replace(/^91/, ""))
+    .pipe(
+      z.string()
+        .length(10, "Phone number must be exactly 10 digits")
+        .regex(/^\d{10}$/, "Enter a valid 10-digit Indian mobile number")
+    ),
   password: z
     .string()
     .min(8, "Password must be at least 8 characters"),
@@ -130,6 +135,7 @@ export default function RegisterPage() {
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    mode: "onTouched",
     defaultValues: {
       name: "",
       phone: "",

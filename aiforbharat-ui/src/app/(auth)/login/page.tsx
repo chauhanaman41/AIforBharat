@@ -31,9 +31,13 @@ import { useLogin } from "@/hooks/use-auth";
 const loginSchema = z.object({
   phone: z
     .string()
-    .min(10, "Phone number must be 10 digits")
-    .max(10, "Phone number must be 10 digits")
-    .regex(/^\d{10}$/, "Enter a valid 10-digit Indian mobile number"),
+    .min(1, "Phone number is required")
+    .transform((v) => v.replace(/[\s\-+]/g, "").replace(/^91/, ""))
+    .pipe(
+      z.string()
+        .length(10, "Phone number must be 10 digits")
+        .regex(/^\d{10}$/, "Enter a valid 10-digit Indian mobile number")
+    ),
   password: z
     .string()
     .min(8, "Password must be at least 8 characters"),
@@ -47,6 +51,7 @@ export default function LoginPage() {
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+    mode: "onTouched",
     defaultValues: {
       phone: "",
       password: "",

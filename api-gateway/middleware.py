@@ -35,6 +35,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self._burst_buckets: dict[str, dict] = defaultdict(lambda: {"count": 0, "window_start": time.time()})
 
     async def dispatch(self, request: Request, call_next) -> Response:
+        # Let CORS preflight requests pass through without rate limiting
+        if request.method == "OPTIONS":
+            return await call_next(request)
+
         # Skip rate limiting for health checks and docs
         if request.url.path in ["/health", "/docs", "/redoc", "/openapi.json", "/"]:
             return await call_next(request)

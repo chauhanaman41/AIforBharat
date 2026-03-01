@@ -24,6 +24,7 @@ import ReactFlow, {
 import "reactflow/dist/style.css";
 
 import { useEngineHealth, type EngineHealthEntry } from "@/hooks/use-analytics";
+import { cn } from "@/lib/utils";
 
 /**
  * EngineStatusMap — React Flow visualization of the 21-engine architecture.
@@ -215,7 +216,7 @@ export default function EngineStatusMap({ className }: EngineStatusMapProps) {
 
   return (
     <ReactFlowProvider>
-      <div className={`w-full h-full min-h-[500px] rounded-lg border border-border overflow-hidden ${className ?? ""}`}>
+      <div className={cn("w-full rounded-lg border border-border overflow-hidden h-[500px]", className)}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
